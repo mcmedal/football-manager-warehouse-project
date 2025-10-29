@@ -38,39 +38,39 @@ Here, we define lists of file paths for the images that contain the possession d
 ```python
 # Importing Average Possession Data
 italy = [
-    r"C:\Users\olufe\Documents\FM data\italy 1.png",
-    r"C:\Users\olufe\Documents\FM data\italy 2.png"
+    r"C:\...\FM data\italy 1.png",
+    r"C:\...\FM data\italy 2.png"
 ]
 germany = [
-    r"C:\Users\olufe\Documents\FM data\germany 1.png",
-    r"C:\Users\olufe\Documents\FM data\germany 2.png"
+    r"C:\...\FM data\germany 1.png",
+    r"C:\...\FM data\germany 2.png"
 ]
 england = [
-    r"C:\Users\olufe\Documents\FM data\england 1.png",
-    r"C:\Users\olufe\Documents\FM data\england 2.png"
+    r"C:\...\FM data\england 1.png",
+    r"C:\...\FM data\england 2.png"
 ]
 spain = [
-    r"C:\Users\olufe\Documents\FM data\spain 1.png",
-    r"C:\Users\olufe\Documents\FM data\spain 2.png"
+    r"C:\...\FM data\spain 1.png",
+    r"C:\...\FM data\spain 2.png"
 ]
 portugal = [
-    r"C:\Users\olufe\Documents\FM data\portugal 1.png",
-    r"C:\Users\olufe\Documents\FM data\portugal 2.png"
+    r"C:\...\FM data\portugal 1.png",
+    r"C:\...\FM data\portugal 2.png"
 ]
 belgium = [
-    r"C:\Users\olufe\Documents\FM data\belgium 1.png"
+    r"C:\...\FM data\belgium 1.png"
 ]
 netherlands = [
-    r"C:\Users\olufe\Documents\FM data\netherlands 1.png",
-    r"C:\Users\olufe\Documents\FM data\netherlands 2.png"
+    r"C:\...\FM data\netherlands 1.png",
+    r"C:\...\FM data\netherlands 2.png"
 ]
 england2 = [
-    r"C:\Users\olufe\Documents\FM data\england2 1.png",
-    r"C:\Users\olufe\Documents\FM data\england2 2.png"
+    r"C:\...\FM data\england2 1.png",
+    r"C:\...\FM data\england2 2.png"
 ]
 france = [
-    r"C:\Users\olufe\Documents\FM data\france 1.png",
-    r"C:\Users\olufe\Documents\FM data\france 2.png"
+    r"C:\...\FM data\france 1.png",
+    r"C:\...\FM data\france 2.png"
 ]
 ```
 
@@ -292,5 +292,5 @@ poss_metric.head(10)
 
 ```python
 # Exporting to directory
-poss_metric.to_csv(r"C:\Users\olufe\Documents\FM data\possession_data.csv", encoding='utf-8', index = False)
+poss_metric.to_csv(r"C:\...\FM data\possession_data.csv", encoding='utf-8', index = False)
 ```

@@ -365,3 +365,12 @@ CREATE TABLE bronze.fmdata_interested_gks(
 	wage_per_week NVARCHAR(20),
 	transfer_value NVARCHAR(30)
 );
+
+--
+IF OBJECT_ID ('bronze.fmdata_possession_data', 'U') IS NOT NULL
+	DROP TABLE bronze.fmdata_possession_data
+
+CREATE TABLE bronze.fmdata_possession_data(
+	club_name NVARCHAR(40),
+	average_possession NVARCHAR(10)
+);

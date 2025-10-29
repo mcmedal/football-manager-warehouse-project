@@ -32,7 +32,7 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_team_players';
 		BULK INSERT bronze.fmdata_team_players
-		FROM 'C:\...\FM data\team_players.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\team_players.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',
@@ -50,7 +50,7 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_team_gks';
 		BULK INSERT bronze.fmdata_team_gks
-		FROM 'C:\...\FM data\team_gks.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\team_gks.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',
@@ -68,7 +68,7 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_manager_data';
 		BULK INSERT bronze.fmdata_manager_data
-		FROM 'C:\...\FM data\mngrs_data.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\mngrs_data.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',
@@ -86,7 +86,7 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_interested_out_players1';
 		BULK INSERT bronze.fmdata_interested_out_players1
-		FROM 'C:\...\FM data\interested_out_players1.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\interested_out_players1.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',
@@ -104,7 +104,7 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_interested_out_players2';
 		BULK INSERT bronze.fmdata_interested_out_players2
-		FROM 'C:\...\FM data\interested_out_players2.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\interested_out_players2.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',
@@ -122,7 +122,7 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_interested_out_players3';
 		BULK INSERT bronze.fmdata_interested_out_players3
-		FROM 'C:\...\FM data\interested_out_players3.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\interested_out_players3.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',
@@ -140,7 +140,24 @@ BEGIN
 
 		PRINT '>>INSERTING DATA INTO: bronze.fmdata_interested_gks';
 		BULK INSERT bronze.fmdata_interested_gks
-		FROM 'C:\...\FM data\interested_gks.csv'
+		FROM 'C:\Users\olufe\Documents\FM data\interested_gks.csv'
+		WITH (
+			FIRSTROW = 2,
+			FORMAT = 'CSV',
+			CODEPAGE = '65001',
+			TABLOCK
+		);
+		SET @end_time = GETDATE();
+		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
+		PRINT '---------------------------------------';
+		--
+		SET @start_time = GETDATE();
+		PRINT '>>TRUNCATING: bronze.fmdata_possession_data';
+		TRUNCATE TABLE bronze.fmdata_possession_data;
+
+		PRINT '>>INSERTING DATA INTO: bronze.fmdata_possession_data';
+		BULK INSERT bronze.fmdata_possession_data
+		FROM 'C:\Users\olufe\Documents\FM data\possession_data.csv'
 		WITH (
 			FIRSTROW = 2,
 			FORMAT = 'CSV',

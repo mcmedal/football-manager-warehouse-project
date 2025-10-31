@@ -9,7 +9,7 @@ I took up this project to showcase my Data Engineering, Warehousing and Analysti
 ### Building the Data Warehouse
 
 #### Objective🏁
-Design a modern Data Warehouse using SQL Server to consolidate player statistical data, enabling analytical reporting and informed descision-making.
+Design a modern Data Warehouse using SQL Server to consolidate player statistical data, enabling analytical reporting and informed decision-making.
 
 #### Specifications
 - **Data Sources:** Exported data from the `Squad` being managed, the `Staff Search` and the `Player Search` screen.

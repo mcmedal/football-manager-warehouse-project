@@ -26,9 +26,7 @@ Design a modern Data Warehouse using SQL Server to consolidate player statistica
 Develop SQL based Analytics to deliver detailed insights into actionable insights, hopefully empowering "Stakeholders" to make informed transfer decisions.
 
 #### Specifications
-- Evaluate Squad members performance.
-- Identify benchmarks for statistical attributes for evaluating performance.
-- Identify potential transfer transfer targets.
+- Exploratory Data Analysis to generate analysis. Insights derived will be itemized as concluded.
 
 ***
 

@@ -5,7 +5,7 @@ Creates a Stored Procedure: Load Bronze Layer (Source -> Bronze Layer)
    This script is designed to create a stored procedure that loads external 'csv'
   files into the bronze schema. This procedure:
     - truncates the bronze tables before loading the data.
-    - uses the 'BULK INSERT' to load data intpo the tables.
+    - uses the 'BULK INSERT' to load data into the tables.
 
   This Stored Procedure does not require any parameters.
   Example: EXECUTE bronze.load_bronze;

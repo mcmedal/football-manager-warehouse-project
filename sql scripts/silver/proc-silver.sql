@@ -1811,7 +1811,10 @@ BEGIN
 					WHEN club_name = 'Vitoria de Cuimaraes' THEN 'Vitória de Guimarães'
 				ELSE club_name
 				END club_name,
-				CAST(REPLACE(average_possession, '-', '') AS FLOAT) AS average_possession
+				CASE
+					WHEN LEN(REPLACE(average_possession, '-', '')) > 2 THEN CAST(SUBSTRING(REPLACE(average_possession, '-', ''), 1, 2) AS FLOAT)
+					ELSE CAST(REPLACE(average_possession, '-', '') AS FLOAT)
+				END AS average_possession
 		FROM bronze.fmdata_possession_data
 		) AS OLD;
 
@@ -1822,13 +1825,13 @@ BEGIN
 
 		SET @batch_end_time = GETDATE();
 		PRINT '=================================';
-		PRINT 'LOADING OF BRONZE LAYER COMPLETED';
+		PRINT 'LOADING OF SILVER LAYER COMPLETED';
 		PRINT '	TOTAL DURATION: ' + CAST(DATEDIFF(millisecond, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' milliseconds';
 		PRINT '=================================';
 	END TRY
 	BEGIN CATCH
 		PRINT '=================================';
-		PRINT 'ERROR DURING LOADING BRONZE LAYER';
+		PRINT 'ERROR DURING LOADING SILVER LAYER';
 		PRINT 'Error Message:' + ERROR_MESSAGE();
 		PRINT 'Error Message:' + CAST(ERROR_NUMBER() AS NVARCHAR);
 		PRINT 'Error Message:' + CAST(ERROR_STATE() AS NVARCHAR);

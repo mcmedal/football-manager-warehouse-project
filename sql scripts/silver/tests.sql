@@ -25,6 +25,7 @@ age
 FROM silver.fmdata_team_players
 WHERE age < 16 OR age > 45;
 
+-- Check for Standardization
 SELECT 
 distance_covered_km_per90
 FROM silver.fmdata_team_players
@@ -83,6 +84,7 @@ age
 FROM silver.fmdata_team_gks
 WHERE age < 16 OR age > 45;
 
+-- Check for Standardization
 SELECT 
 distance_covered_km_per90
 FROM silver.fmdata_team_gks
@@ -122,32 +124,39 @@ SELECT
 DISTINCT(tactical_style)
 FROM silver.fmdata_manager_data;
 
+-- Check for Consistency
 SELECT
 DISTINCT(playing_mentality)
 FROM silver.fmdata_manager_data;
 
+-- Check for Consistency
 SELECT
 DISTINCT(preferred_formation)
 FROM silver.fmdata_manager_data;
 
+-- Check for Consistency
 SELECT
 DISTINCT(pressing_style)
 FROM silver.fmdata_manager_data;
 
+-- Check for Consistency
 SELECT
 DISTINCT(marking_style)
 FROM silver.fmdata_manager_data;
 
+-- Check for Consistency
 SELECT
 DISTINCT(YEAR(contract_begins)) AS CB
 FROM silver.fmdata_manager_data
 ORDER BY CB;
 
+-- Check for Consistency
 SELECT
 DISTINCT(YEAR(contract_expires)) AS CB
 FROM silver.fmdata_manager_data
 ORDER BY CB;
 
+-- Check for Consistency
 SELECT
 	preferred_formation
 FROM silver.fmdata_manager_data
@@ -172,6 +181,7 @@ age
 FROM silver.fmdata_interested_out_players
 WHERE age < 16 OR age > 45;
 
+-- Check for Standardization
 SELECT 
 distance_covered_km_per90
 FROM silver.fmdata_interested_out_players
@@ -195,7 +205,7 @@ SELECT
 FROM bronze.fmdata_interested_out_players3 AS O
 INNER JOIN silver.fmdata_interested_out_players AS N ON O.player_id = N.player_id;
 
--- Check for Clarity
+-- Check for Correct Calculation - Transfer Value
 SELECT 
 	O.transfer_value,
 	N.transfer_value_m
@@ -209,7 +219,7 @@ SELECT
 FROM bronze.fmdata_interested_out_players3 AS O
 INNER JOIN silver.fmdata_interested_out_players AS N ON O.player_id = N.player_id;
 
--- Check for Accuracy
+-- Check for Correct Conversion
 SELECT
 (CHARINDEX('p', O.wage_per_week) - 3) AS OLD,
 N.wage_per_week_k
@@ -229,6 +239,7 @@ WITH no_match AS (
         C.club_name IS NULL
 )
 
+-- Finding Possible Matches
 SELECT 
     DISTINCT(D.club_name) AS no_matchC,
     C.club_name AS possible_match
@@ -240,3 +251,10 @@ LEFT JOIN
     AND LEFT(D.club_name, 1) = LEFT(C.club_name, 1)
     AND RIGHT(D.club_name, 1) = RIGHT(C.club_name, 1)
 WHERE C.club_name IS NOT NULL;
+
+-- Check for Standardization
+SELECT
+*
+FROM silver.fmdata_possession_data
+WHERE LEN(REPLACE(average_possession, '-', '')) > 2;
+

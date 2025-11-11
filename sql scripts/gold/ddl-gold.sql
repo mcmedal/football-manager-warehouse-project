@@ -10,6 +10,7 @@ Creates a View: Load Gold View (Silver Layer -> Gold Layer)
 ======================================================================
 */
 
+-- View: gold.fmdata_team_possession
 WITH league_ids AS (
     SELECT
         DISTINCT(league) AS league,
@@ -35,3 +36,22 @@ LEFT JOIN league_ids AS A
 INNER JOIN club_ids AS C
     ON B.club_name = C.club_name;
 
+
+-- View: gold.fmdata_manager_playstyle
+WITH playstyle AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER(ORDER BY tactical_style, playing_mentality, preferred_formation, pressing_style, marking_style) AS playstyle_id
+    FROM(
+        SELECT
+            DISTINCT tactical_style, playing_mentality, preferred_formation, pressing_style, marking_style
+        FROM silver.fmdata_manager_data) AS styles_of_play
+    )
+SELECT
+    playstyle_id,
+    tactical_style,
+    playing_mentality,
+    preferred_formation,
+    pressing_style,
+    marking_style
+FROM playstyle;

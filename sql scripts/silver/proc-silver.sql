@@ -117,7 +117,21 @@ BEGIN
 				REPLACE(player_name, ' - Pick Player', '') AS player_name,
 				TRIM(club_name) AS club_name,
 				UPPER(league) AS league,
-				TRIM(position) AS position,
+				CASE 
+					WHEN position  = 'AM (C)' THEN 'Central Attacking Midfielder'
+					WHEN position  = 'AM (L)' THEN 'Left Attacking Midfielder'
+					WHEN position  = 'AM (R)' THEN 'Right Attacking Midfielder'
+					WHEN position  = 'D (C)' THEN 'Central Defender'
+					WHEN position  = 'D (L)' THEN 'Left Defender'
+					WHEN position  = 'D (R)' THEN 'Right Defender'
+					WHEN position  = 'DM' THEN 'Defensive Midfielder'
+					WHEN position  = 'M (C)' THEN 'Central Midfielder'
+					WHEN position  = 'M (L)' THEN 'Left Midfielder'
+					WHEN position  = 'M (R)' THEN 'Right Midfielder'
+					WHEN position  = 'ST (C)' THEN 'Striker'
+					WHEN position  = 'WB (L)' THEN 'Left Wingback'
+					WHEN position  = 'WB (R)' THEN 'Right Wingback'
+				END AS position,
 				CAST(age AS INT) AS age,
 				CASE 
 					WHEN minutes_played  = '-' THEN CAST(REPLACE(minutes_played, '-', '0') AS INT)
@@ -418,7 +432,7 @@ BEGIN
 				REPLACE(player_name, ' - Pick Player', '') AS player_name,
 				TRIM(club_name) AS club_name,
 				UPPER(league) AS league,
-				TRIM(position) AS position,
+				REPLACE(position, 'GK', 'Goalkeeper') AS position,
 				CAST(age AS INT) AS age,
 				CASE 
 					WHEN minutes_played  = '-' THEN CAST(REPLACE(minutes_played, '-', '0') AS INT)
@@ -701,7 +715,21 @@ BEGIN
 				REPLACE(player_name, ' - Pick Player', '') AS player_name,
 				TRIM(club_name) AS club_name,
 				UPPER(league) AS league,
-				TRIM(position) AS position,
+								CASE 
+					WHEN position  = 'AM (C)' THEN 'Central Attacking Midfielder'
+					WHEN position  = 'AM (L)' THEN 'Left Attacking Midfielder'
+					WHEN position  = 'AM (R)' THEN 'Right Attacking Midfielder'
+					WHEN position  = 'D (C)' THEN 'Central Defender'
+					WHEN position  = 'D (L)' THEN 'Left Defender'
+					WHEN position  = 'D (R)' THEN 'Right Defender'
+					WHEN position  = 'DM' THEN 'Defensive Midfielder'
+					WHEN position  = 'M (C)' THEN 'Central Midfielder'
+					WHEN position  = 'M (L)' THEN 'Left Midfielder'
+					WHEN position  = 'M (R)' THEN 'Right Midfielder'
+					WHEN position  = 'ST (C)' THEN 'Striker'
+					WHEN position  = 'WB (L)' THEN 'Left Wingback'
+					WHEN position  = 'WB (R)' THEN 'Right Wingback'
+				END AS position,
 				CAST(age AS INT) AS age,
 				CASE 
 					WHEN minutes_played  = '-' THEN CAST(REPLACE(minutes_played, '-', '0') AS INT)
@@ -1025,7 +1053,21 @@ BEGIN
 				REPLACE(player_name, ' - Pick Player', '') AS player_name,
 				TRIM(club_name) AS club_name,
 				UPPER(league) AS league,
-				TRIM(position) AS position,
+				CASE 
+					WHEN position  = 'AM (C)' THEN 'Central Attacking Midfielder'
+					WHEN position  = 'AM (L)' THEN 'Left Attacking Midfielder'
+					WHEN position  = 'AM (R)' THEN 'Right Attacking Midfielder'
+					WHEN position  = 'D (C)' THEN 'Central Defender'
+					WHEN position  = 'D (L)' THEN 'Left Defender'
+					WHEN position  = 'D (R)' THEN 'Right Defender'
+					WHEN position  = 'DM' THEN 'Defensive Midfielder'
+					WHEN position  = 'M (C)' THEN 'Central Midfielder'
+					WHEN position  = 'M (L)' THEN 'Left Midfielder'
+					WHEN position  = 'M (R)' THEN 'Right Midfielder'
+					WHEN position  = 'ST (C)' THEN 'Striker'
+					WHEN position  = 'WB (L)' THEN 'Left Wingback'
+					WHEN position  = 'WB (R)' THEN 'Right Wingback'
+				END AS position,
 				CAST(age AS INT) AS age,
 				CASE 
 					WHEN minutes_played  = '-' THEN CAST(REPLACE(minutes_played, '-', '0') AS INT)
@@ -1349,7 +1391,21 @@ BEGIN
 				REPLACE(player_name, ' - Pick Player', '') AS player_name,
 				TRIM(club_name) AS club_name,
 				UPPER(league) AS league,
-				TRIM(position) AS position,
+								CASE 
+					WHEN position  = 'AM (C)' THEN 'Central Attacking Midfielder'
+					WHEN position  = 'AM (L)' THEN 'Left Attacking Midfielder'
+					WHEN position  = 'AM (R)' THEN 'Right Attacking Midfielder'
+					WHEN position  = 'D (C)' THEN 'Central Defender'
+					WHEN position  = 'D (L)' THEN 'Left Defender'
+					WHEN position  = 'D (R)' THEN 'Right Defender'
+					WHEN position  = 'DM' THEN 'Defensive Midfielder'
+					WHEN position  = 'M (C)' THEN 'Central Midfielder'
+					WHEN position  = 'M (L)' THEN 'Left Midfielder'
+					WHEN position  = 'M (R)' THEN 'Right Midfielder'
+					WHEN position  = 'ST (C)' THEN 'Striker'
+					WHEN position  = 'WB (L)' THEN 'Left Wingback'
+					WHEN position  = 'WB (R)' THEN 'Right Wingback'
+				END AS position,
 				CAST(age AS INT) AS age,
 				CASE 
 					WHEN minutes_played  = '-' THEN CAST(REPLACE(minutes_played, '-', '0') AS INT)
@@ -1652,7 +1708,7 @@ BEGIN
 				REPLACE(player_name, ' - Pick Player', '') AS player_name,
 				TRIM(club_name) AS club_name,
 				UPPER(league) AS league,
-				TRIM(position) AS position,
+				REPLACE(position, 'GK', 'Goalkeeper') AS position,
 				CAST(age AS INT) AS age,
 				CASE 
 					WHEN minutes_played  = '-' THEN CAST(REPLACE(minutes_played, '-', '0') AS INT)

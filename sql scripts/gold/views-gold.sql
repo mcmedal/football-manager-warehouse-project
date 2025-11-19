@@ -209,6 +209,7 @@ CREATE VIEW gold.fact_outfield_player_stats AS
             ON A.player_id = B.player_id
         INNER JOIN gold.dim_team_info AS C
             ON A.club_name = C.club_name
+        WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players) -- If present, ignore our players
     UNION
         SELECT
             B.player_key,
@@ -304,6 +305,7 @@ CREATE VIEW gold.fact_gk_stats AS
             ON A.player_id = B.player_id
         INNER JOIN gold.dim_team_info AS C
             ON A.club_name = C.club_name
+        WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks) -- If present, ignore our players
     UNION
         SELECT
             B.player_key,
@@ -375,4 +377,96 @@ CREATE VIEW gold.fact_players_value AS
         FROM gold.dim_player_info AS A
         INNER JOIN silver.fmdata_team_gks AS B
             ON A.player_id = B.player_id;
+GO
+
+-- View: gold.fact_team_statistics
+CREATE VIEW gold.fact_team_statistics AS
+    SELECT
+        A.*,
+        B.position,
+        SUM(CAST(B.minutes_played AS INT)) AS total_minutes_played,
+        SUM(CAST(B.team_goals_scored_per90 AS DECIMAL( 5, 2))) AS total_team_goals_scored_per90,
+        SUM(CAST(B.team_goals_conceded_per90 AS DECIMAL( 5, 2))) AS total_team_goals_conceded_per90,
+        SUM(CAST(B.goals AS INT)) AS total_goals,
+        SUM(CAST(B.goals_outside_the_box AS INT)) AS total_goals_outside_the_box,
+        SUM(CAST(B.shots_per90 AS DECIMAL( 5, 2))) AS total_shots_per90,
+        SUM(CAST(B.xGoals_per_shot AS DECIMAL( 5, 2))) AS total_xGoals_per_shot,
+        AVG(CAST(B.shot_accuracy AS DECIMAL( 4, 2))) AS average_shot_accuracy,
+        SUM(CAST(B.shots_on_target_per90 AS DECIMAL( 5, 2))) AS total_shots_on_target_per90,
+        SUM(CAST(B.shots_outside_the_box_per90 AS DECIMAL( 5, 2))) AS total_shots_outside_the_box_per90,
+        SUM(CAST(B.goals_per90 AS DECIMAL( 5, 2))) AS total_goals_per90,
+        SUM(CAST(B.xGoals_per90 AS DECIMAL( 5, 2))) AS total_xGoals_per90,
+        SUM(CAST(B.non_penalty_xGoals_per90 AS DECIMAL( 5, 2))) AS total_non_penalty_xGoals_per90,
+        SUM(CAST(B.xGoals_overperformance AS DECIMAL( 5, 2))) AS total_xGoals_overperformance,
+        AVG(CAST(B.conversion_rate AS DECIMAL( 4, 2))) AS average_conversion_rate,
+        SUM(CAST(B.assists AS INT)) AS total_assists,
+        SUM(CAST(B.assists_per90 AS DECIMAL( 5, 2))) AS total_assists_per90,
+        SUM(CAST(B.passes_attempted_per90 AS DECIMAL( 5, 2))) AS total_passes_attempted_per90,
+        AVG(CAST(B.pass_accuracy AS DECIMAL( 4, 2))) AS average_pass_accuracy,
+        SUM(CAST(B.xAssits_per90 AS DECIMAL( 5, 2))) AS total_xAssits_per90,
+        SUM(CAST(B.open_play_key_passes_per90 AS DECIMAL( 5, 2))) AS total_open_play_key_passes_per90,
+        SUM(CAST(B.chances_created_per90 AS DECIMAL( 5, 2))) AS total_chances_created_per90,
+        SUM(CAST(B.dribbles_made_per90 AS DECIMAL( 5, 2))) AS total_dribbles_made_per90,
+        SUM(CAST(B.progressive_passes_per90 AS DECIMAL( 5, 2))) AS total_progressive_passes_per90,
+        SUM(CAST(B.open_play_crosses_attempted_per90 AS DECIMAL( 5, 2))) AS total_open_play_crosses_attempted_per90,
+        AVG(CAST(B.open_play_cross_accuracy AS DECIMAL( 4, 2))) AS average_open_play_cross_accuracy,
+        SUM(CAST(B.crosses_attempted_per90 AS DECIMAL( 5, 2))) AS total_crosses_attempted_per90,
+        AVG(CAST(B.cross_accuracy AS DECIMAL( 4, 2))) AS average_cross_accuracy,
+        SUM(CAST(B.tackles_attempted_per90 AS DECIMAL( 5, 2))) AS total_tackles_attempted_per90,
+        AVG(CAST(B.tackle_accuracy AS DECIMAL( 4, 2))) AS average_tackle_accuracy,
+        SUM(CAST(B.pressures_attempted_per90 AS DECIMAL( 5, 2))) AS total_pressures_attempted_per90,
+        SUM(CAST(B.pressures_completed_per90 AS DECIMAL( 5, 2))) AS total_pressures_completed_per90,
+        SUM(CAST(B.possession_won_per90 AS DECIMAL( 5, 2))) AS total_possession_won_per90,
+        SUM(CAST(B.possession_lost_per90 AS DECIMAL( 5, 2))) AS total_possession_lost_per90,
+        SUM(CAST(B.key_tackles_per90 AS DECIMAL( 5, 2))) AS total_key_tackles_per90,
+        SUM(CAST(B.interceptions_per90 AS DECIMAL( 5, 2))) AS total_interceptions_per90,
+        SUM(CAST(B.clearances_per90 AS DECIMAL( 5, 2))) AS total_clearances_per90,
+        SUM(CAST(B.blocks_per90 AS DECIMAL( 5, 2))) AS total_blocks_per90,
+        SUM(CAST(B.shots_blocked_per90 AS DECIMAL( 5, 2))) AS total_shots_blocked_per90,
+        SUM(CAST(B.headers_attempted_per90 AS DECIMAL( 5, 2))) AS total_headers_attempted_per90,
+        AVG(CAST(B.heading_accuracy AS DECIMAL( 4, 2))) AS average_heading_accuracy,
+        SUM(CAST(B.key_headers_per90 AS DECIMAL( 5, 2))) AS total_key_headers_per90,
+        SUM(CAST(B.sprints_per90 AS DECIMAL( 5, 2))) AS total_sprints_per90,
+        SUM(CAST(B.distance_covered_km_per90 AS DECIMAL( 5, 2))) AS total_distance_covered_km_per90,
+        SUM(CAST(B.mistakes_leading_to_goals_per90 AS DECIMAL( 5, 2))) AS total_mistakes_leading_to_goals_per90,
+        SUM(CAST(B.fouls_made_per90 AS DECIMAL( 5, 2))) AS total_fouls_made_per90,
+        SUM(CAST(B.fouls_against_per90 AS DECIMAL( 5, 2))) AS total_fouls_against_per90,
+        SUM(CAST(B.yellow_cards_per90 AS DECIMAL( 5, 2))) AS total_yellow_cards_per90,
+        SUM(CAST(B.red_cards_per90 AS DECIMAL( 5, 2))) AS total_red_cards_per90
+    FROM gold.dim_team_info AS A
+    INNER JOIN gold.fact_outfield_player_stats AS B
+        ON A.team_key = B.team_key
+    GROUP BY A.team_key, A.league, A.club_name, B.position;
+GO
+
+-- View: gold.fact_team_gks_statistics
+CREATE VIEW gold.fact_team_gks_statistics AS
+    SELECT
+        A.*,
+        SUM(CAST(B.minutes_played AS INT)) AS total_minutes_played,
+        SUM(CAST(B.team_goals_scored_per90 AS DECIMAL( 5, 2))) AS total_team_goals_scored_per90,
+        SUM(CAST(B.team_goals_conceded_per90 AS DECIMAL( 5, 2))) AS total_team_goals_conceded_per90,
+        SUM(CAST(B.goals_conceded_per90 AS DECIMAL( 5, 2))) AS total_goals_conceded_per90,
+        SUM(CAST(B.saves_made_per90 AS DECIMAL( 5, 2))) AS total_saves_made_per90,
+        SUM(CAST(B.xGoals_prevented_per90 AS DECIMAL( 5, 2))) AS total_xGoals_prevented_per90,
+        AVG(CAST(B.xSave_rate AS DECIMAL( 4, 2))) AS average_xSave_rate,
+        SUM(CAST(B.saves_tipped_per90 AS DECIMAL( 5, 2))) AS total_saves_tipped_per90,
+        SUM(CAST(B.saves_parried_per90 AS DECIMAL( 5, 2))) AS total_saves_parried_per90,
+        SUM(CAST(B.saves_held_per90 AS DECIMAL( 5, 2))) AS total_saves_held_per90,
+        AVG(CAST(B.saves_percentage AS DECIMAL( 4, 2))) AS average_saves_percentage,
+        SUM(CAST(B.passes_attempted_per90 AS DECIMAL( 5, 2))) AS total_passes_attempted_per90,
+        AVG(CAST(B.pass_accuracy AS DECIMAL( 4, 2))) AS average_pass_accuracy,
+        SUM(CAST(B.possession_won_per90 AS DECIMAL( 5, 2))) AS total_possession_won_per90,
+        SUM(CAST(B.possession_lost_per90 AS DECIMAL( 5, 2))) AS total_possession_lost_per90,
+        SUM(CAST(B.interceptions_per90 AS DECIMAL( 5, 2))) AS total_interceptions_per90,
+        SUM(CAST(B.clearances_per90 AS DECIMAL( 5, 2))) AS total_clearances_per90,
+        SUM(CAST(B.penalties_faced_per90 AS DECIMAL( 5, 2))) AS total_penalties_faced_per90,
+        AVG(CAST(B.penalties_save_percentage AS DECIMAL( 4, 2))) AS average_penalties_save_percentage,
+        SUM(CAST(B.distance_covered_km_per90 AS DECIMAL( 5, 2))) AS total_distance_covered_km_per90,
+        SUM(CAST(B.mistakes_leading_to_goals_per90 AS DECIMAL( 5, 2))) AS total_mistakes_leading_to_goals_per90,
+        SUM(CAST(B.fouls_against_per90 AS DECIMAL( 5, 2))) AS total_fouls_against_per90
+    FROM gold.dim_team_info AS A
+    INNER JOIN gold.fact_gk_stats AS B
+        ON A.team_key = B.team_key
+    GROUP BY A.team_key, A.league, A.club_name;
 GO

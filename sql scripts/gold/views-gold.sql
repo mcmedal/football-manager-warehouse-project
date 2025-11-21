@@ -38,7 +38,7 @@ CREATE VIEW gold.dim_team_info AS
         ON B.club_name = C.club_name;
 GO
 
--- View: gold.fact_team_possession
+-- View: gold.fact_teams_possession
 CREATE VIEW gold.fact_teams_possession AS
     SELECT
         B.team_key,
@@ -48,7 +48,7 @@ CREATE VIEW gold.fact_teams_possession AS
         ON A.club_name = B.club_name;
 GO
 
--- View: gold.fmdata_manager_playstyle
+-- View: gold.dim_playstyle
 CREATE VIEW gold.dim_playstyle AS
     WITH playstyle AS (
         SELECT

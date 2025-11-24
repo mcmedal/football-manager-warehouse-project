@@ -1,0 +1,197 @@
+// Project Info
+Project FM_Analytics_Gold_Layer {
+  database_type: 'SQL Server'
+  Note: 'Gold Layer Schema for Football Manager Analytics based on views-gold.sql'
+}
+
+// ==========================================
+// Dimension Tables
+// ==========================================
+
+Table gold.dim_team_info {
+  team_key varchar [pk, note: "Composite of League ID and Club ID"]
+  league varchar
+  club_name varchar
+}
+
+Table gold.dim_playstyle {
+  playstyle_key int [pk]
+  tactical_style varchar
+  playing_mentality varchar
+  preferred_formation varchar
+  pressing_style varchar
+  marking_style varchar
+}
+
+Table gold.dim_manager_info {
+  manager_key int [pk]
+  staff_id int
+  staff_name varchar
+  current_club_key varchar
+  previous_club_key varchar
+  playstyle_key int
+  contract_begins date
+  contract_expires date
+}
+
+Table gold.dim_player_info {
+  player_key int [pk]
+  contracted int [note: "0 or 1 boolean flag"]
+  player_id int
+  player_name varchar
+  age int
+  position varchar
+  team_key varchar
+}
+
+// ==========================================
+// Fact Tables
+// ==========================================
+
+Table gold.fact_teams_possession {
+  team_key varchar
+  average_possession int
+}
+
+Table gold.fact_players_value {
+  player_key int
+  team_key varchar
+  wage_per_week_k decimal
+  transfer_value_m decimal
+}
+
+Table gold.fact_outfield_player_stats {
+  player_key int
+  team_key varchar
+  contracted int
+  position varchar
+  minutes_played int
+  team_goals_scored_per90 decimal
+  team_goals_conceded_per90 decimal
+  goals int
+  goals_outside_the_box int
+  shots_per90 decimal
+  xGoals_per_shot decimal
+  shot_accuracy decimal
+  shots_on_target_per90 decimal
+  shots_outside_the_box_per90 decimal
+  goals_per90 decimal
+  xGoals_per90 decimal
+  non_penalty_xGoals_per90 decimal
+  xGoals_overperformance decimal
+  conversion_rate decimal
+  assists int
+  assists_per90 decimal
+  passes_attempted_per90 decimal
+  pass_accuracy decimal
+  xAssits_per90 decimal
+  open_play_key_passes_per90 decimal
+  chances_created_per90 decimal
+  dribbles_made_per90 decimal
+  progressive_passes_per90 decimal
+  open_play_crosses_attempted_per90 decimal
+  open_play_cross_accuracy decimal
+  crosses_attempted_per90 decimal
+  cross_accuracy decimal
+  tackles_attempted_per90 decimal
+  tackle_accuracy decimal
+  pressures_attempted_per90 decimal
+  pressures_completed_per90 decimal
+  possession_won_per90 decimal
+  possession_lost_per90 decimal
+  key_tackles_per90 decimal
+  interceptions_per90 decimal
+  clearances_per90 decimal
+  blocks_per90 decimal
+  shots_blocked_per90 decimal
+  headers_attempted_per90 decimal
+  heading_accuracy decimal
+  key_headers_per90 decimal
+  sprints_per90 decimal
+  distance_covered_km_per90 decimal
+  mistakes_leading_to_goals_per90 decimal
+  fouls_made_per90 decimal
+  fouls_against_per90 decimal
+  yellow_cards_per90 decimal
+  red_cards_per90 decimal
+}
+
+Table gold.fact_gk_stats {
+  player_key int
+  team_key varchar
+  contracted int
+  minutes_played int
+  team_goals_scored_per90 decimal
+  team_goals_conceded_per90 decimal
+  goals_conceded_per90 decimal
+  saves_made_per90 decimal
+  xGoals_prevented_per90 decimal
+  xSave_rate decimal
+  saves_tipped_per90 decimal
+  saves_parried_per90 decimal
+  saves_held_per90 decimal
+  saves_percentage decimal
+  passes_attempted_per90 decimal
+  pass_accuracy decimal
+  possession_won_per90 decimal
+  possession_lost_per90 decimal
+  interceptions_per90 decimal
+  clearances_per90 decimal
+  penalties_faced_per90 decimal
+  penalties_save_percentage decimal
+  distance_covered_km_per90 decimal
+  mistakes_leading_to_goals_per90 decimal
+  fouls_against_per90 decimal
+}
+
+// Aggregated Team Stats Views
+Table gold.fact_team_statistics {
+  team_key varchar
+  league varchar
+  club_name varchar
+  position varchar
+  total_minutes_played int
+  total_goals int
+  total_xGoals_per90 decimal
+  // ... (Includes all other summed metrics from view)
+}
+
+Table gold.fact_team_gks_statistics {
+  team_key varchar
+  league varchar
+  club_name varchar
+  total_minutes_played int
+  total_saves_made_per90 decimal
+  // ... (Includes all other summed metrics from view)
+}
+
+// ==========================================
+// Relationships
+// ==========================================
+
+// Manager Relationships
+Ref: gold.dim_manager_info.current_club_key > gold.dim_team_info.team_key
+Ref: gold.dim_manager_info.previous_club_key > gold.dim_team_info.team_key
+Ref: gold.dim_manager_info.playstyle_key > gold.dim_playstyle.playstyle_key
+
+// Player Dimension Relationships
+Ref: gold.dim_player_info.team_key > gold.dim_team_info.team_key
+
+// Team Possession Fact
+Ref: gold.fact_teams_possession.team_key > gold.dim_team_info.team_key
+
+// Player Value Fact
+Ref: gold.fact_players_value.player_key > gold.dim_player_info.player_key
+Ref: gold.fact_players_value.team_key > gold.dim_team_info.team_key
+
+// Outfield Player Stats Fact
+Ref: gold.fact_outfield_player_stats.player_key > gold.dim_player_info.player_key
+Ref: gold.fact_outfield_player_stats.team_key > gold.dim_team_info.team_key
+
+// GK Stats Fact
+Ref: gold.fact_gk_stats.player_key > gold.dim_player_info.player_key
+Ref: gold.fact_gk_stats.team_key > gold.dim_team_info.team_key
+
+// Aggregated Stats
+Ref: gold.fact_team_statistics.team_key > gold.dim_team_info.team_key
+Ref: gold.fact_team_gks_statistics.team_key > gold.dim_team_info.team_key

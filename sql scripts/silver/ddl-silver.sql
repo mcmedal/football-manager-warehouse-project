@@ -70,7 +70,9 @@ CREATE TABLE silver.fmdata_team_players(
 	red_cards_per90 NVARCHAR(10),
 	wage_per_week_k NVARCHAR(20),
 	transfer_value_m NVARCHAR(30),
-	dwh_create_date DATETIME2 DEFAULT GETDATE()
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
 );
 
 --
@@ -108,7 +110,9 @@ CREATE TABLE silver.fmdata_team_gks(
 	fouls_against_per90 NVARCHAR(10),
 	wage_per_week_k NVARCHAR(20),
 	transfer_value_m NVARCHAR(30),
-	dwh_create_date DATETIME2 DEFAULT GETDATE()
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
 );
 
 --
@@ -128,7 +132,9 @@ CREATE TABLE silver.fmdata_manager_data(
 	marking_style NVARCHAR(30),
 	contract_begins NVARCHAR(20),
 	contract_expires NVARCHAR(20),
-	dwh_create_date DATETIME2 DEFAULT GETDATE()
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
 );
 
 --
@@ -193,7 +199,9 @@ CREATE TABLE silver.fmdata_interested_out_players(
 	red_cards_per90 NVARCHAR(10),
 	wage_per_week_k NVARCHAR(20),
 	transfer_value_m NVARCHAR(30),
-	dwh_create_date DATETIME2 DEFAULT GETDATE()
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
 );
 
 --
@@ -231,7 +239,9 @@ CREATE TABLE silver.fmdata_interested_gks(
 	fouls_against_per90 NVARCHAR(10),
 	wage_per_week_k NVARCHAR(20),
 	transfer_value_m NVARCHAR(30),
-	dwh_create_date DATETIME2 DEFAULT GETDATE()
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
 );
 
 IF OBJECT_ID ('silver.fmdata_possession_data', 'U') IS NOT NULL
@@ -240,5 +250,7 @@ IF OBJECT_ID ('silver.fmdata_possession_data', 'U') IS NOT NULL
 CREATE TABLE silver.fmdata_possession_data(
 	club_name NVARCHAR(40),
 	average_possession NVARCHAR(10),
-	dwh_create_date DATETIME2 DEFAULT GETDATE()
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
 );

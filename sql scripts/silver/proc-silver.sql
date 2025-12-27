@@ -756,7 +756,7 @@ BEGIN
 					END AS xGoals_per_shot,
 					CASE 
 						WHEN shot_accuracy  = '-' THEN CAST(REPLACE(shot_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN (CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS shot_accuracy,
 					CASE
 						WHEN shots_on_target_per90 = '-' THEN CAST(REPLACE(shots_on_target_per90, '-', '0') AS DECIMAL(5, 2))
@@ -784,7 +784,7 @@ BEGIN
 					END AS xGoals_overperformance,
 					CASE 
 						WHEN conversion_rate  = '-' THEN CAST(REPLACE(conversion_rate, '-', '0') AS INT)
-						WHEN RIGHT(conversion_rate, 1)  = '%' THEN (CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(conversion_rate, 1)  = '%' THEN CAST((CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS conversion_rate,
 					CASE 
 						WHEN assists  = '-' THEN CAST(REPLACE(assists, '-', '0') AS INT)
@@ -800,7 +800,7 @@ BEGIN
 					END AS passes_attempted_per90,
 					CASE 
 						WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS pass_accuracy,
 					CASE
 						WHEN xAssits_per90 = '-' THEN CAST(REPLACE(xAssits_per90, '-', '0') AS DECIMAL(5, 2))
@@ -828,7 +828,7 @@ BEGIN
 					END AS open_play_crosses_attempted_per90,
 					CASE 
 						WHEN open_play_cross_accuracy  = '-' THEN CAST(REPLACE(open_play_cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS open_play_cross_accuracy,
 					CASE
 						WHEN crosses_attempted_per90 = '-' THEN CAST(REPLACE(crosses_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -836,7 +836,7 @@ BEGIN
 					END AS crosses_attempted_per90,
 					CASE 
 						WHEN cross_accuracy  = '-' THEN CAST(REPLACE(cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS cross_accuracy,
 					CASE
 						WHEN tackles_attempted = '-' THEN CAST(REPLACE(tackles_attempted, '-', '0') AS INT)
@@ -844,7 +844,7 @@ BEGIN
 					END AS tackles_attempted,
 					CASE 
 						WHEN tackle_accuracy  = '-' THEN CAST(REPLACE(tackle_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN (CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS tackle_accuracy,
 					CASE
 						WHEN pressures_attempted_per90 = '-' THEN CAST(REPLACE(pressures_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -888,7 +888,7 @@ BEGIN
 					END AS headers_attempted_per90,
 					CASE 
 						WHEN heading_accuracy  = '-' THEN CAST(REPLACE(heading_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN (CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS heading_accuracy,
 					CASE
 						WHEN key_headers_per90 = '-' THEN CAST(REPLACE(key_headers_per90, '-', '0') AS DECIMAL(5, 2))
@@ -968,7 +968,7 @@ BEGIN
 					END AS xGoals_per_shot,
 					CASE 
 						WHEN shot_accuracy  = '-' THEN CAST(REPLACE(shot_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN (CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS shot_accuracy,
 					CASE
 						WHEN shots_on_target_per90 = '-' THEN CAST(REPLACE(shots_on_target_per90, '-', '0') AS DECIMAL(5, 2))
@@ -996,7 +996,7 @@ BEGIN
 					END AS xGoals_overperformance,
 					CASE 
 						WHEN conversion_rate  = '-' THEN CAST(REPLACE(conversion_rate, '-', '0') AS INT)
-						WHEN RIGHT(conversion_rate, 1)  = '%' THEN (CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(conversion_rate, 1)  = '%' THEN CAST((CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS conversion_rate,
 					CASE 
 						WHEN assists  = '-' THEN CAST(REPLACE(assists, '-', '0') AS INT)
@@ -1012,7 +1012,7 @@ BEGIN
 					END AS passes_attempted_per90,
 					CASE 
 						WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS pass_accuracy,
 					CASE
 						WHEN xAssits_per90 = '-' THEN CAST(REPLACE(xAssits_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1040,7 +1040,7 @@ BEGIN
 					END AS open_play_crosses_attempted_per90,
 					CASE 
 						WHEN open_play_cross_accuracy  = '-' THEN CAST(REPLACE(open_play_cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS open_play_cross_accuracy,
 					CASE
 						WHEN crosses_attempted_per90 = '-' THEN CAST(REPLACE(crosses_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1048,7 +1048,7 @@ BEGIN
 					END AS crosses_attempted_per90,
 					CASE 
 						WHEN cross_accuracy  = '-' THEN CAST(REPLACE(cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS cross_accuracy,
 					CASE
 						WHEN tackles_attempted = '-' THEN CAST(REPLACE(tackles_attempted, '-', '0') AS INT)
@@ -1056,7 +1056,7 @@ BEGIN
 					END AS tackles_attempted,
 					CASE 
 						WHEN tackle_accuracy  = '-' THEN CAST(REPLACE(tackle_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN (CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS tackle_accuracy,
 					CASE
 						WHEN pressures_attempted_per90 = '-' THEN CAST(REPLACE(pressures_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1100,7 +1100,7 @@ BEGIN
 					END AS headers_attempted_per90,
 					CASE 
 						WHEN heading_accuracy  = '-' THEN CAST(REPLACE(heading_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN (CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS heading_accuracy,
 					CASE
 						WHEN key_headers_per90 = '-' THEN CAST(REPLACE(key_headers_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1345,7 +1345,7 @@ BEGIN
 					END AS xGoals_per_shot,
 					CASE 
 						WHEN shot_accuracy  = '-' THEN CAST(REPLACE(shot_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN (CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS shot_accuracy,
 					CASE
 						WHEN shots_on_target_per90 = '-' THEN CAST(REPLACE(shots_on_target_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1373,7 +1373,7 @@ BEGIN
 					END AS xGoals_overperformance,
 					CASE 
 						WHEN conversion_rate  = '-' THEN CAST(REPLACE(conversion_rate, '-', '0') AS INT)
-						WHEN RIGHT(conversion_rate, 1)  = '%' THEN (CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(conversion_rate, 1)  = '%' THEN CAST((CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS conversion_rate,
 					CASE 
 						WHEN assists  = '-' THEN CAST(REPLACE(assists, '-', '0') AS INT)
@@ -1389,7 +1389,7 @@ BEGIN
 					END AS passes_attempted_per90,
 					CASE 
 						WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS pass_accuracy,
 					CASE
 						WHEN xAssits_per90 = '-' THEN CAST(REPLACE(xAssits_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1417,7 +1417,7 @@ BEGIN
 					END AS open_play_crosses_attempted_per90,
 					CASE 
 						WHEN open_play_cross_accuracy  = '-' THEN CAST(REPLACE(open_play_cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS open_play_cross_accuracy,
 					CASE
 						WHEN crosses_attempted_per90 = '-' THEN CAST(REPLACE(crosses_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1425,7 +1425,7 @@ BEGIN
 					END AS crosses_attempted_per90,
 					CASE 
 						WHEN cross_accuracy  = '-' THEN CAST(REPLACE(cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS cross_accuracy,
 					CASE
 						WHEN tackles_attempted = '-' THEN CAST(REPLACE(tackles_attempted, '-', '0') AS INT)
@@ -1433,7 +1433,7 @@ BEGIN
 					END AS tackles_attempted,
 					CASE 
 						WHEN tackle_accuracy  = '-' THEN CAST(REPLACE(tackle_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN (CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS tackle_accuracy,
 					CASE
 						WHEN pressures_attempted_per90 = '-' THEN CAST(REPLACE(pressures_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1477,7 +1477,7 @@ BEGIN
 					END AS headers_attempted_per90,
 					CASE 
 						WHEN heading_accuracy  = '-' THEN CAST(REPLACE(heading_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN (CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS heading_accuracy,
 					CASE
 						WHEN key_headers_per90 = '-' THEN CAST(REPLACE(key_headers_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1557,7 +1557,7 @@ BEGIN
 					END AS xGoals_per_shot,
 					CASE 
 						WHEN shot_accuracy  = '-' THEN CAST(REPLACE(shot_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN (CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(shot_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(shot_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS shot_accuracy,
 					CASE
 						WHEN shots_on_target_per90 = '-' THEN CAST(REPLACE(shots_on_target_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1585,7 +1585,7 @@ BEGIN
 					END AS xGoals_overperformance,
 					CASE 
 						WHEN conversion_rate  = '-' THEN CAST(REPLACE(conversion_rate, '-', '0') AS INT)
-						WHEN RIGHT(conversion_rate, 1)  = '%' THEN (CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(conversion_rate, 1)  = '%' THEN CAST((CAST(REPLACE(conversion_rate, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS conversion_rate,
 					CASE 
 						WHEN assists  = '-' THEN CAST(REPLACE(assists, '-', '0') AS INT)
@@ -1601,7 +1601,7 @@ BEGIN
 					END AS passes_attempted_per90,
 					CASE 
 						WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS pass_accuracy,
 					CASE
 						WHEN xAssits_per90 = '-' THEN CAST(REPLACE(xAssits_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1629,7 +1629,7 @@ BEGIN
 					END AS open_play_crosses_attempted_per90,
 					CASE 
 						WHEN open_play_cross_accuracy  = '-' THEN CAST(REPLACE(open_play_cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(open_play_cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(open_play_cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS open_play_cross_accuracy,
 					CASE
 						WHEN crosses_attempted_per90 = '-' THEN CAST(REPLACE(crosses_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1637,7 +1637,7 @@ BEGIN
 					END AS crosses_attempted_per90,
 					CASE 
 						WHEN cross_accuracy  = '-' THEN CAST(REPLACE(cross_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN (CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(cross_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(cross_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS cross_accuracy,
 					CASE
 						WHEN tackles_attempted = '-' THEN CAST(REPLACE(tackles_attempted, '-', '0') AS INT)
@@ -1645,7 +1645,7 @@ BEGIN
 					END AS tackles_attempted,
 					CASE 
 						WHEN tackle_accuracy  = '-' THEN CAST(REPLACE(tackle_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN (CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(tackle_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(tackle_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS tackle_accuracy,
 					CASE
 						WHEN pressures_attempted_per90 = '-' THEN CAST(REPLACE(pressures_attempted_per90, '-', '0') AS DECIMAL(5, 2))
@@ -1689,7 +1689,7 @@ BEGIN
 					END AS headers_attempted_per90,
 					CASE 
 						WHEN heading_accuracy  = '-' THEN CAST(REPLACE(heading_accuracy, '-', '0') AS INT)
-						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN (CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+						WHEN RIGHT(heading_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(heading_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 					END AS heading_accuracy,
 					CASE
 						WHEN key_headers_per90 = '-' THEN CAST(REPLACE(key_headers_per90, '-', '0') AS DECIMAL(5, 2))
@@ -2020,7 +2020,7 @@ BEGIN
 						END AS passes_attempted_per90,
 						CASE 
 							WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 						END AS pass_accuracy,
 						CASE 
 							WHEN possession_won_per90  = '-' THEN CAST(REPLACE(possession_won_per90, '-', '0') AS DECIMAL(5, 2))
@@ -2117,7 +2117,7 @@ BEGIN
 						END AS passes_attempted_per90,
 						CASE 
 							WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 						END AS pass_accuracy,
 						CASE 
 							WHEN possession_won_per90  = '-' THEN CAST(REPLACE(possession_won_per90, '-', '0') AS DECIMAL(5, 2))
@@ -2331,7 +2331,7 @@ BEGIN
 						END AS passes_attempted_per90,
 						CASE 
 							WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 						END AS pass_accuracy,
 						CASE 
 							WHEN possession_won_per90  = '-' THEN CAST(REPLACE(possession_won_per90, '-', '0') AS DECIMAL(5, 2))
@@ -2428,7 +2428,7 @@ BEGIN
 						END AS passes_attempted_per90,
 						CASE 
 							WHEN pass_accuracy  = '-' THEN CAST(REPLACE(pass_accuracy, '-', '0') AS INT)
-							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN (CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100)
+							WHEN RIGHT(pass_accuracy, 1)  = '%' THEN CAST((CAST(REPLACE(pass_accuracy, '%', '') AS DECIMAL(5, 2))/100) AS DECIMAL(5, 2))
 						END AS pass_accuracy,
 						CASE 
 							WHEN possession_won_per90  = '-' THEN CAST(REPLACE(possession_won_per90, '-', '0') AS DECIMAL(5, 2))

@@ -4,29 +4,36 @@ Hola!
 Welcome to my **Football Manager 24 - Data Warehouse and Analystics Project** repository!
 I took up this project to showcase my Data Engineering, Warehousing and Analystics capacity while also mixing a little pleasure with a new club in the Football Manager 24 game for PC. 
 
-## ✅Project Requirements
+## 🏗️ Architecture & Methodology
 
-### Building the Data Warehouse
+The solution implements a **Medallion Architecture** (Bronze, Silver, Gold) within Microsoft SQL Server to ensure data quality and historization.
 
-#### Objective🏁
-Design a modern Data Warehouse using SQL Server to consolidate player statistical data, enabling analytical reporting and informed decision-making.
+### 1. Data Ingestion & OCR (Python)
+**Goal:** Extract data not natively exportable by the game.
+* **Challenge:** "Average Possession" stats are only visible on GUI dashboards and cannot be exported to CSV.
+* **Solution:** Developed a Python pipeline using `EasyOCR`, `PIL`, and `Pandas` to:
+    * Concatenate multiple screenshot images into a single array.
+    * Perform Optical Character Recognition (OCR) to extract text.
+    * Clean and parse the output into a structured CSV dataset for ingestion.
 
-#### Specifications
-- **Data Sources:** Exported data from the `Squad` being managed, the `Staff Search` and the `Player Search` screen.
-- **Data Quality:** Clean and resolve Data Quality issues prior to analysis.
-- **Integration:** Combine sources into a single, user-friendly data model for analytical queries.
-- **Scope:** Historization is not required.
-- **Documentation:** Proovide a clear documentation of the data model to support both business stakeholders and analytical teams.
+### 2. The Data Warehouse (SQL Server)
+The database `FiorentinaDW` is organized into three specific schemas:
 
-***
+#### 🥉 Bronze Layer (Raw)
+* Acts as the landing zone for raw CSV data.
+* Tables include `fmdata_team_players`, `fmdata_manager_data`, and `fmdata_possession_data`.
+* Data is ingested "as-is" to preserve the original state.
 
-### BI Analytics & Reporting (Data Analytics)
+#### 🥈 Silver Layer (Transformation & Historization)
+* **Data Cleaning:** Standardizes strings (e.g., wage formats like `£15.5K/p/w` -> `15500`), removes generic suffixes (" - Pick Player"), and casts data types.
+* **SCD Type 2 (Slowly Changing Dimensions):** Implemented via the `silver.load_silver` Stored Procedure.
+    * Tracks changes in player attributes over time.
+    * Uses columns `dwh_current_validity` and `dwh_cd_valid_till` to expire old records and insert new active ones, enabling time-travel analysis of player development.
 
-#### Objective🏁
-Develop SQL based Analytics to deliver detailed insights into actionable insights, hopefully empowering "Stakeholders" to make informed transfer decisions.
-
-#### Specifications
-- Exploratory Data Analysis to generate analysis. Insights derived will be itemized as concluded.
+#### 🥇 Gold Layer (Reporting & Analytics)
+* **Data Normilization:** Designed a robust Star Schema, organizing data into Fact tables and Dimension tables to optimize query performance while utilizing Data Normalization techniques that enabled advanced tactical analysis through structured data querying.
+* **Business Logic:** Contains SQL Views optimized for end-user reporting.
+* **Aggregations:** Calculates complex metrics (e.g., "Progressive Rate per Pass", "Weighted Defensive Actions") to answer specific scouting questions.
 
 ***
 

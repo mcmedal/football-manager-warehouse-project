@@ -1,34 +1,34 @@
 // Project Info
-Project FM_Analytics_Silver_Layer {
+Project Football_Data_Warehouse_Gold_Layer {
   database_type: 'SQL Server'
-  Note: 'Silver Layer (Normalized & History Tracking) based on proc-silver.sql'
+  Note: 'Gold Layer (Materialized with SCD Type 2 History) based on gold.load_gold'
 }
 
 // ==========================================
 // Dimension Tables
 // ==========================================
 
-Table silver.dim_league {
-  league_key int [pk, increment, note: "Surrogate Key (Implied identity)"]
+Table gold.dim_league {
+  league_key int [pk, increment, note: "Identity inferred from usage in Team Key generation"]
   league varchar
 }
 
-Table silver.dim_club {
-  club_key int [pk, increment, note: "Surrogate Key (Implied identity)"]
+Table gold.dim_club {
+  club_key int [pk, increment, note: "Identity inferred from usage in Team Key generation"]
   club varchar
 }
 
-Table silver.dim_team_info {
+Table gold.dim_team_info {
   team_key varchar [pk, note: "Composite: LeagueKey.ClubKey"]
   league varchar
   club_name varchar
-  dwh_create_date datetime [note: "SCD Type 2 Start Date"]
-  dwh_cd_valid_till datetime [note: "SCD Type 2 End Date"]
-  dwh_current_validity int [note: "1 = Active, 0 = Historical"]
+  dwh_create_date datetime [note: "SCD Start Date"]
+  dwh_cd_valid_till datetime [note: "SCD End Date"]
+  dwh_current_validity int [note: "1 = Active, 0 = Historic"]
 }
 
-Table silver.dim_playstyle {
-  playstyle_key int [pk, increment, note: "Surrogate Key (Implied identity)"]
+Table gold.dim_playstyle {
+  playstyle_key int [pk, increment]
   tactical_style varchar
   playing_mentality varchar
   preferred_formation varchar
@@ -36,9 +36,9 @@ Table silver.dim_playstyle {
   marking_style varchar
 }
 
-Table silver.dim_manager_info {
+Table gold.dim_manager_info {
   manager_key int [pk, increment]
-  staff_id int [note: "Natural Key"]
+  staff_id int
   staff_name varchar
   current_club_key varchar
   previous_club_key varchar
@@ -50,9 +50,9 @@ Table silver.dim_manager_info {
   dwh_current_validity int
 }
 
-Table silver.dim_player_info {
-  player_key int [pk, increment, note: "Surrogate Key used in Facts"]
-  player_id int [note: "Natural Key from Bronze"]
+Table gold.dim_player_info {
+  player_key int [pk, increment]
+  player_id int
   player_name varchar
   team_key varchar
   contracted int
@@ -67,7 +67,7 @@ Table silver.dim_player_info {
 // Fact Tables
 // ==========================================
 
-Table silver.fact_teams_possession {
+Table gold.fact_teams_possession {
   team_key varchar
   average_possession float
   dwh_create_date datetime
@@ -75,7 +75,17 @@ Table silver.fact_teams_possession {
   dwh_current_validity int
 }
 
-Table silver.fact_outfield_player_stats {
+Table gold.fact_players_value {
+  player_key int
+  team_key varchar
+  wage_per_week_k decimal
+  transfer_value_m decimal
+  dwh_create_date datetime
+  dwh_cd_valid_till datetime
+  dwh_current_validity int
+}
+
+Table gold.fact_outfield_player_stats {
   player_key int
   team_key varchar
   minutes_played int
@@ -132,7 +142,7 @@ Table silver.fact_outfield_player_stats {
   dwh_current_validity int
 }
 
-Table silver.fact_gk_stats {
+Table gold.fact_gk_stats {
   player_key int
   team_key varchar
   minutes_played int
@@ -162,38 +172,28 @@ Table silver.fact_gk_stats {
   dwh_current_validity int
 }
 
-Table silver.fact_players_value {
-  player_key int
-  team_key varchar
-  wage_per_week_k decimal
-  transfer_value_m decimal
-  dwh_create_date datetime
-  dwh_cd_valid_till datetime
-  dwh_current_validity int
-}
-
 // ==========================================
 // Relationships
 // ==========================================
 
-// Team Building
-// (Inferred from logic: team_key = league_key + club_key)
-Ref: silver.dim_team_info.league > silver.dim_league.league
-Ref: silver.dim_team_info.club_name > silver.dim_club.club
+// Team Construction
+// (Based on logic: team_key = league_key + club_key)
+Ref: gold.dim_team_info.league > gold.dim_league.league
+Ref: gold.dim_team_info.club_name > gold.dim_club.club
 
-// Manager
-Ref: silver.dim_manager_info.current_club_key > silver.dim_team_info.team_key
-Ref: silver.dim_manager_info.previous_club_key > silver.dim_team_info.team_key
-Ref: silver.dim_manager_info.playstyle_key > silver.dim_playstyle.playstyle_key
+// Managers
+Ref: gold.dim_manager_info.current_club_key > gold.dim_team_info.team_key
+Ref: gold.dim_manager_info.previous_club_key > gold.dim_team_info.team_key
+Ref: gold.dim_manager_info.playstyle_key > gold.dim_playstyle.playstyle_key
 
-// Player
-Ref: silver.dim_player_info.team_key > silver.dim_team_info.team_key
+// Players
+Ref: gold.dim_player_info.team_key > gold.dim_team_info.team_key
 
 // Facts
-Ref: silver.fact_teams_possession.team_key > silver.dim_team_info.team_key
-Ref: silver.fact_outfield_player_stats.player_key > silver.dim_player_info.player_key
-Ref: silver.fact_outfield_player_stats.team_key > silver.dim_team_info.team_key
-Ref: silver.fact_gk_stats.player_key > silver.dim_player_info.player_key
-Ref: silver.fact_gk_stats.team_key > silver.dim_team_info.team_key
-Ref: silver.fact_players_value.player_key > silver.dim_player_info.player_key
-Ref: silver.fact_players_value.team_key > silver.dim_team_info.team_key
+Ref: gold.fact_teams_possession.team_key > gold.dim_team_info.team_key
+Ref: gold.fact_players_value.player_key > gold.dim_player_info.player_key
+Ref: gold.fact_players_value.team_key > gold.dim_team_info.team_key
+Ref: gold.fact_outfield_player_stats.player_key > gold.dim_player_info.player_key
+Ref: gold.fact_outfield_player_stats.team_key > gold.dim_team_info.team_key
+Ref: gold.fact_gk_stats.player_key > gold.dim_player_info.player_key
+Ref: gold.fact_gk_stats.team_key > gold.dim_team_info.team_key

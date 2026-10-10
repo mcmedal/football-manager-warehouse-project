@@ -14,7 +14,8 @@ IF OBJECT_ID ('gold.dim_league', 'U') IS NOT NULL
 
 CREATE TABLE gold.dim_league (
 	league_key INT IDENTITY(1, 1) NOT NULL,
-	league NVARCHAR(35)
+	league NVARCHAR(35),
+	league_difficulty_coef DECIMAL(3, 2) DEFAULT 1.00
 )
 
 --GOLD.DIM_CLUB
@@ -39,17 +40,9 @@ CREATE TABLE gold.dim_team_info(
 	dwh_current_validity BIT DEFAULT ((1))
 )
 
--- GOLD.FACT_TEAMS_POSSESSION
+-- Clean up unused possession table if present
 IF OBJECT_ID ('gold.fact_teams_possession', 'U') IS NOT NULL
 	DROP TABLE gold.fact_teams_possession;
-
-CREATE TABLE gold.fact_teams_possession (
-	team_key VARCHAR(10) NOT NULL,
-	average_possession INT,
-	dwh_create_date DATETIME2 DEFAULT GETDATE(),
-	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
-	dwh_current_validity BIT DEFAULT ((1))
-)
 
 -- GOLD.DIM_PLAYSTYLE
 IF OBJECT_ID ('gold.dim_playstyle', 'U') IS NOT NULL
@@ -91,9 +84,11 @@ CREATE TABLE gold.dim_player_info (
 	player_id INT NOT NULL,
 	player_name VARCHAR(35),
 	team_key VARCHAR(10),
+	is_own_squad BIT DEFAULT ((0)),
 	contracted BIT DEFAULT ((1)),
 	age INT,
 	position VARCHAR(28),
+	season VARCHAR(9) DEFAULT '2023/24',
 	dwh_create_date DATETIME2 DEFAULT GETDATE(),
 	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
 	dwh_current_validity BIT DEFAULT ((1)),
@@ -155,6 +150,7 @@ CREATE TABLE gold.fact_outfield_player_stats (
 	fouls_against_per90 DECIMAL(5, 2),
 	yellow_cards_per90 DECIMAL(5, 2),
 	red_cards_per90 DECIMAL(5, 2),
+	season VARCHAR(9) DEFAULT '2023/24',
 	dwh_create_date DATETIME2 DEFAULT GETDATE(),
 	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
 	dwh_current_validity BIT DEFAULT ((1))
@@ -189,6 +185,7 @@ CREATE TABLE gold.fact_gk_stats (
 	distance_covered_km_per90 DECIMAL(5, 2),
 	mistakes_leading_to_goals_per90 DECIMAL(5, 2),
 	fouls_against_per90 DECIMAL(5, 2),
+	season VARCHAR(9) DEFAULT '2023/24',
 	dwh_create_date DATETIME2 DEFAULT GETDATE(),
 	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
 	dwh_current_validity BIT DEFAULT ((1))
@@ -203,7 +200,31 @@ CREATE TABLE gold.fact_players_value (
 	team_key VARCHAR(10),
 	wage_per_week_k DECIMAL(10, 2),
 	transfer_value_m DECIMAL(10, 2),
+	season VARCHAR(9) DEFAULT '2023/24',
 	dwh_create_date DATETIME2 DEFAULT GETDATE(),
 	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
 	dwh_current_validity BIT DEFAULT ((1))
-)
+);
+
+-- ======================================================================
+-- AUDIT SCHEMA & ETL PIPELINE LOG
+-- ======================================================================
+IF SCHEMA_ID('audit') IS NULL
+	EXEC('CREATE SCHEMA audit');
+GO
+
+IF OBJECT_ID('audit.etl_pipeline_log', 'U') IS NOT NULL
+	DROP TABLE audit.etl_pipeline_log;
+
+CREATE TABLE audit.etl_pipeline_log (
+	log_id INT IDENTITY(1,1) PRIMARY KEY,
+	batch_id UNIQUEIDENTIFIER DEFAULT NEWID(),
+	pipeline_layer VARCHAR(20) NOT NULL, -- 'Bronze', 'Silver', 'Gold', 'Complete'
+	step_name VARCHAR(100) NOT NULL,
+	status VARCHAR(20) NOT NULL,        -- 'Started', 'Success', 'Failed'
+	rows_affected INT DEFAULT 0,
+	start_time DATETIME2 DEFAULT GETDATE(),
+	end_time DATETIME2 NULL,
+	duration_ms INT NULL,
+	error_message NVARCHAR(4000) NULL
+);

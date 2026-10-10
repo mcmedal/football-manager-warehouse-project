@@ -15,7 +15,9 @@ Creates a Stored Procedure: Load Gold Layer (Silver Layer -> Gold Layer)
 ======================================================================
 */
 
-CREATE OR ALTER PROCEDURE gold.load_gold AS
+CREATE OR ALTER PROCEDURE gold.load_gold
+	@Season VARCHAR(9) = '2023/24'
+AS
 BEGIN
 	DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME;
 	BEGIN TRY
@@ -35,19 +37,43 @@ BEGIN
 		SET @start_time = GETDATE();
 		PRINT '>>> Inserting New Records in GOLD.DIM_LEAGUE';
 			WITH dim_league AS (
-				SELECT league
+				SELECT DISTINCT TRIM(league) AS league
 				FROM (
-					SELECT DISTINCT(TRIM(league)) AS league
-					FROM silver.fmdata_interested_out_players AS B
-			) AS dim_league
+					SELECT league FROM silver.fmdata_team_players WHERE league IS NOT NULL AND TRIM(league) != ''
+					UNION
+					SELECT league FROM silver.fmdata_team_gks WHERE league IS NOT NULL AND TRIM(league) != ''
+					UNION
+					SELECT league FROM silver.fmdata_interested_out_players WHERE league IS NOT NULL AND TRIM(league) != ''
+					UNION
+					SELECT league FROM silver.fmdata_interested_gks WHERE league IS NOT NULL AND TRIM(league) != ''
+				) AS all_leagues
 			)
-			INSERT INTO gold.dim_league (league)
-			SELECT league FROM dim_league AS N
+			INSERT INTO gold.dim_league (league, league_difficulty_coef)
+			SELECT 
+				league,
+				CASE 
+					-- Top European First Tiers (Tier 1)
+					WHEN league IN ('Serie A TIM', 'Premier League', 'LALIGA EA SPORTS', 'Bundesliga') THEN 1.00
+					WHEN league LIKE '%Premier%' OR league LIKE '%Serie A%' OR league LIKE '%LaLiga%' OR league LIKE '%Bundesliga%' OR league LIKE '%Primera%' THEN 0.95
+					-- Secondary European / Quality First Tiers (Tier 1.5)
+					WHEN league IN ('Ligue 1 Uber Eats', 'Liga Portugal Betclic', 'Eredivisie') THEN 0.90
+					WHEN league LIKE '%Ligue 1%' OR league LIKE '%Eredivisie%' OR league LIKE '%Liga Portugal%' OR league LIKE '%Super Lig%' THEN 0.85
+					-- High Quality Second Divisions & Continental Leagues (Tier 2)
+					WHEN league LIKE '%Championship%' OR league LIKE '%2. Bundesliga%' OR league LIKE '%LaLiga 2%' OR league LIKE '%Serie B%' THEN 0.75
+					WHEN league LIKE '%Jupiler%' OR league LIKE '%Super League%' OR league LIKE '%Premiership%' THEN 0.75
+					-- Third Tiers (Tier 3)
+					WHEN league LIKE '%League One%' OR league LIKE '%3.%' OR league LIKE '%Serie C%' THEN 0.60
+					-- Fourth Tiers & Below
+					WHEN league LIKE '%League Two%' OR league LIKE '%4.%' OR league LIKE '%National%' THEN 0.50
+					-- Default fallback for any custom/unclassified league in any FM save
+					ELSE 0.75
+				END AS league_difficulty_coef
+			FROM dim_league AS N
 			WHERE NOT EXISTS (
 				SELECT 1
 				FROM gold.dim_league AS O
 				WHERE N.league = O.league
-			)
+			);
 
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
@@ -57,18 +83,21 @@ BEGIN
 		PRINT '=============================================';
 		PRINT 'GOLD.DIM_CLUB';
 		PRINT '---------------------------------------------';
-		PRINT 'LOADING DATA FROM: silver.fmdata_interested_out_players';
-		
-		
+		PRINT 'LOADING DATA FROM: ALL PLAYER SOURCES';
 		PRINT '---------------------------------------------';
 		SET @start_time = GETDATE();
 		PRINT '>>> Inserting New Records in GOLD.DIM_CLUB';
 			WITH dim_club AS (
-				SELECT club_name
+				SELECT DISTINCT TRIM(club_name) AS club_name
 				FROM (
-					SELECT DISTINCT(TRIM(club_name)) AS club_name
-					FROM silver.fmdata_interested_out_players AS B
-			) AS dim_club
+					SELECT club_name FROM silver.fmdata_team_players WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					UNION
+					SELECT club_name FROM silver.fmdata_team_gks WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					UNION
+					SELECT club_name FROM silver.fmdata_interested_out_players WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					UNION
+					SELECT club_name FROM silver.fmdata_interested_gks WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+				) AS all_clubs
 			)
 			INSERT INTO gold.dim_club (club)
 			SELECT club_name FROM dim_club AS N
@@ -76,7 +105,7 @@ BEGIN
 				SELECT 1
 				FROM gold.dim_club AS O
 				WHERE N.club_name = O.club
-			)
+			);
 
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
@@ -86,56 +115,35 @@ BEGIN
 		PRINT '=============================================';
 		PRINT 'GOLD.DIM_TEAM_INFO';
 		PRINT '---------------------------------------------';
-		PRINT 'LOADING DATA FROM: silver.fmdata_interested_out_players';
-		PRINT 'LOADING DATA FROM: gold.dim_league';
-		PRINT 'LOADING DATA FROM: gold.dim_club';
+		PRINT 'LOADING DATA FROM: ALL PLAYER SOURCES, gold.dim_league, gold.dim_club';
 		PRINT '---------------------------------------------';
 		SET @start_time = GETDATE();
-		PRINT '>>> Acknowledging Old Records in GOLD.DIM_TEAM_INFO';
-			WITH cleaned AS (
+		PRINT '>>> Inserting / Synchronizing Records in GOLD.DIM_TEAM_INFO';
+			WITH source_teams AS (
+				SELECT DISTINCT TRIM(club_name) AS club_name, TRIM(league) AS league
+				FROM (
+					SELECT club_name, league FROM silver.fmdata_team_players WHERE club_name IS NOT NULL AND league IS NOT NULL
+					UNION
+					SELECT club_name, league FROM silver.fmdata_team_gks WHERE club_name IS NOT NULL AND league IS NOT NULL
+					UNION
+					SELECT club_name, league FROM silver.fmdata_interested_out_players WHERE club_name IS NOT NULL AND league IS NOT NULL
+					UNION
+					SELECT club_name, league FROM silver.fmdata_interested_gks WHERE club_name IS NOT NULL AND league IS NOT NULL
+				) AS raw_teams
+			),
+			cleaned AS (
 				SELECT
-					*,
+					CONCAT(S.league_key, '.', S1.club_key) AS team_key,
+					st.league,
+					st.club_name,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 					1 AS dwh_current_validity
-				FROM (
-					SELECT
-						CONCAT(S.league_key, '.', S1.club_key) AS team_key,
-						S.league,
-						S1.club
-					FROM silver.fmdata_interested_out_players AS B
-					INNER JOIN gold.dim_league AS S
-						ON B.league = S.league
-					INNER JOIN gold.dim_club AS S1
-						ON B.club_name = S1.club
-				) AS NEW
-			)
-			UPDATE S
-			SET
-				dwh_cd_valid_till = GETDATE(),
-				dwh_current_validity = 0
-			FROM gold.dim_team_info AS S
-			WHERE
-				team_key NOT IN (SELECT team_key FROM gold.dim_team_info);
-
-		PRINT '>>> Inserting New Records in GOLD.DIM_TEAM_INFO';
-			WITH cleaned AS (
-				SELECT
-					*,
-					GETDATE() AS dwh_create_date,
-					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
-					1 AS dwh_current_validity
-				FROM (
-					SELECT
-						CONCAT(S.league_key, '.', S1.club_key) AS team_key,
-						S.league,
-						S1.club
-					FROM silver.fmdata_interested_out_players AS B
-					INNER JOIN gold.dim_league AS S
-						ON B.league = S.league
-					INNER JOIN gold.dim_club AS S1
-						ON B.club_name = S1.club
-				) AS NEW
+				FROM source_teams AS st
+				INNER JOIN gold.dim_league AS S
+					ON st.league = S.league
+				INNER JOIN gold.dim_club AS S1
+					ON st.club_name = S1.club
 			)
 			INSERT INTO gold.dim_team_info (
 				team_key, league, club_name, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
@@ -143,82 +151,20 @@ BEGIN
 			SELECT DISTINCT
 				team_key,
 				league,
-				club,
+				club_name,
 				dwh_create_date,
 				dwh_cd_valid_till,
 				dwh_current_validity
-			FROM cleaned
-			WHERE
-				team_key NOT IN (SELECT team_key FROM gold.dim_team_info);
-
-		SET @end_time = GETDATE();
-		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
-		PRINT '---------------------------------------------';
-
-	-- GOLD.FACT_TEAMS_POSSESSION
-		PRINT '=============================================';
-		PRINT 'GOLD.FACT_TEAMS_POSSESSION';
-		PRINT '---------------------------------------------';
-		PRINT 'LOADING DATA FROM: silver.fmdata_possession_data';
-		PRINT 'LOADING DATA FROM: gold.dim_team_info';
-		PRINT '---------------------------------------------';
-		SET @start_time = GETDATE();
-		PRINT '>>> Acknowledging Old Records in GOLD.FACT_TEAMS_POSSESSION';
-		    WITH OLD AS (
-				SELECT
-					S.team_key,
-					S.club_name,
-					O.average_possession,
-					GETDATE() AS dwh_create_date,
-					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
-					1 AS dwh_current_validity
-				FROM silver.fmdata_possession_data AS O
-				INNER JOIN gold.dim_team_info AS S
-					ON O.club_name = S.club_name
-			)
-			UPDATE S
-			SET 
-				dwh_cd_valid_till = GETDATE(),
-				dwh_current_validity = 0
-			FROM gold.fact_teams_possession AS S
-			INNER JOIN OLD AS O
-				ON S.team_key = O.team_key
-			WHERE S.team_key = O.team_key
-				AND S.average_possession != O.average_possession
-				AND S.dwh_current_validity = 1;
-		PRINT '>>> Inserting New Records in GOLD.FACT_TEAMS_POSSESSION';
-			WITH OLD AS (
-				SELECT
-					S.team_key,
-					S.club_name,
-					O.average_possession,
-					GETDATE() AS dwh_create_date,
-					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
-					1 AS dwh_current_validity
-				FROM silver.fmdata_possession_data AS O
-				INNER JOIN gold.dim_team_info AS S
-					ON O.club_name = S.club_name
-			)
-			INSERT INTO gold.fact_teams_possession (
-				team_key, average_possession, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
-			)
-			SELECT
-				S.team_key,
-				O.average_possession,
-				O.dwh_create_date,
-				O.dwh_cd_valid_till,
-				O.dwh_current_validity
-			FROM OLD AS O
-			INNER JOIN gold.dim_team_info AS S
-				ON O.club_name = S.club_name
+			FROM cleaned AS C
 			WHERE NOT EXISTS (
-				SELECT * FROM gold.fact_teams_possession AS F
-				WHERE F.dwh_current_validity = 1
-			)
+				SELECT 1 FROM gold.dim_team_info AS E WHERE E.team_key = C.team_key
+			);
 
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
 		PRINT '---------------------------------------------';
+
+
 
 	--GOLD.DIM_PLAYSTYLE
 		PRINT '=============================================';
@@ -246,8 +192,11 @@ BEGIN
 				ELSE tactical_style END AS tactical_style,
 				TRIM(playing_mentality) AS playing_mentality,
 				CASE
-					WHEN preferred_formation = '4/4/2002' THEN REPLACE(SUBSTRING(preferred_formation, 1, 5), '/', '-')
-				ELSE TRIM(CAST(preferred_formation AS NVARCHAR)) END AS preferred_formation,
+					WHEN preferred_formation LIKE '_/_/200_' THEN 
+						CONCAT(SUBSTRING(preferred_formation, 1, 1), '-', SUBSTRING(preferred_formation, 3, 1), '-', SUBSTRING(preferred_formation, 8, 1))
+					WHEN preferred_formation = '4/4/2002' THEN '4-4-2'
+					ELSE TRIM(CAST(preferred_formation AS NVARCHAR))
+				END AS preferred_formation,
 				TRIM(pressing_style) AS pressing_style,
 				TRIM(marking_style) AS marking_style
 			FROM playstyle
@@ -260,8 +209,11 @@ BEGIN
 				AND D.playing_mentality = TRIM(playing_mentality)
 				AND D.preferred_formation = 
 					CASE
-						WHEN preferred_formation = '4/4/2002' THEN REPLACE(SUBSTRING(preferred_formation, 1, 5), '/', '-')
-					ELSE TRIM(CAST(preferred_formation AS NVARCHAR)) END
+						WHEN preferred_formation LIKE '_/_/200_' THEN 
+							CONCAT(SUBSTRING(preferred_formation, 1, 1), '-', SUBSTRING(preferred_formation, 3, 1), '-', SUBSTRING(preferred_formation, 8, 1))
+						WHEN preferred_formation = '4/4/2002' THEN '4-4-2'
+						ELSE TRIM(CAST(preferred_formation AS NVARCHAR))
+					END
 				AND D.pressing_style = TRIM(pressing_style)
 				AND D.marking_style = TRIM(marking_style)
 			);
@@ -398,15 +350,20 @@ BEGIN
 		PRINT '>>> Acknowledging Old Records in GOLD.DIM_PLAYER_INFO';
 			WITH position AS (
 				SELECT DISTINCT(position) FROM (
-						SELECT position FROM silver.fmdata_interested_out_players
+						SELECT position FROM silver.fmdata_team_players WHERE position IS NOT NULL
 						UNION
-						SELECT position FROM silver.fmdata_interested_gks
+						SELECT position FROM silver.fmdata_team_gks WHERE position IS NOT NULL
+						UNION
+						SELECT position FROM silver.fmdata_interested_out_players WHERE position IS NOT NULL
+						UNION
+						SELECT position FROM silver.fmdata_interested_gks WHERE position IS NOT NULL
 					) AS Q
 			), cleaned AS (
 				SELECT
 					player_id,
 					player_name,
 					team_key,
+					is_own_squad,
 					contracted,
 					age,
 					position
@@ -415,6 +372,7 @@ BEGIN
 						A.player_id,
 						A.player_name,
 						B.team_key AS team_key,
+						0 AS is_own_squad,
 						0 AS contracted,
 						A.age,
 						C.position
@@ -429,6 +387,7 @@ BEGIN
 						A.player_id,
 						A.player_name,
 						B.team_key AS team_key,
+						1 AS is_own_squad,
 						1 AS contracted,
 						A.age,
 						C.position
@@ -442,6 +401,7 @@ BEGIN
 						A.player_id,
 						A.player_name,
 						B.team_key AS team_key,
+						0 AS is_own_squad,
 						0 AS contracted,
 						A.age,
 						C.position
@@ -456,6 +416,7 @@ BEGIN
 						A.player_id,
 						A.player_name,
 						B.team_key AS team_key,
+						1 AS is_own_squad,
 						1 AS contracted,
 						A.age,
 						C.position
@@ -474,18 +435,25 @@ BEGIN
 			INNER JOIN cleaned AS N
 				ON S.player_id = N.player_id
 			WHERE S.player_id = N.player_id
-				AND S.team_key != N.team_key
-				OR S.age != N.age
-				OR S.position != N.position
-				OR S.contracted != N.contracted
+				AND (
+					S.team_key != N.team_key
+					OR S.age != N.age
+					OR S.position != N.position
+					OR S.is_own_squad != N.is_own_squad
+					OR S.contracted != N.contracted
+				)
 				AND S.dwh_current_validity = 1;
 
 		PRINT '>>> Inserting New Records in GOLD.DIM_PLAYER_INFO';
 			WITH position AS (
 				SELECT DISTINCT(position) FROM (
-						SELECT position FROM silver.fmdata_interested_out_players
+						SELECT position FROM silver.fmdata_team_players WHERE position IS NOT NULL
 						UNION
-						SELECT position FROM silver.fmdata_interested_gks
+						SELECT position FROM silver.fmdata_team_gks WHERE position IS NOT NULL
+						UNION
+						SELECT position FROM silver.fmdata_interested_out_players WHERE position IS NOT NULL
+						UNION
+						SELECT position FROM silver.fmdata_interested_gks WHERE position IS NOT NULL
 					) AS Q
 			), cleaned AS (
 				SELECT 
@@ -498,6 +466,7 @@ BEGIN
 						player_id,
 						player_name,
 						team_key,
+						is_own_squad,
 						contracted,
 						age,
 						position
@@ -506,6 +475,7 @@ BEGIN
 							A.player_id,
 							A.player_name,
 							B.team_key AS team_key,
+							0 AS is_own_squad,
 							0 AS contracted,
 							A.age,
 							C.position
@@ -520,6 +490,7 @@ BEGIN
 							A.player_id,
 							A.player_name,
 							B.team_key AS team_key,
+							1 AS is_own_squad,
 							1 AS contracted,
 							A.age,
 							C.position
@@ -533,6 +504,7 @@ BEGIN
 							A.player_id,
 							A.player_name,
 							B.team_key AS team_key,
+							0 AS is_own_squad,
 							0 AS contracted,
 							A.age,
 							C.position
@@ -547,6 +519,7 @@ BEGIN
 							A.player_id,
 							A.player_name,
 							B.team_key AS team_key,
+							1 AS is_own_squad,
 							1 AS contracted,
 							A.age,
 							C.position
@@ -559,15 +532,17 @@ BEGIN
 				) AS player_info
 					)
 			INSERT INTO gold.dim_player_info (
-				player_id, player_name, team_key, contracted, age, position, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
+				player_id, player_name, team_key, is_own_squad, contracted, age, position, season, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
 			)
 			SELECT DISTINCT
 				S.player_id,
 				S.player_name,
 				S.team_key,
+				S.is_own_squad,
 				S.contracted,
 				S.age,
 				S.position,
+				@Season,
 				S.dwh_create_date,
 				S.dwh_cd_valid_till,
 				S.dwh_current_validity
@@ -579,6 +554,7 @@ BEGIN
 					S.team_key != O.team_key
 					OR S.age != O.age
 					OR S.position != O.position
+					OR S.is_own_squad != O.is_own_squad
 					OR S.contracted != O.contracted
 				)
 				OR NOT EXISTS (
@@ -887,7 +863,7 @@ BEGIN
 					tackles_attempted_per90, tackle_accuracy, pressures_attempted_per90, pressures_completed_per90, possession_won_per90, possession_lost_per90,
 					key_tackles_per90, interceptions_per90, clearances_per90, blocks_per90, shots_blocked_per90, headers_attempted_per90,
 					heading_accuracy, key_headers_per90, sprints_per90, distance_covered_km_per90, mistakes_leading_to_goals_per90, fouls_made_per90,
-					fouls_against_per90, yellow_cards_per90, red_cards_per90, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
+					fouls_against_per90, yellow_cards_per90, red_cards_per90, season, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
 				)
 			SELECT DISTINCT
 				S.player_key,
@@ -941,6 +917,7 @@ BEGIN
 				S.fouls_against_per90,
 				S.yellow_cards_per90,
 				S.red_cards_per90,
+				@Season,
 				S.dwh_create_date,
 				S.dwh_cd_valid_till,
 				S.dwh_current_validity
@@ -1153,7 +1130,7 @@ BEGIN
 				saves_made_per90, xGoals_prevented_per90, xSave_rate, saves_tipped_per90, saves_parried_per90, saves_held_per90,
 				saves_percentage, passes_attempted_per90, pass_accuracy, possession_won_per90, possession_lost_per90,
 				interceptions_per90, clearances_per90, penalties_faced_per90, penalties_save_percentage, distance_covered_km_per90,
-				mistakes_leading_to_goals_per90, fouls_against_per90, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
+				mistakes_leading_to_goals_per90, fouls_against_per90, season, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
 			)
 			SELECT DISTINCT
 				S.player_key,
@@ -1180,6 +1157,7 @@ BEGIN
 				S.distance_covered_km_per90,
 				S.mistakes_leading_to_goals_per90,
 				S.fouls_against_per90,
+				@Season,
 				S.dwh_create_date,
 				S.dwh_cd_valid_till,
 				S.dwh_current_validity
@@ -1371,13 +1349,14 @@ BEGIN
 						ON A.player_id = B.player_id
 				)
 			INSERT INTO gold.fact_players_value (
-				player_key, team_key, wage_per_week_k, transfer_value_m, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
+				player_key, team_key, wage_per_week_k, transfer_value_m, season, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
 			)
 			SELECT
 				S.player_key,
 				S.team_key,
 				S.wage_per_week_k,
 				S.transfer_value_m,
+				@Season,
 				S.dwh_create_date,
 				S.dwh_cd_valid_till,
 				S.dwh_current_validity
@@ -1416,4 +1395,347 @@ BEGIN
 		PRINT 'Error Message:' + CAST(ERROR_STATE() AS NVARCHAR);
 		PRINT '=================================';
 	END CATCH
-END
+END;
+GO
+
+-- ======================================================================
+-- Stored Procedure: Ad-hoc Player Replacement Scouting Engine
+-- ======================================================================
+-- Finds the most similar external transfer targets for ANY specified
+-- player in the database (by name or player_key).
+--
+-- Examples:
+--   EXEC gold.usp_scout_similar_players @TargetPlayerName = 'Edin Džeko', @TopN = 10;
+--   EXEC gold.usp_scout_similar_players @TargetPlayerName = 'Rolando Mandragora', @TopN = 10;
+--   EXEC gold.usp_scout_similar_players @TargetPlayerKey = 12345, @TopN = 5, @MinMinutes = 900;
+-- ======================================================================
+CREATE OR ALTER PROCEDURE gold.usp_scout_similar_players
+    @TargetPlayerName NVARCHAR(100) = NULL,
+    @TargetPlayerKey INT = NULL,
+    @TopN INT = 10,
+    @MinMinutes INT = 900
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Resolve Target Player
+    DECLARE @ResolvedPlayerKey INT, @ResolvedName NVARCHAR(100), @Position NVARCHAR(50);
+
+    IF @TargetPlayerKey IS NOT NULL
+    BEGIN
+        SELECT TOP 1 
+            @ResolvedPlayerKey = player_key, 
+            @ResolvedName = player_name, 
+            @Position = position
+        FROM gold.dim_player_info
+        WHERE player_key = @TargetPlayerKey AND dwh_current_validity = 1;
+    END
+    ELSE IF @TargetPlayerName IS NOT NULL
+    BEGIN
+        SELECT TOP 1 
+            @ResolvedPlayerKey = player_key, 
+            @ResolvedName = player_name, 
+            @Position = position
+        FROM gold.dim_player_info
+        WHERE player_name LIKE '%' + @TargetPlayerName + '%' AND dwh_current_validity = 1
+        ORDER BY CASE WHEN player_name = @TargetPlayerName THEN 0 ELSE 1 END;
+    END
+
+    IF @ResolvedPlayerKey IS NULL
+    BEGIN
+        RAISERROR('Target player not found in gold.dim_player_info. Please provide a valid @TargetPlayerName or @TargetPlayerKey.', 16, 1);
+        RETURN;
+    END
+
+    PRINT CONCAT('Scouting replacements for: ', @ResolvedName, ' (Key: ', @ResolvedPlayerKey, ', Position: ', @Position, ')');
+
+    -- 2. Execute Position-Specific Similarity Search
+    IF @Position = 'Goalkeeper'
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                shot_stopping_delta, xGoals_prevented_per90, hold_rate_pct, sweeper_index, distribution_value, pass_accuracy
+            FROM gold.mart_gk_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE((COALESCE(tgt.shot_stopping_delta, 0.0) - COALESCE(bmk.shot_stopping_delta, 0.0)) * 5.0) +
+                    SQUARE((COALESCE(tgt.xGoals_prevented_per90, 0.0) - COALESCE(bmk.xGoals_prevented_per90, 0.0)) * 3.0) +
+                    SQUARE(((COALESCE(tgt.hold_rate_pct, 40.0) - COALESCE(bmk.hold_rate_pct, 40.0)) / 10.0)) +
+                    SQUARE(((COALESCE(tgt.sweeper_index, 0.0) - COALESCE(bmk.sweeper_index, 0.0)) / 3.0)) +
+                    SQUARE(((COALESCE(tgt.distribution_value, 0.0) - COALESCE(bmk.distribution_value, 0.0)) / 10.0)) +
+                    SQUARE((COALESCE(tgt.pass_accuracy, 0.70) - COALESCE(bmk.pass_accuracy, 0.70)) * 5.0)
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE((COALESCE(tgt.shot_stopping_delta, 0.0) - COALESCE(bmk.shot_stopping_delta, 0.0)) * 5.0) +
+                SQUARE((COALESCE(tgt.xGoals_prevented_per90, 0.0) - COALESCE(bmk.xGoals_prevented_per90, 0.0)) * 3.0) +
+                SQUARE(((COALESCE(tgt.hold_rate_pct, 40.0) - COALESCE(bmk.hold_rate_pct, 40.0)) / 10.0)) +
+                SQUARE(((COALESCE(tgt.sweeper_index, 0.0) - COALESCE(bmk.sweeper_index, 0.0)) / 3.0)) +
+                SQUARE(((COALESCE(tgt.distribution_value, 0.0) - COALESCE(bmk.distribution_value, 0.0)) / 10.0)) +
+                SQUARE((COALESCE(tgt.pass_accuracy, 0.70) - COALESCE(bmk.pass_accuracy, 0.70)) * 5.0)
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.shot_stopping_delta, tgt.xGoals_prevented_per90, tgt.saves_percentage, tgt.hold_rate_pct,
+            tgt.sweeper_index, tgt.distribution_value, tgt.pass_accuracy
+        FROM gold.mart_gk_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+    ELSE IF @Position = 'Central Defender'
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                aerial_duels_won_per90, heading_accuracy, prog_rate_per_pass, progressive_passes_per90,
+                defensive_actions_per90, tackle_accuracy, reactive_vs_positional, discipline_index
+            FROM gold.mart_outfield_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE((COALESCE(tgt.aerial_duels_won_per90, 0.0) - COALESCE(bmk.aerial_duels_won_per90, 0.0)) * 1.5) +
+                    SQUARE((COALESCE(tgt.heading_accuracy, 0.65) - COALESCE(bmk.heading_accuracy, 0.65)) * 5.0) +
+                    SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                    SQUARE(COALESCE(tgt.progressive_passes_per90, 0.0) - COALESCE(bmk.progressive_passes_per90, 0.0)) +
+                    SQUARE(((COALESCE(tgt.defensive_actions_per90, 0.0) - COALESCE(bmk.defensive_actions_per90, 0.0)) / 2.0)) +
+                    SQUARE((COALESCE(tgt.tackle_accuracy, 0.75) - COALESCE(bmk.tackle_accuracy, 0.75)) * 5.0) +
+                    SQUARE((COALESCE(tgt.reactive_vs_positional, 0.50) - COALESCE(bmk.reactive_vs_positional, 0.50)) * 5.0) +
+                    SQUARE(((COALESCE(tgt.discipline_index, 0.0) - COALESCE(bmk.discipline_index, 0.0)) / 3.0))
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE((COALESCE(tgt.aerial_duels_won_per90, 0.0) - COALESCE(bmk.aerial_duels_won_per90, 0.0)) * 1.5) +
+                SQUARE((COALESCE(tgt.heading_accuracy, 0.65) - COALESCE(bmk.heading_accuracy, 0.65)) * 5.0) +
+                SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                SQUARE(COALESCE(tgt.progressive_passes_per90, 0.0) - COALESCE(bmk.progressive_passes_per90, 0.0)) +
+                SQUARE(((COALESCE(tgt.defensive_actions_per90, 0.0) - COALESCE(bmk.defensive_actions_per90, 0.0)) / 2.0)) +
+                SQUARE((COALESCE(tgt.tackle_accuracy, 0.75) - COALESCE(bmk.tackle_accuracy, 0.75)) * 5.0) +
+                SQUARE((COALESCE(tgt.reactive_vs_positional, 0.50) - COALESCE(bmk.reactive_vs_positional, 0.50)) * 5.0) +
+                SQUARE(((COALESCE(tgt.discipline_index, 0.0) - COALESCE(bmk.discipline_index, 0.0)) / 3.0))
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.aerial_duels_won_per90, tgt.heading_accuracy, tgt.progressive_passes_per90,
+            tgt.prog_rate_per_pass, tgt.defensive_actions_per90, tgt.tackle_accuracy, tgt.cost_per_xgi
+        FROM gold.mart_outfield_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.position = 'Central Defender' AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+    ELSE IF @Position IN ('Right Wingback', 'Left Wingback', 'Right Defender', 'Left Defender')
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                completed_crosses_per90, open_play_cross_accuracy, prog_rate_per_pass, turnover_rate,
+                defensive_actions_per90, tackle_accuracy, sprints_per90
+            FROM gold.mart_outfield_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE((COALESCE(tgt.completed_crosses_per90, 0.0) - COALESCE(bmk.completed_crosses_per90, 0.0)) * 2.0) +
+                    SQUARE((COALESCE(tgt.open_play_cross_accuracy, 0.15) - COALESCE(bmk.open_play_cross_accuracy, 0.15)) * 5.0) +
+                    SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                    SQUARE((COALESCE(tgt.turnover_rate, 0.15) - COALESCE(bmk.turnover_rate, 0.15)) * 5.0) +
+                    SQUARE(((COALESCE(tgt.defensive_actions_per90, 0.0) - COALESCE(bmk.defensive_actions_per90, 0.0)) / 2.0)) +
+                    SQUARE((COALESCE(tgt.tackle_accuracy, 0.75) - COALESCE(bmk.tackle_accuracy, 0.75)) * 5.0) +
+                    SQUARE(((COALESCE(tgt.sprints_per90, 0.0) - COALESCE(bmk.sprints_per90, 0.0)) / 5.0))
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE((COALESCE(tgt.completed_crosses_per90, 0.0) - COALESCE(bmk.completed_crosses_per90, 0.0)) * 2.0) +
+                SQUARE((COALESCE(tgt.open_play_cross_accuracy, 0.15) - COALESCE(bmk.open_play_cross_accuracy, 0.15)) * 5.0) +
+                SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                SQUARE((COALESCE(tgt.turnover_rate, 0.15) - COALESCE(bmk.turnover_rate, 0.15)) * 5.0) +
+                SQUARE(((COALESCE(tgt.defensive_actions_per90, 0.0) - COALESCE(bmk.defensive_actions_per90, 0.0)) / 2.0)) +
+                SQUARE((COALESCE(tgt.tackle_accuracy, 0.75) - COALESCE(bmk.tackle_accuracy, 0.75)) * 5.0) +
+                SQUARE(((COALESCE(tgt.sprints_per90, 0.0) - COALESCE(bmk.sprints_per90, 0.0)) / 5.0))
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.position, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.completed_crosses_per90, tgt.open_play_cross_accuracy, tgt.prog_rate_per_pass,
+            tgt.turnover_rate, tgt.defensive_actions_per90, tgt.tackle_accuracy, tgt.sprints_per90, tgt.cost_per_xgi
+        FROM gold.mart_outfield_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.position IN ('Right Wingback', 'Left Wingback', 'Right Defender', 'Left Defender')
+          AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+    ELSE IF @Position IN ('Central Midfielder', 'Defensive Midfielder')
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                progressive_passes_per90, prog_rate_per_pass, passes_attempted_per90, pass_accuracy,
+                turnover_rate, npxg_plus_xa_per90, defensive_actions_per90, pressure_efficiency
+            FROM gold.mart_outfield_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE(COALESCE(tgt.progressive_passes_per90, 0.0) - COALESCE(bmk.progressive_passes_per90, 0.0)) +
+                    SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                    SQUARE(((COALESCE(tgt.passes_attempted_per90, 0.0) - COALESCE(bmk.passes_attempted_per90, 0.0)) / 10.0)) +
+                    SQUARE((COALESCE(tgt.pass_accuracy, 0.85) - COALESCE(bmk.pass_accuracy, 0.85)) * 5.0) +
+                    SQUARE((COALESCE(tgt.turnover_rate, 0.15) - COALESCE(bmk.turnover_rate, 0.15)) * 5.0) +
+                    SQUARE((COALESCE(tgt.npxg_plus_xa_per90, 0.0) - COALESCE(bmk.npxg_plus_xa_per90, 0.0)) * 3.0) +
+                    SQUARE(((COALESCE(tgt.defensive_actions_per90, 0.0) - COALESCE(bmk.defensive_actions_per90, 0.0)) / 2.0)) +
+                    SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0)
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE(COALESCE(tgt.progressive_passes_per90, 0.0) - COALESCE(bmk.progressive_passes_per90, 0.0)) +
+                SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                SQUARE(((COALESCE(tgt.passes_attempted_per90, 0.0) - COALESCE(bmk.passes_attempted_per90, 0.0)) / 10.0)) +
+                SQUARE((COALESCE(tgt.pass_accuracy, 0.85) - COALESCE(bmk.pass_accuracy, 0.85)) * 5.0) +
+                SQUARE((COALESCE(tgt.turnover_rate, 0.15) - COALESCE(bmk.turnover_rate, 0.15)) * 5.0) +
+                SQUARE((COALESCE(tgt.npxg_plus_xa_per90, 0.0) - COALESCE(bmk.npxg_plus_xa_per90, 0.0)) * 3.0) +
+                SQUARE(((COALESCE(tgt.defensive_actions_per90, 0.0) - COALESCE(bmk.defensive_actions_per90, 0.0)) / 2.0)) +
+                SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0)
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.position, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.passes_attempted_per90, tgt.pass_accuracy, tgt.progressive_passes_per90,
+            tgt.prog_rate_per_pass, tgt.turnover_rate, tgt.npxg_plus_xa_per90,
+            tgt.defensive_actions_per90, tgt.pressure_efficiency, tgt.cost_per_xgi
+        FROM gold.mart_outfield_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.position IN ('Central Midfielder', 'Defensive Midfielder')
+          AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+    ELSE IF @Position IN ('Right Attacking Midfielder', 'Left Attacking Midfielder', 'Right Midfielder', 'Left Midfielder')
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                npxg_plus_xa_per90, dribbles_made_per90, completed_crosses_per90, open_play_cross_accuracy,
+                xa_per_op_kp, sprints_per90, prog_rate_per_pass, goal_threat_share, pressure_efficiency
+            FROM gold.mart_outfield_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE((COALESCE(tgt.npxg_plus_xa_per90, 0.0) - COALESCE(bmk.npxg_plus_xa_per90, 0.0)) * 3.0) +
+                    SQUARE(COALESCE(tgt.dribbles_made_per90, 0.0) - COALESCE(bmk.dribbles_made_per90, 0.0)) +
+                    SQUARE((COALESCE(tgt.completed_crosses_per90, 0.0) - COALESCE(bmk.completed_crosses_per90, 0.0)) * 2.0) +
+                    SQUARE((COALESCE(tgt.open_play_cross_accuracy, 0.15) - COALESCE(bmk.open_play_cross_accuracy, 0.15)) * 5.0) +
+                    SQUARE((COALESCE(tgt.xa_per_op_kp, 0.20) - COALESCE(bmk.xa_per_op_kp, 0.20)) * 5.0) +
+                    SQUARE(((COALESCE(tgt.sprints_per90, 0.0) - COALESCE(bmk.sprints_per90, 0.0)) / 5.0)) +
+                    SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                    SQUARE((COALESCE(tgt.goal_threat_share, 0.50) - COALESCE(bmk.goal_threat_share, 0.50)) * 3.0) +
+                    SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0)
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE((COALESCE(tgt.npxg_plus_xa_per90, 0.0) - COALESCE(bmk.npxg_plus_xa_per90, 0.0)) * 3.0) +
+                SQUARE(COALESCE(tgt.dribbles_made_per90, 0.0) - COALESCE(bmk.dribbles_made_per90, 0.0)) +
+                SQUARE((COALESCE(tgt.completed_crosses_per90, 0.0) - COALESCE(bmk.completed_crosses_per90, 0.0)) * 2.0) +
+                SQUARE((COALESCE(tgt.open_play_cross_accuracy, 0.15) - COALESCE(bmk.open_play_cross_accuracy, 0.15)) * 5.0) +
+                SQUARE((COALESCE(tgt.xa_per_op_kp, 0.20) - COALESCE(bmk.xa_per_op_kp, 0.20)) * 5.0) +
+                SQUARE(((COALESCE(tgt.sprints_per90, 0.0) - COALESCE(bmk.sprints_per90, 0.0)) / 5.0)) +
+                SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                SQUARE((COALESCE(tgt.goal_threat_share, 0.50) - COALESCE(bmk.goal_threat_share, 0.50)) * 3.0) +
+                SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0)
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.position, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.npxg_plus_xa_per90, tgt.dribbles_made_per90, tgt.completed_crosses_per90,
+            tgt.open_play_cross_accuracy, tgt.xa_per_op_kp, tgt.sprints_per90, tgt.goal_threat_share, tgt.cost_per_xgi
+        FROM gold.mart_outfield_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.position IN ('Right Attacking Midfielder', 'Left Attacking Midfielder', 'Right Midfielder', 'Left Midfielder')
+          AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+    ELSE IF @Position = 'Central Attacking Midfielder'
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                npxg_plus_xa_per90, xa_per_op_kp, open_play_key_passes_per90, prog_rate_per_pass,
+                dribbles_made_per90, turnover_rate, goal_threat_share, pressure_efficiency
+            FROM gold.mart_outfield_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE((COALESCE(tgt.npxg_plus_xa_per90, 0.0) - COALESCE(bmk.npxg_plus_xa_per90, 0.0)) * 3.0) +
+                    SQUARE((COALESCE(tgt.xa_per_op_kp, 0.20) - COALESCE(bmk.xa_per_op_kp, 0.20)) * 5.0) +
+                    SQUARE((COALESCE(tgt.open_play_key_passes_per90, 0.0) - COALESCE(bmk.open_play_key_passes_per90, 0.0)) * 2.0) +
+                    SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                    SQUARE(COALESCE(tgt.dribbles_made_per90, 0.0) - COALESCE(bmk.dribbles_made_per90, 0.0)) +
+                    SQUARE((COALESCE(tgt.turnover_rate, 0.15) - COALESCE(bmk.turnover_rate, 0.15)) * 5.0) +
+                    SQUARE((COALESCE(tgt.goal_threat_share, 0.50) - COALESCE(bmk.goal_threat_share, 0.50)) * 3.0) +
+                    SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0)
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE((COALESCE(tgt.npxg_plus_xa_per90, 0.0) - COALESCE(bmk.npxg_plus_xa_per90, 0.0)) * 3.0) +
+                SQUARE((COALESCE(tgt.xa_per_op_kp, 0.20) - COALESCE(bmk.xa_per_op_kp, 0.20)) * 5.0) +
+                SQUARE((COALESCE(tgt.open_play_key_passes_per90, 0.0) - COALESCE(bmk.open_play_key_passes_per90, 0.0)) * 2.0) +
+                SQUARE(((COALESCE(tgt.prog_rate_per_pass, 0.0) - COALESCE(bmk.prog_rate_per_pass, 0.0)) / 5.0)) +
+                SQUARE(COALESCE(tgt.dribbles_made_per90, 0.0) - COALESCE(bmk.dribbles_made_per90, 0.0)) +
+                SQUARE((COALESCE(tgt.turnover_rate, 0.15) - COALESCE(bmk.turnover_rate, 0.15)) * 5.0) +
+                SQUARE((COALESCE(tgt.goal_threat_share, 0.50) - COALESCE(bmk.goal_threat_share, 0.50)) * 3.0) +
+                SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0)
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.position, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.npxg_plus_xa_per90, tgt.xa_per_op_kp, tgt.open_play_key_passes_per90,
+            tgt.dribbles_made_per90, tgt.prog_rate_per_pass, tgt.goal_threat_share, tgt.cost_per_xgi
+        FROM gold.mart_outfield_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.position IN ('Central Attacking Midfielder', 'Right Attacking Midfielder', 'Left Attacking Midfielder')
+          AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+    ELSE -- Default to Striker engine
+    BEGIN
+        WITH bmk AS (
+            SELECT TOP 1
+                non_penalty_xGoals_per90, shot_on_target_rate, aerial_duels_won_per90,
+                heading_accuracy, pressure_efficiency, xGoals_per_shot, goal_threat_share
+            FROM gold.mart_outfield_scouting_summary
+            WHERE player_key = @ResolvedPlayerKey
+        )
+        SELECT TOP (@TopN)
+            DENSE_RANK() OVER (ORDER BY 
+                SQRT(
+                    SQUARE((COALESCE(tgt.non_penalty_xGoals_per90, 0.0) - COALESCE(bmk.non_penalty_xGoals_per90, 0.0)) * 3.0) +
+                    SQUARE((COALESCE(tgt.shot_on_target_rate, 0.40) - COALESCE(bmk.shot_on_target_rate, 0.40)) * 5.0) +
+                    SQUARE((COALESCE(tgt.aerial_duels_won_per90, 0.0) - COALESCE(bmk.aerial_duels_won_per90, 0.0)) * 1.5) +
+                    SQUARE((COALESCE(tgt.heading_accuracy, 0.50) - COALESCE(bmk.heading_accuracy, 0.50)) * 4.0) +
+                    SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0) +
+                    SQUARE((COALESCE(tgt.xGoals_per_shot, 0.12) - COALESCE(bmk.xGoals_per_shot, 0.12)) * 10.0) +
+                    SQUARE((COALESCE(tgt.goal_threat_share, 0.65) - COALESCE(bmk.goal_threat_share, 0.65)) * 3.0)
+                ) ASC
+            ) AS similarity_rank,
+            CAST(SQRT(
+                SQUARE((COALESCE(tgt.non_penalty_xGoals_per90, 0.0) - COALESCE(bmk.non_penalty_xGoals_per90, 0.0)) * 3.0) +
+                SQUARE((COALESCE(tgt.shot_on_target_rate, 0.40) - COALESCE(bmk.shot_on_target_rate, 0.40)) * 5.0) +
+                SQUARE((COALESCE(tgt.aerial_duels_won_per90, 0.0) - COALESCE(bmk.aerial_duels_won_per90, 0.0)) * 1.5) +
+                SQUARE((COALESCE(tgt.heading_accuracy, 0.50) - COALESCE(bmk.heading_accuracy, 0.50)) * 4.0) +
+                SQUARE((COALESCE(tgt.pressure_efficiency, 0.25) - COALESCE(bmk.pressure_efficiency, 0.25)) * 3.0) +
+                SQUARE((COALESCE(tgt.xGoals_per_shot, 0.12) - COALESCE(bmk.xGoals_per_shot, 0.12)) * 10.0) +
+                SQUARE((COALESCE(tgt.goal_threat_share, 0.65) - COALESCE(bmk.goal_threat_share, 0.65)) * 3.0)
+            ) AS DECIMAL(5,2)) AS similarity_distance,
+            tgt.player_key, tgt.player_name, tgt.age, tgt.club_name, tgt.league,
+            tgt.wage_per_week_k, tgt.transfer_value_m, tgt.minutes_played,
+            tgt.goals_per90, tgt.non_penalty_xGoals_per90, tgt.finishing_overperf_shrunk,
+            tgt.goal_threat_share, tgt.shot_on_target_rate, tgt.xGoals_per_shot,
+            tgt.aerial_duels_won_per90, tgt.heading_accuracy, tgt.pressure_efficiency, tgt.cost_per_xgi
+        FROM gold.mart_outfield_scouting_summary AS tgt
+        CROSS JOIN bmk
+        WHERE tgt.is_own_squad = 0 AND tgt.position = 'Striker'
+          AND tgt.player_key != @ResolvedPlayerKey AND tgt.minutes_played >= @MinMinutes
+        ORDER BY similarity_distance ASC;
+    END
+END;
+GO

@@ -52,21 +52,92 @@ BEGIN
 			SELECT 
 				league,
 				CASE 
-					-- Top European First Tiers (Tier 1)
-					WHEN league IN ('Serie A TIM', 'Premier League', 'LALIGA EA SPORTS', 'Bundesliga') THEN 1.00
-					WHEN league LIKE '%Premier%' OR league LIKE '%Serie A%' OR league LIKE '%LaLiga%' OR league LIKE '%Bundesliga%' OR league LIKE '%Primera%' THEN 0.95
-					-- Secondary European / Quality First Tiers (Tier 1.5)
-					WHEN league IN ('Ligue 1 Uber Eats', 'Liga Portugal Betclic', 'Eredivisie') THEN 0.90
-					WHEN league LIKE '%Ligue 1%' OR league LIKE '%Eredivisie%' OR league LIKE '%Liga Portugal%' OR league LIKE '%Super Lig%' THEN 0.85
-					-- High Quality Second Divisions & Continental Leagues (Tier 2)
-					WHEN league LIKE '%Championship%' OR league LIKE '%2. Bundesliga%' OR league LIKE '%LaLiga 2%' OR league LIKE '%Serie B%' THEN 0.75
-					WHEN league LIKE '%Jupiler%' OR league LIKE '%Super League%' OR league LIKE '%Premiership%' THEN 0.75
-					-- Third Tiers (Tier 3)
-					WHEN league LIKE '%League One%' OR league LIKE '%3.%' OR league LIKE '%Serie C%' THEN 0.60
-					-- Fourth Tiers & Below
-					WHEN league LIKE '%League Two%' OR league LIKE '%4.%' OR league LIKE '%National%' THEN 0.50
-					-- Default fallback for any custom/unclassified league in any FM save
-					ELSE 0.75
+					-- =================================================================
+					-- 1. APEX TIER: PREMIER LEAGUE / WORLD SUPER LEAGUE (1.00)
+					-- =================================================================
+					WHEN league IN ('Premier League', 'English Premier Division', 'World Super League', 'WSL Premier League') THEN 1.00
+
+					-- =================================================================
+					-- 2. STEP 6 / SUPER LEAGUE 5 (0.28 - 0.26)
+					-- =================================================================
+					WHEN league LIKE '%National North%' OR league LIKE '%National South%'
+					  OR league LIKE '%National League North%' OR league LIKE '%National League South%' THEN 0.28
+					WHEN league LIKE '%National East%' OR league LIKE '%National West%'
+					  OR league LIKE '%Super League 5%' THEN 0.26
+
+					-- =================================================================
+					-- 3. STEP 5 / SUPER LEAGUE 4 (0.44 - 0.36)
+					-- =================================================================
+					WHEN league IN ('National', 'National WSL', 'Vanarama National League', 'National League', 'English National League') THEN 0.44
+					WHEN league LIKE '%Bundesliga 4%' OR league LIKE '%Regionalliga%' THEN 0.42
+					WHEN league LIKE '%LaLiga 4%' OR league LIKE '%Segunda Federación%' OR league LIKE '%Spanish Federation Second%' THEN 0.41
+					WHEN league LIKE '%Ligue 4%' OR league LIKE '%National 2%' OR league LIKE '%French National 2%' THEN 0.40
+					WHEN league LIKE '%Brasileiro Série D%' OR league LIKE '%Brasileiro Serie D%'
+					  OR league LIKE '%Brazilian National Fourth%' THEN 0.37
+					WHEN league LIKE '%Serie D%' OR league LIKE '%Super League 4%' THEN 0.39
+					WHEN league LIKE '%Liga Portugal 3%' OR league LIKE '%Liga 3%' THEN 0.38
+					WHEN league LIKE '%Tercera%' THEN 0.36
+
+					-- =================================================================
+					-- 4. STEP 4 / SUPER LEAGUE 3 (0.62 - 0.50)
+					-- =================================================================
+					WHEN league LIKE '%Liga MX%' OR league LIKE '%Mexican First%' THEN 0.62
+					WHEN league LIKE '%Bundesliga 3%' OR league LIKE '%3. Liga%' THEN 0.58
+					WHEN league LIKE '%Scottish Premiership%' OR league LIKE '%SPFL%' THEN 0.58
+					WHEN league LIKE '%Brasileiro Série C%' OR league LIKE '%Brasileiro Serie C%'
+					  OR league LIKE '%Brazilian National Third%' THEN 0.53
+					WHEN league LIKE '%League Two%' OR league LIKE '%LaLiga 3%'
+					  OR league LIKE '%Primera Federación%' OR league LIKE '%Spanish Federation First%'
+					  OR league LIKE '%Serie C%' OR league LIKE '%Super League 3%' THEN 0.56
+					WHEN league LIKE '%Ligue 3%' OR league IN ('Championnat National', 'French National') THEN 0.55
+					WHEN league LIKE '%Liga Portugal 2%' OR league LIKE '%LigaPro%'
+					  OR league LIKE '%Allsvenskan%' OR league LIKE '%Ekstraklasa%' THEN 0.54
+					WHEN league LIKE '%1. Lig%' THEN 0.53
+					WHEN league LIKE '%Segunda División%' OR league LIKE '%Primera Nacional%'
+					  OR league LIKE '%Eerste Divisie%' OR league LIKE '%Keuken Kampioen%' THEN 0.52
+					WHEN league LIKE '%A-League%' THEN 0.51
+					WHEN league LIKE '%Prva Liga%' THEN 0.50
+
+					-- =================================================================
+					-- 5. STEP 3 / SUPER LEAGUE 2 & SECONDARY EUROPEAN TOP TIERS (0.76 - 0.68)
+					-- =================================================================
+					WHEN league LIKE '%Eredivisie%' OR league LIKE '%Dutch%' THEN 0.76
+					WHEN league LIKE '%Liga Portugal%' OR league LIKE '%Primeira Liga%' OR league LIKE '%Portuguese First%' THEN 0.75
+					WHEN league LIKE '%Jupiler%' OR league LIKE '%Belgian Pro%' THEN 0.74
+					WHEN league IN ('SAF', 'Superliga Argentina', 'Liga Profesional de Fútbol', 'Argentine Premier Division')
+					  OR league LIKE '%Superliga Argentina%' OR league LIKE '%Argentine Primera%' THEN 0.73
+					WHEN league LIKE '%Bundesliga 2%' OR league LIKE '%2. Bundesliga%'
+					  OR league LIKE '%Austrian%' OR league LIKE '%ADMIRAL Bundesliga%'
+					  OR league LIKE '%Super League 2%' THEN 0.72
+					WHEN league LIKE '%LaLiga 2%' OR league LIKE '%Russian Premier%'
+					  OR league LIKE '%Swiss Super League%' OR league LIKE '%3F Superliga%' THEN 0.71
+					WHEN league LIKE '%Brasileiro Série B%' OR league LIKE '%Brasileiro Serie B%'
+					  OR league LIKE '%Brazilian National Second%' THEN 0.69
+					WHEN league LIKE '%Serie B%' OR league LIKE '%Süper Lig%' OR league LIKE '%Super Lig%'
+					  OR league LIKE '%Turkish Super%' THEN 0.70
+					WHEN league LIKE '%League One%' OR league LIKE '%Ligue 2%' THEN 0.69
+					WHEN league LIKE '%MLS%' OR league LIKE '%Major League Soccer%' THEN 0.68
+
+					-- =================================================================
+					-- 6. STEP 2 / SUPER LEAGUE 1 & BIG 5 TOP FLIGHTS (0.90 - 0.80)
+					-- =================================================================
+					WHEN league IN ('La Liga', 'LaLiga', 'LALIGA EA SPORTS', 'Spanish First Division')
+					  OR league LIKE '%LaLiga%' OR league LIKE '%La Liga%' THEN 0.90
+					WHEN league IN ('Bundesliga', '1. Bundesliga', 'German First Division')
+					  OR league LIKE '%Bundesliga%' OR league LIKE '%Super League 1%' THEN 0.88
+					WHEN league LIKE '%Brasileiro Série A%' OR league LIKE '%Brasileiro Serie A%'
+					  OR league LIKE '%Brazilian National First%' THEN 0.82
+					WHEN league IN ('Serie A', 'Serie A TIM', 'Italian Serie A')
+					  OR league LIKE '%Serie A%' THEN 0.87
+					WHEN league IN ('Ligue 1', 'Ligue 1 Uber Eats', 'Ligue 1 McDonald''s')
+					  OR league LIKE '%Ligue 1%' THEN 0.84
+					WHEN league LIKE '%Championship%' THEN 0.80
+					WHEN league LIKE '%Brasileiro%' OR league LIKE '%Brasileirão%' THEN 0.82
+
+					-- =================================================================
+					-- 7. DEFAULT FALLBACK
+					-- =================================================================
+					ELSE 0.65
 				END AS league_difficulty_coef
 			FROM dim_league AS N
 			WHERE NOT EXISTS (

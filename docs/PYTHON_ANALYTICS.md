@@ -109,3 +109,27 @@ except ImportError:
   pip install pandas matplotlib numpy
   ```
 * **Fallback Mode:** If run in a lean server environment without graphics libraries, `--mode export` executes seamlessly using Python's standard `csv` library, ensuring that recruitment shortlist generation never fails.
+
+---
+
+## 5. HTML to CSV Ingestion Converter (`html_to_csv.py`)
+
+Football Manager natively exports custom views as Web Pages (`.html`). The utility script [`python scripts/html_to_csv.py`](python%20scripts/html_to_csv.py) parses these exported tables and converts them into clean, UTF-8 CSV files ready for Bronze ingestion.
+
+### Key Features
+* **Zero External Dependencies:** Built entirely with Python's built-in `html.parser` and `csv` modules.
+* **Accented Characters & Currencies:** Preserves player names (e.g. `Martin Ødegaard`, `Jan-Niklas Beste`) and financial values (`£25,000 p/w`, `£5.8M - £9M`).
+* **UTF-8 with BOM (`utf-8-sig`):** Formats output for immediate compatibility with SQL Server `BULK INSERT` (`CODEPAGE = '65001'`), Microsoft Excel, and `pandas`.
+
+### Usage Commands
+
+```bash
+# Convert an entire folder of HTML exports (batch mode)
+python "python scripts/html_to_csv.py" --dir documents/
+
+# Convert a single file (auto-names output to documents/team_players.csv)
+python "python scripts/html_to_csv.py" documents/team_players.html
+
+# Convert a single file with custom output name
+python "python scripts/html_to_csv.py" custom_export.html documents/interested_out_players1.csv
+```

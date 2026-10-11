@@ -14,9 +14,7 @@ Place the player and goalkeeper CSV exports in the `/documents/` folder:
 documents/
 ├── team_players.csv               # Your squad's outfield players
 ├── team_gks.csv                   # Your squad's goalkeepers
-├── interested_out_players1.csv    # Scouted outfield targets (Part 1)
-├── interested_out_players2.csv    # Scouted outfield targets (Part 2)
-├── interested_out_players3.csv    # Scouted outfield targets (Part 3)
+├── interested_out_players*.csv    # Scouted outfield targets (1, 2, 3... up to 8+ or single file)
 ├── interested_gks.csv             # Scouted goalkeeper targets
 ```
 
@@ -72,12 +70,20 @@ In your Squad or Scouting screen filtered by `Position: Goalkeeper`:
 3. **Select All Rows:** Click any row in the table, then press **`Ctrl + A`** (or `Cmd + A` on macOS) to highlight all records.
 4. **Trigger Export:** Press **`Ctrl + P`** (or click the FM menu $\to$ **Print**).
 5. **Select Output Format:**
-   * In the dialog, select **Web Page (*.html)** or **Text (*.txt)**.
-   * Save the file into your local project directory.
-6. **Save as CSV:** If exported as `.html` or `.txt`, save or rename the file with a `.csv` extension into the `documents/` folder.
+   * In the dialog, select **Web Page (*.html)**.
+   * Save the file directly into the `documents/` folder (e.g. `team_players.html`, `interested_out_players1.html`, etc.).
+6. **Convert HTML to CSV:**
+   * Execute the included converter utility to transform the HTML files into clean UTF-8 CSV files:
+     ```bash
+     python "python scripts/html_to_csv.py" --dir documents/
+     ```
+   * Or convert an individual file:
+     ```bash
+     python "python scripts/html_to_csv.py" documents/team_players.html
+     ```
 
 > [!NOTE]
-> **Handling Large Scouting Pools:** Football Manager may paginate or lag if exporting over 1,500 players at once. You can split large scouting pools by age or league into `interested_out_players1.csv`, `interested_out_players2.csv`, and `interested_out_players3.csv`. The Bronze and Silver pipelines automatically union and deduplicate these files.
+> **Dynamic Handling of Scouting Pools:** Football Manager may paginate or lag if exporting over 1,500 players at once. You can split large scouting pools by age or league into any number of partitions: `interested_out_players1.csv`, `interested_out_players2.csv`, `interested_out_players3.csv` ... up to `interested_out_players8.csv` (or even export a single `interested_out_players.csv`). The Bronze ingestion dynamically discovers and ingests all matching partitions into `bronze.fmdata_interested_out_players` without requiring any extra lines of code, and the Silver pipeline automatically deduplicates and standardizes the consolidated data.
 
 ---
 

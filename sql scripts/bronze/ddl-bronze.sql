@@ -110,76 +110,16 @@ CREATE TABLE bronze.fmdata_team_gks(
 );
 
 --
-IF OBJECT_ID ('bronze.fmdata_interested_out_players1', 'U') IS NOT NULL
-	DROP TABLE bronze.fmdata_interested_out_players1;
-
-CREATE TABLE bronze.fmdata_interested_out_players1(
-	record NVARCHAR(10),
-	info NVARCHAR (10),
-	player_id NVARCHAR(10),
-	player_name	NVARCHAR(50),
-	position NVARCHAR(20),
-	age NVARCHAR(10),
-	club_name NVARCHAR(40),
-	league NVARCHAR(50),
-	minutes_played NVARCHAR(10),
-	team_goals_scored_per90 NVARCHAR(10),
-	team_goals_conceded_per90 NVARCHAR(10),	
-	goals NVARCHAR(10),	
-	goals_outside_the_box NVARCHAR(10),
-	shots_per90 NVARCHAR(10),	
-	xGoals_per_shot NVARCHAR(10),	
-	shot_accuracy NVARCHAR(5),
-	shots_on_target_per90 NVARCHAR(10),
-	shots_outside_the_box_per90 NVARCHAR(10),
-	goals_per90 NVARCHAR(10),
-	xGoals_per90 NVARCHAR(10),
-	non_penalty_xGoals_per90 NVARCHAR(10),
-	xGoals_overperformance NVARCHAR(10),
-	conversion_rate NVARCHAR(5),
-	assists NVARCHAR(10),
-	assists_per90 NVARCHAR(10),
-	passes_attempted_per90 NVARCHAR(10),
-	pass_accuracy NVARCHAR(5),
-	xAssits_per90 NVARCHAR(10),
-	open_play_key_passes_per90 NVARCHAR(10)	,
-	chances_created_per90 NVARCHAR(10),
-	dribbles_made_per90 NVARCHAR(10),
-	progressive_passes_per90 NVARCHAR(10),
-	open_play_crosses_attempted_per90 NVARCHAR(10),
-	open_play_cross_accuracy NVARCHAR(5),
-	crosses_attempted_per90 NVARCHAR(10),
-	cross_accuracy NVARCHAR(5),
-	tackles_attempted NVARCHAR(10),
-	tackle_accuracy NVARCHAR(5),
-	pressures_attempted_per90 NVARCHAR(10),
-	pressures_completed_per90 NVARCHAR(10),
-	possession_won_per90 NVARCHAR(10),
-	possession_lost_per90 NVARCHAR(10),
-	key_tackles_per90 NVARCHAR(10),
-	interceptions_per90 NVARCHAR(10),
-	clearances_per90 NVARCHAR(10),
-	blocks_per90 NVARCHAR(10),
-	shots_blocked_per90 NVARCHAR(10),
-	headers_attempted_per90 NVARCHAR(10),
-	heading_accuracy NVARCHAR(5),
-	key_headers_per90 NVARCHAR(10),
-	sprints_per90 NVARCHAR(10),
-	distance_covered_per90 NVARCHAR(10),
-	mistakes_leading_to_goals NVARCHAR(10),
-	fouls_made NVARCHAR(10),
-	fouls_against NVARCHAR(10),
-	yellow_cards NVARCHAR(10),
-	red_cards NVARCHAR(10),
-	wage_per_week NVARCHAR(20),
-	transfer_value NVARCHAR(30)
-);
+-- Drop legacy partition tables if present
+IF OBJECT_ID ('bronze.fmdata_interested_out_players1', 'U') IS NOT NULL DROP TABLE bronze.fmdata_interested_out_players1;
+IF OBJECT_ID ('bronze.fmdata_interested_out_players2', 'U') IS NOT NULL DROP TABLE bronze.fmdata_interested_out_players2;
+IF OBJECT_ID ('bronze.fmdata_interested_out_players3', 'U') IS NOT NULL DROP TABLE bronze.fmdata_interested_out_players3;
 
 --
-IF OBJECT_ID ('bronze.fmdata_interested_out_players2', 'U') IS NOT NULL
-	DROP TABLE bronze.fmdata_interested_out_players2;
+IF OBJECT_ID ('bronze.fmdata_interested_out_players', 'U') IS NOT NULL
+	DROP TABLE bronze.fmdata_interested_out_players;
 
-CREATE TABLE bronze.fmdata_interested_out_players2(
+CREATE TABLE bronze.fmdata_interested_out_players(
 	record NVARCHAR(10),
 	info NVARCHAR (10),
 	player_id NVARCHAR(10),
@@ -241,71 +181,19 @@ CREATE TABLE bronze.fmdata_interested_out_players2(
 	transfer_value NVARCHAR(30)
 );
 
---
-IF OBJECT_ID ('bronze.fmdata_interested_out_players3', 'U') IS NOT NULL
-	DROP TABLE bronze.fmdata_interested_out_players3;
-
-CREATE TABLE bronze.fmdata_interested_out_players3(
-	record NVARCHAR(10),
-	info NVARCHAR (10),
-	player_id NVARCHAR(10),
-	player_name	NVARCHAR(50),
-	position NVARCHAR(20),
-	age NVARCHAR(10),
-	club_name NVARCHAR(40),
-	league NVARCHAR(50),
-	minutes_played NVARCHAR(10),
-	team_goals_scored_per90 NVARCHAR(10),
-	team_goals_conceded_per90 NVARCHAR(10),	
-	goals NVARCHAR(10),	
-	goals_outside_the_box NVARCHAR(10),
-	shots_per90 NVARCHAR(10),	
-	xGoals_per_shot NVARCHAR(10),	
-	shot_accuracy NVARCHAR(5),
-	shots_on_target_per90 NVARCHAR(10),
-	shots_outside_the_box_per90 NVARCHAR(10),
-	goals_per90 NVARCHAR(10),
-	xGoals_per90 NVARCHAR(10),
-	non_penalty_xGoals_per90 NVARCHAR(10),
-	xGoals_overperformance NVARCHAR(10),
-	conversion_rate NVARCHAR(5),
-	assists NVARCHAR(10),
-	assists_per90 NVARCHAR(10),
-	passes_attempted_per90 NVARCHAR(10),
-	pass_accuracy NVARCHAR(5),
-	xAssits_per90 NVARCHAR(10),
-	open_play_key_passes_per90 NVARCHAR(10)	,
-	chances_created_per90 NVARCHAR(10),
-	dribbles_made_per90 NVARCHAR(10),
-	progressive_passes_per90 NVARCHAR(10),
-	open_play_crosses_attempted_per90 NVARCHAR(10),
-	open_play_cross_accuracy NVARCHAR(5),
-	crosses_attempted_per90 NVARCHAR(10),
-	cross_accuracy NVARCHAR(5),
-	tackles_attempted NVARCHAR(10),
-	tackle_accuracy NVARCHAR(5),
-	pressures_attempted_per90 NVARCHAR(10),
-	pressures_completed_per90 NVARCHAR(10),
-	possession_won_per90 NVARCHAR(10),
-	possession_lost_per90 NVARCHAR(10),
-	key_tackles_per90 NVARCHAR(10),
-	interceptions_per90 NVARCHAR(10),
-	clearances_per90 NVARCHAR(10),
-	blocks_per90 NVARCHAR(10),
-	shots_blocked_per90 NVARCHAR(10),
-	headers_attempted_per90 NVARCHAR(10),
-	heading_accuracy NVARCHAR(5),
-	key_headers_per90 NVARCHAR(10),
-	sprints_per90 NVARCHAR(10),
-	distance_covered_per90 NVARCHAR(10),
-	mistakes_leading_to_goals NVARCHAR(10),
-	fouls_made NVARCHAR(10),
-	fouls_against NVARCHAR(10),
-	yellow_cards NVARCHAR(10),
-	red_cards NVARCHAR(10),
-	wage_per_week NVARCHAR(20),
-	transfer_value NVARCHAR(30)
-);
+-- Backward-compatibility views for legacy queries
+IF OBJECT_ID ('bronze.fmdata_interested_out_players1', 'V') IS NOT NULL DROP VIEW bronze.fmdata_interested_out_players1;
+GO
+CREATE VIEW bronze.fmdata_interested_out_players1 AS SELECT * FROM bronze.fmdata_interested_out_players;
+GO
+IF OBJECT_ID ('bronze.fmdata_interested_out_players2', 'V') IS NOT NULL DROP VIEW bronze.fmdata_interested_out_players2;
+GO
+CREATE VIEW bronze.fmdata_interested_out_players2 AS SELECT * FROM bronze.fmdata_interested_out_players;
+GO
+IF OBJECT_ID ('bronze.fmdata_interested_out_players3', 'V') IS NOT NULL DROP VIEW bronze.fmdata_interested_out_players3;
+GO
+CREATE VIEW bronze.fmdata_interested_out_players3 AS SELECT * FROM bronze.fmdata_interested_out_players;
+GO
 
 --
 IF OBJECT_ID ('bronze.fmdata_interested_gks', 'U') IS NOT NULL

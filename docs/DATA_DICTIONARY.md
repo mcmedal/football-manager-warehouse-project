@@ -60,7 +60,7 @@ The database is divided into four distinct logical schemas:
 ### `silver.fmdata_interested_out_players`
 * **Grain:** One row per scouted outfield target.
 * **Cleaning Applied:**
-  * Deduplicated records across multi-file partition exports (`interested_out_players1.csv`, `2.csv`, `3.csv`).
+  * Deduplicated records across dynamic multi-file partition exports (`interested_out_players1.csv` ... `interested_out_players8.csv`+ or single file).
   * Filtered out players currently contracted to the user's club (`WHERE contracted = 0`) to prevent duplicate entity representation.
 
 ### `silver.fmdata_team_gks` & `silver.fmdata_interested_gks`

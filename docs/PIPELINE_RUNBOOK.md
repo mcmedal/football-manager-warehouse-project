@@ -38,9 +38,9 @@ Open and execute [`sql scripts/init_database.sql`](sql%20scripts/init_database.s
 
 ### Step 2: Bronze Layer Setup
 1. Execute [`sql scripts/bronze/ddl-bronze.sql`](sql%20scripts/bronze/ddl-bronze.sql) to define raw landing tables.
-2. Edit [`sql scripts/bronze/data-ingestion bronze.sql`](sql%20scripts/bronze/data-ingestion%20bronze.sql):
-   * Update the file paths in the `BULK INSERT` statements to match your local file system location of `team_players.csv`, `team_gks.csv`, `interested_out_players*.csv`, and `interested_gks.csv`.
-3. Execute the script to compile `bronze.load_bronze`.
+2. Execute [`sql scripts/bronze/data-ingestion bronze.sql`](sql%20scripts/bronze/data-ingestion%20bronze.sql) to compile `bronze.load_bronze`:
+   * `bronze.load_bronze` dynamically ingests any number of outfield player partitions (`interested_out_players1.csv` ... `interested_out_players8.csv`+) or a single `interested_out_players.csv` into `bronze.fmdata_interested_out_players`.
+   * Accepts a configurable `@DataPath` parameter (e.g. `EXEC bronze.load_bronze @DataPath = 'D:\FM Data\';`), so file system locations do not need to be hardcoded.
 
 ### Step 3: Silver Layer Setup
 1. Execute [`sql scripts/silver/ddl-silver.sql`](sql%20scripts/silver/ddl-silver.sql) to create cleansed staging tables.
@@ -65,9 +65,10 @@ To run Bronze ingestion, Silver cleansing, Gold dimensional loading, and integri
 USE DW;
 GO
 
--- Execute pipeline for initial season 2023/24
+-- Execute pipeline for initial season 2023/24 (with optional custom data directory)
 EXEC dbo.usp_run_warehouse_pipeline 
     @Season = '2023/24', 
+    @DataPath = 'C:\Users\<username>\Documents\FM data\', -- optional: customize if needed
     @RunTests = 1;
 ```
 

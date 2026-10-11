@@ -20,6 +20,7 @@ import os
 import sys
 import csv
 import math
+import glob
 import argparse
 
 try:
@@ -41,17 +42,20 @@ def load_data(base_dir=None):
 
     doc_dir = os.path.join(base_dir, "documents")
     team_csv = os.path.join(doc_dir, "team_players.csv")
-    int1_csv = os.path.join(doc_dir, "interested_out_players1.csv")
+    int_csv_files = sorted(glob.glob(os.path.join(doc_dir, "interested_out_players*.csv")))
 
-    if not os.path.exists(team_csv) or not os.path.exists(int1_csv):
-        print(f"[ERROR] Could not find data files in {doc_dir}")
+    if not os.path.exists(team_csv) or not int_csv_files:
+        print(f"[ERROR] Could not find required data files in {doc_dir}")
         sys.exit(1)
 
-    print(">>> Loading scouting and team datasets...")
+    print(f">>> Loading squad dataset and {len(int_csv_files)} scouting partition(s)...")
     team_df = pd.read_csv(team_csv)
     team_df["is_own_squad"] = 1
 
-    int_df = pd.read_csv(int1_csv)
+    int_dfs = [pd.read_csv(f) for f in int_csv_files]
+    int_df = pd.concat(int_dfs, ignore_index=True)
+    if "UID" in int_df.columns:
+        int_df = int_df.drop_duplicates(subset=["UID"], keep="first")
     int_df["is_own_squad"] = 0
 
     # Standardize column headers and concatenate
@@ -228,55 +232,67 @@ def export_shortlist_stdlib(base_dir=None, output_path="scouting_shortlist.csv")
     """Fallback exporter using standard library csv module."""
     if base_dir is None:
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    int1_csv = os.path.join(base_dir, "documents", "interested_out_players1.csv")
+    doc_dir = os.path.join(base_dir, "documents")
+    int_csv_files = sorted(glob.glob(os.path.join(doc_dir, "interested_out_players*.csv")))
+    if not int_csv_files:
+        print(f"[ERROR] Could not find interested outfield player files in {doc_dir}")
+        return
 
     rows = []
-    with open(int1_csv, mode="r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            mins_str = r.get("Mins", "0").replace(",", "").strip()
-            try:
-                mins = float(mins_str)
-            except:
-                mins = 0.0
-            if mins < 900:
-                continue
+    seen_uids = set()
+    for int_csv in int_csv_files:
+        with open(int_csv, mode="r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for r in reader:
+                uid = r.get("UID", "").strip()
+                if uid and uid in seen_uids:
+                    continue
+                if uid:
+                    seen_uids.add(uid)
 
-            try:
-                npxg = float(r.get("NP-xG/90", 0.0) or 0.0)
-            except:
-                npxg = 0.0
-            try:
-                xa = float(r.get("xA/90", 0.0) or 0.0)
-            except:
-                xa = 0.0
-            npxg_plus_xa = round(npxg + xa, 2)
+                mins_str = r.get("Mins", "0").replace(",", "").strip()
+                try:
+                    mins = float(mins_str)
+                except:
+                    mins = 0.0
+                if mins < 900:
+                    continue
 
-            val_str = r.get("Transfer Value", "10").replace("£", "").replace(",", "")
-            if "-" in val_str:
-                val_str = val_str.split("-")[-1].strip()
-            if "M" in val_str:
-                val_m = float(val_str.replace("M", "").strip() or 10.0)
-            elif "K" in val_str:
-                val_m = float(val_str.replace("K", "").strip() or 1000.0) / 1000.0
-            else:
-                val_m = 10.0
+                try:
+                    npxg = float(r.get("NP-xG/90", 0.0) or 0.0)
+                except:
+                    npxg = 0.0
+                try:
+                    xa = float(r.get("xA/90", 0.0) or 0.0)
+                except:
+                    xa = 0.0
+                npxg_plus_xa = round(npxg + xa, 2)
 
-            cost_per_xgi = round((val_m * 1000.0) / max(npxg_plus_xa, 0.05), 2)
-            player_name = r.get("Name") or r.get("Player") or "Unknown"
-            player_name = player_name.replace(" - Pick Player", "").strip()
+                val_str = r.get("Transfer Value", "10").replace("£", "").replace(",", "")
+                if "-" in val_str:
+                    val_str = val_str.split("-")[-1].strip()
+                if "M" in val_str:
+                    val_m = float(val_str.replace("M", "").strip() or 10.0)
+                elif "K" in val_str:
+                    val_m = float(val_str.replace("K", "").strip() or 1000.0) / 1000.0
+                else:
+                    val_m = 10.0
 
-            rows.append({
-                "Player": player_name,
-                "Position": r.get("Best Pos", ""),
-                "Age": r.get("Age", ""),
-                "Club": r.get("Club", ""),
-                "Division": r.get("Division", ""),
-                "Minutes": mins,
-                "Transfer_Value_M": val_m,
-                "NPxG_plus_xA_per90": npxg_plus_xa,
-                "Cost_per_xGI": cost_per_xgi
-            })
+                cost_per_xgi = round((val_m * 1000.0) / max(npxg_plus_xa, 0.05), 2)
+                player_name = r.get("Name") or r.get("Player") or "Unknown"
+                player_name = player_name.replace(" - Pick Player", "").strip()
+
+                rows.append({
+                    "Player": player_name,
+                    "Position": r.get("Best Pos", ""),
+                    "Age": r.get("Age", ""),
+                    "Club": r.get("Club", ""),
+                    "Division": r.get("Division", ""),
+                    "Minutes": mins,
+                    "Transfer_Value_M": val_m,
+                    "NPxG_plus_xA_per90": npxg_plus_xa,
+                    "Cost_per_xGI": cost_per_xgi
+                })
 
     rows.sort(key=lambda x: x["Cost_per_xGI"])
     for idx, r in enumerate(rows[:50], 1):

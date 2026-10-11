@@ -25,6 +25,7 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_run_warehouse_pipeline
     @Season VARCHAR(9) = '2023/24',
+    @DataPath NVARCHAR(500) = 'C:\Users\<username>\Documents\FM data\',
     @RunTests BIT = 1
 AS
 BEGIN
@@ -38,6 +39,7 @@ BEGIN
     PRINT '======================================================================';
     PRINT CONCAT('STARTING WAREHOUSE ETL PIPELINE - BATCH: ', CAST(@BatchId AS NVARCHAR(50)));
     PRINT CONCAT('TARGET SEASON: ', @Season);
+    PRINT CONCAT('DATA DIRECTORY: ', @DataPath);
     PRINT '======================================================================';
 
     -- Log Pipeline Start
@@ -53,7 +55,7 @@ BEGIN
 
         IF OBJECT_ID('bronze.load_bronze', 'P') IS NOT NULL
         BEGIN
-            EXEC bronze.load_bronze;
+            EXEC bronze.load_bronze @DataPath = @DataPath;
         END
         ELSE
         BEGIN

@@ -1304,11 +1304,7 @@ BEGIN
 		PRINT '=============================================';
 		PRINT 'FMDATA_INTERESTED_OUT_PLAYERS';
 		PRINT '---------------------------------------------';
-		PRINT 'NUMBERED VARIATIONS OF DATA WILL BE APPENDED INTO: silver.fmdata_interested_out_players'
-		PRINT '---------------------------------------------';
-		PRINT 'LOADING DATA FROM: bronze.fmdata_interested_out_players1';
-		PRINT 'LOADING DATA FROM: bronze.fmdata_interested_out_players2';
-		PRINT 'LOADING DATA FROM: bronze.fmdata_interested_out_players3';
+		PRINT 'DYNAMIC INGESTION DATA LOADED FROM: bronze.fmdata_interested_out_players';
 		PRINT '---------------------------------------------';
 		SET @start_time = GETDATE();
 		PRINT '>>> Acknowledging Old Records in silver.fmdata_interested_out_players';
@@ -1566,13 +1562,7 @@ BEGIN
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 					1 AS dwh_current_validity
-				FROM (
-					SELECT * FROM bronze.fmdata_interested_out_players1
-					UNION
-					SELECT * FROM bronze.fmdata_interested_out_players2
-					UNION
-					SELECT * FROM bronze.fmdata_interested_out_players3
-				) AS fmdata_interested_out_players
+				FROM bronze.fmdata_interested_out_players AS fmdata_interested_out_players
 			), final_bronze AS (
 				SELECT 
 					player_id, 
@@ -1928,13 +1918,7 @@ BEGIN
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 					1 AS dwh_current_validity
-				FROM (
-					SELECT * FROM bronze.fmdata_interested_out_players1
-					UNION
-					SELECT * FROM bronze.fmdata_interested_out_players2
-					UNION
-					SELECT * FROM bronze.fmdata_interested_out_players3
-				) AS fmdata_interested_out_players
+				FROM bronze.fmdata_interested_out_players AS fmdata_interested_out_players
 			), final_bronze AS (
 				SELECT 
 					player_id, 

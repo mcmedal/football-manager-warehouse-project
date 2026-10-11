@@ -43,7 +43,7 @@ flowchart TD
 
     subgraph Bronze ["🥉 Bronze Layer (Landing Zone)"]
         B1[(bronze.fmdata_team_players)]
-        B2[(bronze.fmdata_interested_players)]
+        B2[(bronze.fmdata_interested_out_players)]
         B_P[EXEC bronze.load_bronze]
     end
 

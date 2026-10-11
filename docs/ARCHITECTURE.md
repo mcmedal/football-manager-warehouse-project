@@ -23,7 +23,7 @@ flowchart TD
     subgraph Bronze ["🥉 Bronze Layer (Raw Storage)"]
         B1[(bronze.fmdata_team_players)]
         B2[(bronze.fmdata_team_gks)]
-        B3[(bronze.fmdata_interested_players)]
+        B3[(bronze.fmdata_interested_out_players)]
         B4[(bronze.fmdata_interested_gks)]
     end
 
@@ -66,7 +66,8 @@ flowchart TD
 * **Objective:** Ingest raw CSV data exported directly from Football Manager 24 with minimal friction and zero data loss.
 * **Storage Philosophy:** Wide tables with loose typing (`NVARCHAR(MAX)` or large `VARCHAR`), matching the raw columns of FM24 view exports.
 * **Ingestion Method:** T-SQL `BULK INSERT` using UTF-8 code page (`CODEPAGE = '65001'`), comma-delimited, tab-locked for performance.
-* **Idempotency:** Truncate-and-load pattern managed by `bronze.load_bronze`.
+* **Dynamic Multi-Partition Ingestion:** Transparently discovers and loads any number of split scouting exports (`interested_out_players1.csv` ... `interested_out_players8.csv`+ or single `interested_out_players.csv`) into a single unified table `bronze.fmdata_interested_out_players` without requiring extra lines of DDL or code changes.
+* **Idempotency:** Truncate-and-load pattern managed by `bronze.load_bronze` with decoupled `@DataPath` parameter.
 
 ### 🥈 Silver Layer: Cleansing, Normalization & Typing
 * **Objective:** Clean, parse, validate, and standardize data into structured tabular representations.

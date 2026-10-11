@@ -39,13 +39,11 @@ flowchart TD
         A2[team_gks.csv]
         A3[interested_out_players*.csv]
         A4[interested_gks.csv]
-        A5[mngrs_data.csv]
     end
 
     subgraph Bronze ["🥉 Bronze Layer (Landing Zone)"]
         B1[(bronze.fmdata_team_players)]
         B2[(bronze.fmdata_interested_players)]
-        B3[(bronze.fmdata_managers)]
         B_P[EXEC bronze.load_bronze]
     end
 
@@ -57,7 +55,7 @@ flowchart TD
     end
 
     subgraph Gold ["🥇 Gold Layer (Star Schema & SCD2)"]
-        G_DIM[(Dimensions: Player, Team, Club, League, Playstyle)]
+        G_DIM[(Dimensions: Player, Team, Club, League)]
         G_FACT[(Facts: Stats, GK, Value with SCD2)]
         G_MART[Analytical Marts & Similarity Views]
         G_P[EXEC gold.load_gold @Season = '2023/24']
@@ -213,10 +211,9 @@ football-manager-warehouse-project/
 │   ├── PIPELINE_RUNBOOK.md             # Deployment, execution & troubleshooting
 │   ├── FM_EXPORT_GUIDE.md              # In-game FM24 view setup & export guide
 │   └── PYTHON_ANALYTICS.md             # Python CLI, radar charts & scatter plots
-├── documents/                          # Raw FM24 CSV exports (teams, targets, managers)
+├── documents/                          # Raw FM24 CSV exports (teams and targets)
 ├── python scripts/
 │   ├── scouting_dashboard.py           # Python Moneyball radar charts, scatter plots & exporter
-│   └── possession_data.md              # Reference documentation for legacy OCR research
 ├── sql scripts/
 │   ├── init_database.sql               # Database & schema creation script
 │   ├── bronze/                         # Landing layer DDL & ingestion scripts

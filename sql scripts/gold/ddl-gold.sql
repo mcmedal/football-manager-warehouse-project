@@ -44,37 +44,6 @@ CREATE TABLE gold.dim_team_info(
 IF OBJECT_ID ('gold.fact_teams_possession', 'U') IS NOT NULL
 	DROP TABLE gold.fact_teams_possession;
 
--- GOLD.DIM_PLAYSTYLE
-IF OBJECT_ID ('gold.dim_playstyle', 'U') IS NOT NULL
-	DROP TABLE gold.dim_playstyle;
-
-CREATE TABLE gold.dim_playstyle (
-	playstyle_key INT IDENTITY(1,1) NOT NULL,
-	tactical_style VARCHAR(30),
-	playing_mentality VARCHAR(20),
-	preferred_formation VARCHAR(25),
-	pressing_style VARCHAR(10),
-	marking_style VARCHAR(5)
-)
-
--- GOLD.DIM_MANAGER_INFO
-IF OBJECT_ID ('gold.dim_manager_info', 'U') IS NOT NULL
-	DROP TABLE gold.dim_manager_info;
-
-CREATE TABLE gold.dim_manager_info (
-	manager_key INT IDENTITY(1,1) NOT NULL,
-	staff_id INT NOT NULL,
-	staff_name VARCHAR(35),
-	current_club_key VARCHAR(10),
-	previous_club_key VARCHAR(10),
-	playstyle_key INT,
-	contract_begins DATE,
-	contract_expires DATE,
-	dwh_create_date DATETIME2 DEFAULT GETDATE(),
-	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
-	dwh_current_validity BIT DEFAULT ((1)),
-)
-
 -- GOLD.DIM_PLAYER_INFO
 IF OBJECT_ID ('gold.dim_player_info', 'U') IS NOT NULL
 	DROP TABLE gold.dim_player_info;

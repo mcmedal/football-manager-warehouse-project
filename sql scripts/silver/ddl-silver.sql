@@ -116,28 +116,6 @@ CREATE TABLE silver.fmdata_team_gks(
 );
 
 --
-IF OBJECT_ID ('silver.fmdata_manager_data', 'U') IS NOT NULL
-	DROP TABLE silver.fmdata_manager_data;
-
-CREATE TABLE silver.fmdata_manager_data(
-	staff_id INT NOT NULL,
-	staff_name NVARCHAR(30),
-	club_name NVARCHAR(40),
-	job_at_club VARCHAR(30),
-	previous_club_name NVARCHAR(45),
-	tactical_style VARCHAR(30),
-	playing_mentality VARCHAR(30),
-	preferred_formation VARCHAR(30),
-	pressing_style VARCHAR(30),
-	marking_style VARCHAR(30),
-	contract_begins DATE,
-	contract_expires DATE,
-	dwh_create_date DATETIME2 DEFAULT GETDATE(),
-	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
-	dwh_current_validity BIT DEFAULT ((1))
-);
-
---
 IF OBJECT_ID ('silver.fmdata_interested_out_players', 'U') IS NOT NULL
 	DROP TABLE silver.fmdata_interested_out_players;
 
@@ -239,17 +217,6 @@ CREATE TABLE silver.fmdata_interested_gks(
 	fouls_against_per90 DECIMAL(5, 2),
 	wage_per_week_k DECIMAL(10, 2),
 	transfer_value_m DECIMAL(10, 2),
-	dwh_create_date DATETIME2 DEFAULT GETDATE(),
-	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
-	dwh_current_validity BIT DEFAULT ((1))
-);
-
-IF OBJECT_ID ('silver.fmdata_possession_data', 'U') IS NOT NULL
-	DROP TABLE silver.fmdata_possession_data
-
-CREATE TABLE silver.fmdata_possession_data(
-	club_name NVARCHAR(40),
-	average_possession INT,
 	dwh_create_date DATETIME2 DEFAULT GETDATE(),
 	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
 	dwh_current_validity BIT DEFAULT ((1))

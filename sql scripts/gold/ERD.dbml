@@ -28,29 +28,6 @@ Table gold.dim_team_info {
   dwh_current_validity int [note: "1 = Active, 0 = Historic"]
 }
 
-Table gold.dim_playstyle {
-  playstyle_key int [pk, increment]
-  tactical_style varchar
-  playing_mentality varchar
-  preferred_formation varchar
-  pressing_style varchar
-  marking_style varchar
-}
-
-Table gold.dim_manager_info {
-  manager_key int [pk, increment]
-  staff_id int
-  staff_name varchar
-  current_club_key varchar
-  previous_club_key varchar
-  playstyle_key int
-  contract_begins date
-  contract_expires date
-  dwh_create_date datetime
-  dwh_cd_valid_till datetime
-  dwh_current_validity int
-}
-
 Table gold.dim_player_info {
   player_key int [pk, increment]
   player_id int
@@ -191,11 +168,6 @@ Table audit.etl_pipeline_log {
 // (Based on logic: team_key = league_key + club_key)
 Ref: gold.dim_team_info.league > gold.dim_league.league
 Ref: gold.dim_team_info.club_name > gold.dim_club.club
-
-// Managers
-Ref: gold.dim_manager_info.current_club_key > gold.dim_team_info.team_key
-Ref: gold.dim_manager_info.previous_club_key > gold.dim_team_info.team_key
-Ref: gold.dim_manager_info.playstyle_key > gold.dim_playstyle.playstyle_key
 
 // Players
 Ref: gold.dim_player_info.team_key > gold.dim_team_info.team_key

@@ -110,26 +110,6 @@ CREATE TABLE bronze.fmdata_team_gks(
 );
 
 --
-IF OBJECT_ID ('bronze.fmdata_manager_data', 'U') IS NOT NULL
-	DROP TABLE bronze.fmdata_manager_data;
-
-CREATE TABLE bronze.fmdata_manager_data(
-	info NVARCHAR(10),
-	staff_id NVARCHAR(10),
-	staff_name NVARCHAR(30),
-	club_name NVARCHAR(40),
-	job_at_club NVARCHAR(30),
-	previous_club_name NVARCHAR(45),
-	tactical_style NVARCHAR(30),
-	playing_mentality NVARCHAR(30),
-	preferred_formation NVARCHAR(30),
-	pressing_style NVARCHAR(30),
-	marking_style NVARCHAR(30),
-	contract_begins NVARCHAR(20),
-	contract_expires NVARCHAR(20)
-);
-
---
 IF OBJECT_ID ('bronze.fmdata_interested_out_players1', 'U') IS NOT NULL
 	DROP TABLE bronze.fmdata_interested_out_players1;
 
@@ -364,13 +344,4 @@ CREATE TABLE bronze.fmdata_interested_gks(
 	fouls_against NVARCHAR(10),
 	wage_per_week NVARCHAR(20),
 	transfer_value NVARCHAR(30)
-);
-
---
-IF OBJECT_ID ('bronze.fmdata_possession_data', 'U') IS NOT NULL
-	DROP TABLE bronze.fmdata_possession_data
-
-CREATE TABLE bronze.fmdata_possession_data(
-	club_name NVARCHAR(40),
-	average_possession NVARCHAR(10)
 );

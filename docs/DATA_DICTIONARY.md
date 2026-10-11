@@ -43,10 +43,6 @@ The database is divided into four distinct logical schemas:
 * **Grain:** One row per scouted goalkeeper within the club's scouting range.
 * **Description:** Raw landing table for scouted goalkeepers from `interested_gks.csv`.
 
-### `bronze.fmdata_managers`
-* **Grain:** One row per club manager/staff member.
-* **Description:** Raw landing table for European managerial profiles and tactical styles from `mngrs_data.csv`.
-
 ---
 
 ## 3. Silver Schema Tables
@@ -71,11 +67,6 @@ The database is divided into four distinct logical schemas:
 * **Grain:** One row per goalkeeper.
 * **Cleaning Applied:**
   * Cleansed shot-stopping metrics, sweep actions, and distribution metrics into standard `DECIMAL(5, 2)` representations.
-
-### `silver.fmdata_managers`
-* **Grain:** One row per manager.
-* **Cleaning Applied:**
-  * Standardized tactical formations, pressing mentalities, and marking systems.
 
 ---
 
@@ -128,31 +119,6 @@ The database is divided into four distinct logical schemas:
 | `league_key` | `INT IDENTITY(1,1)` | **NO** (PK) | Surrogate key for the league. |
 | `league` | `NVARCHAR(35)` | NO | League name (e.g. `'SERIE A'`, `'ENGLISH PREMIER LEAGUE'`). |
 | `league_difficulty_coef` | `DECIMAL(3, 2)` | NO | Quality adjustment coefficient (e.g. `1.00` for Top 5, `0.85` for tier 2). |
-
-### `gold.dim_playstyle`
-* **Grain:** One row per distinct tactical playstyle combination.
-
-| Column Name | Data Type | Nullable | Description |
-| :--- | :--- | :--- | :--- |
-| `playstyle_key` | `INT IDENTITY(1,1)` | **NO** (PK) | Surrogate key for playstyle profile. |
-| `tactical_style` | `VARCHAR(30)` | YES | Tactical philosophy (e.g. `'Gegenpress'`, `'Tiki-Taka'`). |
-| `playing_mentality` | `VARCHAR(20)` | YES | Mentality (e.g. `'Attacking'`, `'Balanced'`). |
-| `preferred_formation` | `VARCHAR(25)` | YES | Formation structure (e.g. `'4-2-3-1 DM Wide'`). |
-| `pressing_style` | `VARCHAR(10)` | YES | Pressing intensity (`'High'`, `'Mid'`). |
-| `marking_style` | `VARCHAR(5)` | YES | Marking approach (`'Zonal'`, `'Man'`). |
-
-### `gold.dim_manager_info`
-* **Grain:** One row per manager per season snapshot.
-
-| Column Name | Data Type | Nullable | Description |
-| :--- | :--- | :--- | :--- |
-| `manager_key` | `INT IDENTITY(1,1)` | **NO** (PK) | Surrogate key for manager snapshot. |
-| `staff_id` | `INT` | NO | Natural identifier from FM24. |
-| `staff_name` | `VARCHAR(35)` | YES | Manager name. |
-| `current_club_key` | `VARCHAR(10)` | YES | Foreign key to `gold.dim_team_info`. |
-| `playstyle_key` | `INT` | YES | Foreign key to `gold.dim_playstyle`. |
-| `contract_begins` | `DATE` | YES | Contract start date. |
-| `contract_expires` | `DATE` | YES | Contract expiration date. |
 
 ---
 

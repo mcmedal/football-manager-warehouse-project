@@ -63,24 +63,6 @@ BEGIN
 
 		--
 		SET @start_time = GETDATE();
-		PRINT '>>TRUNCATING: bronze.fmdata_manager_data';
-		TRUNCATE TABLE bronze.fmdata_manager_data;
-
-		PRINT '>>INSERTING DATA INTO: bronze.fmdata_manager_data';
-		BULK INSERT bronze.fmdata_manager_data
-		FROM 'C:\Users\olufe\Documents\FM data\mngrs_data.csv'
-		WITH (
-			FIRSTROW = 2,
-			FORMAT = 'CSV',
-			CODEPAGE = '65001',
-			TABLOCK
-		);
-		SET @end_time = GETDATE();
-		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';;
-		PRINT '---------------------------------------';
-
-		--
-		SET @start_time = GETDATE();
 		PRINT '>>TRUNCATING: bronze.fmdata_interested_out_players1';
 		TRUNCATE TABLE bronze.fmdata_interested_out_players1;
 
@@ -150,24 +132,6 @@ BEGIN
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
 		PRINT '---------------------------------------';
-		--
-		SET @start_time = GETDATE();
-		PRINT '>>TRUNCATING: bronze.fmdata_possession_data';
-		TRUNCATE TABLE bronze.fmdata_possession_data;
-
-		PRINT '>>INSERTING DATA INTO: bronze.fmdata_possession_data';
-		BULK INSERT bronze.fmdata_possession_data
-		FROM 'C:\Users\olufe\Documents\FM data\possession_data.csv'
-		WITH (
-			FIRSTROW = 2,
-			FORMAT = 'CSV',
-			CODEPAGE = '65001',
-			TABLOCK
-		);
-		SET @end_time = GETDATE();
-		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
-		PRINT '---------------------------------------';
-
 		SET @batch_end_time = GETDATE();
 		PRINT '=================================';
 		PRINT 'LOADING OF BRONZE LAYER COMPLETED';

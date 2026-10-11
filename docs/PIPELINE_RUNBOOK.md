@@ -39,7 +39,7 @@ Open and execute [`sql scripts/init_database.sql`](sql%20scripts/init_database.s
 ### Step 2: Bronze Layer Setup
 1. Execute [`sql scripts/bronze/ddl-bronze.sql`](sql%20scripts/bronze/ddl-bronze.sql) to define raw landing tables.
 2. Edit [`sql scripts/bronze/data-ingestion bronze.sql`](sql%20scripts/bronze/data-ingestion%20bronze.sql):
-   * Update the file paths in the `BULK INSERT` statements to match your local file system location of `team_players.csv`, `team_gks.csv`, `interested_out_players*.csv`, and `mngrs_data.csv`.
+   * Update the file paths in the `BULK INSERT` statements to match your local file system location of `team_players.csv`, `team_gks.csv`, `interested_out_players*.csv`, and `interested_gks.csv`.
 3. Execute the script to compile `bronze.load_bronze`.
 
 ### Step 3: Silver Layer Setup

@@ -11,7 +11,7 @@ Traditional scouting in Football Manager relies heavily on visible attribute num
 2. **Tactical Mismatch:** A player with 16 Passing might achieve poor progressive output in an unsuitable tactical system.
 3. **Attribute Inflation:** High-attribute players command exorbitant transfer fees and wages despite failing to deliver elite per-90 value.
 
-By ingesting granular performance statistics (expected goals, expected assists, progressive passing volume, pressure completions, and aerial duels) into `DW`, recruitment decisions are driven by **actual on-pitch output per 90 minutes**, finding undervalued gems who fit the manager's tactical identity.
+By ingesting granular performance statistics (expected goals, expected assists, progressive passing volume, pressure completions, and aerial duels) into `DW`, recruitment decisions are driven by **actual on-pitch output per 90 minutes**, finding undervalued gems who fit the club's tactical needs.
 
 ---
 

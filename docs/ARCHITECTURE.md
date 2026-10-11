@@ -25,7 +25,6 @@ flowchart TD
         B2[(bronze.fmdata_team_gks)]
         B3[(bronze.fmdata_interested_players)]
         B4[(bronze.fmdata_interested_gks)]
-        B5[(bronze.fmdata_managers)]
     end
 
     subgraph Silver ["🥈 Silver Layer (Cleansed & Enriched)"]
@@ -33,7 +32,6 @@ flowchart TD
         S2[(silver.fmdata_team_gks)]
         S3[(silver.fmdata_interested_out_players)]
         S4[(silver.fmdata_interested_gks)]
-        S5[(silver.fmdata_managers)]
     end
 
     subgraph Gold ["🥇 Gold Layer (Star Schema & SCD Type 2)"]
@@ -41,8 +39,6 @@ flowchart TD
         D2[(dim_team_info)]
         D3[(dim_club)]
         D4[(dim_league)]
-        D5[(dim_playstyle)]
-        D6[(dim_manager_info)]
         F1[(fact_outfield_player_stats)]
         F2[(fact_gk_stats)]
         F3[(fact_players_value)]
@@ -85,7 +81,7 @@ flowchart TD
 
 ### 🥇 Gold Layer: Star Schema & Dimensional Modeling
 * **Objective:** Present optimized dimensional models (Facts and Dimensions) structured for analytical aggregation, machine learning similarity comparisons, and reporting.
-* **Modeling Methodology:** Kimball Star Schema with surrogate keys (`player_key`, `team_key`, `club_key`, `league_key`, `manager_key`, `playstyle_key`).
+* **Modeling Methodology:** Kimball Star Schema with surrogate keys (`player_key`, `team_key`, `club_key`, `league_key`).
 * **Grain:**
   * Outfield Stats: One row per player per team per season (`player_key`, `team_key`, `season`).
   * Goalkeeper Stats: One row per goalkeeper per team per season (`player_key`, `team_key`, `season`).
@@ -136,8 +132,6 @@ sequenceDiagram
 | **`gold.dim_team_info`** | `team_key` (Surrogate) | `club_name` + `league` | Team per Season | Club name, competitive league, and temporal validity. |
 | **`gold.dim_club`** | `club_key` (Surrogate) | `club` | Club Entity | Distinct football club registry. |
 | **`gold.dim_league`** | `league_key` (Surrogate) | `league` | League Entity | League registry and `league_difficulty_coef` multiplier. |
-| **`gold.dim_playstyle`** | `playstyle_key` (Surrogate) | Tactical attributes | Playstyle Combination | Tactical formation, mentality, pressing intensity, and marking style. |
-| **`gold.dim_manager_info`** | `manager_key` (Surrogate) | `staff_id` | Manager per Season | Manager profile, tactical style foreign key, contract dates, and clubs. |
 
 ### Fact Tables
 

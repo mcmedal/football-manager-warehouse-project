@@ -8,7 +8,7 @@ This guide walks through configuring custom views in Football Manager 2024, expo
 
 Football Manager allows users to print or save any active grid view as a Web Page (`.html`) or Text file (`.txt` / `.csv`) via the standard `Ctrl + P` shortcut.
 
-The warehouse consumes five distinct data exports placed in the `/documents/` folder:
+Place the player and goalkeeper CSV exports in the `/documents/` folder:
 
 ```text
 documents/
@@ -18,7 +18,6 @@ documents/
 ├── interested_out_players2.csv    # Scouted outfield targets (Part 2)
 ├── interested_out_players3.csv    # Scouted outfield targets (Part 3)
 ├── interested_gks.csv             # Scouted goalkeeper targets
-└── mngrs_data.csv                 # European managers / staff tactical data
 ```
 
 ---
@@ -61,11 +60,6 @@ In your Squad or Scouting screen filtered by `Position: Goalkeeper`:
 | **Physical & Errors**| `Dist/90`, `Gl Mst`, `FA` |
 
 ---
-
-### 2.3. Manager Profiles View (`mngrs_data.csv`)
-
-In the **Staff $\to$ Staff Search** screen:
-* Fields: `ID`, `Name`, `Club`, `Previous Club`, `Tactical Style`, `Playing Mentality`, `Formation`, `Pressing Style`, `Marking Style`, `Contract Start`, `Contract Expiry`.
 
 ---
 

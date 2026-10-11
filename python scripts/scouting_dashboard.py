@@ -3,7 +3,7 @@
 Football Manager Moneyball Scouting & Visual Analytics Engine
 ======================================================================
 Purpose:
-    Visual analytics tool that connects to the FiorentinaDW warehouse
+    Visual analytics tool that connects to the DW warehouse
     (or falls back to raw CSV exports in /documents) to produce:
       1. Player Comparison Radar / Spider Charts (Target vs Starter)
       2. Moneyball Quadrant Scatter Plots (Output vs Cost)

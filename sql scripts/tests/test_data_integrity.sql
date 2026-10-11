@@ -5,14 +5,14 @@ Automated Data Quality & Integrity Test Suite
 Purpose:
     Enterprise dbt-style data warehouse integrity testing suite
     verifying table constraints, referential integrity, domain boundaries,
-    and SCD Type 2 historization rules across FiorentinaDW.
+    and SCD Type 2 historization rules across DW.
 
 Execution:
-    sqlcmd -S <server> -d FiorentinaDW -i test_data_integrity.sql
+    sqlcmd -S <server> -d DW -i test_data_integrity.sql
 ======================================================================
 */
 
-USE FiorentinaDW;
+USE DW;
 GO
 
 SET NOCOUNT ON;

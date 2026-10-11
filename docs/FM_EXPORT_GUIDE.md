@@ -1,6 +1,6 @@
 # 🎮 Football Manager 24 Data Export Guide
 
-This guide walks through configuring custom views in Football Manager 2024, exporting player performance and scouting data to CSV/HTML, and structuring files for ingestion into `FiorentinaDW`.
+This guide walks through configuring custom views in Football Manager 2024, exporting player performance and scouting data to CSV/HTML, and structuring files for ingestion into `DW`.
 
 ---
 
@@ -89,7 +89,7 @@ In the **Staff $\to$ Staff Search** screen:
 
 ## 4. Portability: Running on ANY Club or Save
 
-`FiorentinaDW` is **100% club-agnostic**. You can use it for Arsenal, Borussia Dortmund, Ajax, or an amateur non-league club:
+`DW` is **100% club-agnostic**. You can use it for Arsenal, Borussia Dortmund, Ajax, or an amateur non-league club:
 
 1. **Squad Mapping:**
    * Whatever players are exported into `team_players.csv` are automatically flagged with `is_own_squad = 1` in `gold.dim_player_info`.

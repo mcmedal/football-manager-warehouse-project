@@ -1,6 +1,6 @@
 # 📖 Data Dictionary & Schema Catalog
 
-This catalog documents the tables, views, columns, data types, business definitions, constraints, and grains across all schemas in `FiorentinaDW`.
+This catalog documents the tables, views, columns, data types, business definitions, constraints, and grains across all schemas in `DW`.
 
 ---
 

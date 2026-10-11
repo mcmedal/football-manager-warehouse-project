@@ -1,6 +1,6 @@
 /*
 ======================================================================
-Gold Views & Analytical Scouting Marts (FiorentinaDW)
+Gold Views & Analytical Scouting Marts (DW)
 ======================================================================
 Script Purpose:
     Defines Gold Layer analytical views and unified summary marts:
@@ -32,7 +32,7 @@ Script Purpose:
 ======================================================================
 */
 
-USE FiorentinaDW;
+USE DW;
 GO
 
 -- ======================================================================

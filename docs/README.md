@@ -1,6 +1,6 @@
-# 📚 FiorentinaDW Documentation Hub
+# 📚 DW Documentation Hub
 
-Welcome to the comprehensive technical and operational documentation for the **Football Manager Data Warehouse & Moneyball Analytics Engine** (`FiorentinaDW`).
+Welcome to the comprehensive technical and operational documentation for the **Football Manager Data Warehouse & Moneyball Analytics Engine** (`DW`).
 
 This documentation suite covers every aspect of the data platform, from raw game export procedures and Medallion architecture ingestion pipelines to dimensional modeling, Euclidean similarity mathematics, automated testing, and Python visualization.
 

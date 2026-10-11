@@ -1,12 +1,12 @@
 # 🏛️ Architecture & System Design
 
-This document details the architectural blueprint, data modeling paradigms, and technical decision records of the **Football Manager Data Warehouse & Moneyball Analytics Engine** (`FiorentinaDW`).
+This document details the architectural blueprint, data modeling paradigms, and technical decision records of the **Football Manager Data Warehouse & Moneyball Analytics Engine** (`DW`).
 
 ---
 
 ## 1. Overview & Architectural Philosophy
 
-The architecture of `FiorentinaDW` adapts modern cloud data engineering best practices—specifically the **Medallion Architecture** and **Kimball Dimensional Modeling**—for sports analytics and tactical decision support.
+The architecture of `DW` adapts modern cloud data engineering best practices—specifically the **Medallion Architecture** and **Kimball Dimensional Modeling**—for sports analytics and tactical decision support.
 
 ### Core Objectives
 1. **Separation of Concerns:** Distinct separation between raw ingestion (Bronze), clean conformant data (Silver), and dimensional star-schema modeling with analytical marts (Gold).
@@ -97,7 +97,7 @@ flowchart TD
 
 In Football Manager, player abilities, physical attributes, market valuations, and tactical metrics fluctuate dramatically over multiple seasons. Overwriting records prevents analysts from evaluating development curves or past transfer effectiveness.
 
-`FiorentinaDW` implements **SCD Type 2** across the Gold layer:
+`DW` implements **SCD Type 2** across the Gold layer:
 
 ### Tracking Columns
 Every dimension and fact table in the Gold layer maintains temporal lineage:

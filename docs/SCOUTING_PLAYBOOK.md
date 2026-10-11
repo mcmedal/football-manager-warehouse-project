@@ -1,6 +1,6 @@
-# 🎯 The Moneyball Scouting Playbook: How to Scout Players with FiorentinaDW
+# 🎯 The Moneyball Scouting Playbook: How to Scout Players with DW
 
-Welcome to **The Complete Scouting Playbook**. This guide demonstrates how to use the entire `FiorentinaDW` platform to identify, evaluate, and recruit football players in Football Manager 2024.
+Welcome to **The Complete Scouting Playbook**. This guide demonstrates how to use the entire `DW` platform to identify, evaluate, and recruit football players in Football Manager 2024.
 
 Whether you are replacing an injured talisman, planning a multi-year squad overhaul, or operating on a shoestring budget, this playbook translates raw SQL views and Python visualizations into actionable recruitment decisions.
 

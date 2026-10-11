@@ -10,7 +10,7 @@ Purpose:
 Execution:
     Execute in SQL Server Management Studio (SSMS), Azure Data Studio,
     or via sqlcmd:
-    sqlcmd -S <server> -d FiorentinaDW -i test_vw_fiorentina_central_defender_reports.sql
+    sqlcmd -S <server> -d DW -i test_vw_fiorentina_central_defender_reports.sql
 
 Safety:
     All tests execute within transactions that ROLLBACK upon completion,
@@ -18,7 +18,7 @@ Safety:
 ======================================================================
 */
 
-USE FiorentinaDW;
+USE DW;
 GO
 
 SET NOCOUNT ON;

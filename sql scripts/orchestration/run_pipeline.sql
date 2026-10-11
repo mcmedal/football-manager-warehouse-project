@@ -15,7 +15,7 @@ Usage:
 ======================================================================
 */
 
-USE FiorentinaDW;
+USE DW;
 GO
 
 SET ANSI_NULLS ON;

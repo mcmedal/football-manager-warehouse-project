@@ -3,33 +3,33 @@
 Creating the Database & necessary Schemas
 ============================================
 Script Purpose:
-	This script is design to create a new database "FiorentinaDW" after checking if it exists.
+	This script is design to create a new database "DW" after checking if it exists.
 	If it does exist, it is dropped and recreated. The script also creates three schemas within the database:
 	"bronze", "silver" and "gold".
 
 WARNING:
-	Running this script will drop the "FiorentinaDW" db if it exists.
+	Running this script will drop the "DW" db if it exists.
 	All data in the db will be permanently lost. Proceed with caustion 
 	and confirm the exitence of proper backups before running this script.
 
 */
 
--- Create Database "FiorentinaDW"
+-- Create Database "DW"
 USE master;
 GO
 
--- Drop and recreate the "FiorentinaDW" db
-IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'FiorentinaDW')
+-- Drop and recreate the "DW" db
+IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'DW')
 BEGIN
-	ALTER DATABASE FiorentinaDW SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-	DROP DATABASE FiorentinaDW;
+	ALTER DATABASE DW SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+	DROP DATABASE DW;
 END;
 GO
 
--- Create the "FiorentinaDW" db
-CREATE DATABASE FiorentinaDW;
+-- Create the "DW" db
+CREATE DATABASE DW;
 
-USE FiorentinaDW;
+USE DW;
 GO
 
 CREATE SCHEMA bronze;

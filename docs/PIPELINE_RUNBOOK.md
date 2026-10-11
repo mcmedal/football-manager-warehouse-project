@@ -1,6 +1,6 @@
 # 🚀 Pipeline Runbook & Operations Guide
 
-This runbook provides step-by-step instructions for deploying, orchestrating, testing, and troubleshooting the `FiorentinaDW` data warehouse.
+This runbook provides step-by-step instructions for deploying, orchestrating, testing, and troubleshooting the `DW` data warehouse.
 
 ---
 
@@ -33,7 +33,7 @@ flowchart TD
 
 ### Step 1: Database Initialization
 Open and execute [`sql scripts/init_database.sql`](sql%20scripts/init_database.sql):
-* Checks if `FiorentinaDW` exists, closes existing connections, and drops/recreates the database.
+* Checks if `DW` exists, closes existing connections, and drops/recreates the database.
 * Creates the three base schemas: `bronze`, `silver`, and `gold`.
 
 ### Step 2: Bronze Layer Setup
@@ -62,7 +62,7 @@ Execute [`sql scripts/orchestration/run_pipeline.sql`](sql%20scripts/orchestrati
 To run Bronze ingestion, Silver cleansing, Gold dimensional loading, and integrity sanity checks in a single automated transaction with audit logging:
 
 ```sql
-USE FiorentinaDW;
+USE DW;
 GO
 
 -- Execute pipeline for initial season 2023/24

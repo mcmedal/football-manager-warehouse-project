@@ -6,7 +6,7 @@
 [![Tests](https://img.shields.io/badge/Quality-Automated%20TDD%20%26%20Integrity%20Suites-brightgreen.svg)](docs/PIPELINE_RUNBOOK.md)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-Welcome to the **Football Manager Data Warehouse & Moneyball Recruitment Engine** (`FiorentinaDW`).
+Welcome to the **Football Manager Data Warehouse & Moneyball Recruitment Engine** (`DW`).
 
 This platform bridges **modern enterprise Data Engineering** (Medallion Architecture, Kimball Star Schema, Slowly Changing Dimensions Type 2, transactional testing, and audit logging) with **cutting-edge football analytics** (scale-weighted Euclidean profile similarity matching, regression-shrunk finishing indices, and value-efficiency scouting marts) to run data-driven, Moneyball-style management saves in Football Manager 24.
 
@@ -127,7 +127,7 @@ With Slowly Changing Dimensions (SCD Type 2), historical seasons are never overw
 
 ### 1. Execute the Master Pipeline
 ```sql
-USE FiorentinaDW;
+USE DW;
 GO
 EXEC dbo.usp_run_warehouse_pipeline @Season = '2023/24', @RunTests = 1;
 ```

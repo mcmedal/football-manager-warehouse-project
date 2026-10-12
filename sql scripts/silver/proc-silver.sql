@@ -258,28 +258,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -383,6 +405,7 @@ BEGIN
 					OR S.headers_attempted_per90 != N.headers_attempted_per90
 					OR S.distance_covered_km_per90 != N.distance_covered_km_per90
 					OR S.fouls_made_per90 != N.fouls_made_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
 		PRINT '>>> Inserting New Records in  silver.fmdata_team_players';
 			WITH cleaned AS (
@@ -613,28 +636,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -807,6 +852,7 @@ BEGIN
 					OR S.headers_attempted_per90 != O.headers_attempted_per90
 					OR S.distance_covered_km_per90 != O.distance_covered_km_per90
 					OR S.fouls_made_per90 != O.fouls_made_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(O.transfer_value_m, -1)
 				)
 			OR NOT EXISTS (
 				SELECT 1
@@ -933,28 +979,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -1030,6 +1098,7 @@ BEGIN
 					OR S.clearances_per90 != N.clearances_per90
 					OR S.distance_covered_km_per90 != N.distance_covered_km_per90
 					OR S.possession_lost_per90 != N.possession_lost_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
 
 		PRINT '>>> Inserting New Records in  silver.fmdata_team_gks';
@@ -1154,28 +1223,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -1288,6 +1379,7 @@ BEGIN
 					OR S.clearances_per90 != O.clearances_per90
 					OR S.distance_covered_km_per90 != O.distance_covered_km_per90
 					OR S.possession_lost_per90 != O.possession_lost_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(O.transfer_value_m, -1)
 				)
 			OR NOT EXISTS (
 				SELECT 1
@@ -1536,28 +1628,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -1664,6 +1778,7 @@ BEGIN
 					OR S.headers_attempted_per90 != N.headers_attempted_per90
 					OR S.distance_covered_km_per90 != N.distance_covered_km_per90
 					OR S.fouls_made_per90 != N.fouls_made_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
 
 		PRINT '>>> Inserting New Records in silver.fmdata_interested_out_players';
@@ -1896,28 +2011,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -2093,6 +2230,7 @@ BEGIN
 					OR S.headers_attempted_per90 != O.headers_attempted_per90
 					OR S.distance_covered_km_per90 != O.distance_covered_km_per90
 					OR S.fouls_made_per90 != O.fouls_made_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(O.transfer_value_m, -1)
 				)
 			OR NOT EXISTS (
 				SELECT 1
@@ -2222,28 +2360,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -2319,6 +2479,7 @@ BEGIN
 					OR S.clearances_per90 != N.clearances_per90
 					OR S.distance_covered_km_per90 != N.distance_covered_km_per90
 					OR S.possession_lost_per90 != N.possession_lost_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
 
 		PRINT '>>> Inserting New Records in silver.fmdata_interested_gks';
@@ -2428,28 +2589,50 @@ BEGIN
 						)
 					END AS wage_per_week_k,
 					CASE
-						WHEN transfer_value = 'Not for Sale' THEN NULL
-						WHEN RIGHT(transfer_value, 1) = 'K' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+						WHEN transfer_value IS NULL 
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') LIKE '%Not%Sale%'
+							OR REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '') IN ('Unknown', 'NA', 'N/A', '-', '')
+							THEN NULL
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'M'
+							THEN CAST(
+								REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+									TRIM(SUBSTRING(
+										REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+										CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+										LEN(transfer_value)
+									)),
+									'M', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) = 'K'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'K', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT) * 0.001,
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'K' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'K', ''), 2, LEN(transfer_value)) AS FLOAT) * 0.001, ' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND NOT LEN(transfer_value) <= 7 THEN 
-							REPLACE(
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'K', ''), '£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) * 0.001
+								AS DECIMAL(10, 2)
+							)
+						WHEN RIGHT(REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''), 1) LIKE '[0-9]'
+							THEN CAST(
 								CAST(
-									REPLACE(SUBSTRING(REPLACE(transfer_value, 'M', ''), 
-									(CAST(CHARINDEX('-', transfer_value) AS DECIMAL( 9, 0)) + 2), 
-									LEN(transfer_value)), '£', '') 
-								AS FLOAT), 
-							' ', '')
-						WHEN RIGHT(transfer_value, 1) = 'M' AND LEN(transfer_value) <= 7 THEN
-							REPLACE(CAST(SUBSTRING(REPLACE(transfer_value, 'M', ''), 2, LEN(transfer_value)) AS FLOAT), ' ', '')
-						WHEN RIGHT(transfer_value, 1) LIKE '%[0-9]' THEN REPLACE(CAST(SUBSTRING(transfer_value, 2, LEN(transfer_value)) AS DECIMAL( 9, 0)), ' ', '')
+									REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+										TRIM(SUBSTRING(
+											REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), ''),
+											CHARINDEX('-', REPLACE(REPLACE(TRIM(transfer_value), CHAR(13), ''), CHAR(10), '')) + 1,
+											LEN(transfer_value)
+										)),
+										'£', ''), '€', ''), '$', ''), ',', ''), ' ', '')
+									AS FLOAT
+								) / 1000000.0
+								AS DECIMAL(10, 2)
+							)
+						ELSE NULL
 					END AS transfer_value_m,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
@@ -2562,6 +2745,7 @@ BEGIN
 					OR S.clearances_per90 != O.clearances_per90
 					OR S.distance_covered_km_per90 != O.distance_covered_km_per90
 					OR S.possession_lost_per90 != O.possession_lost_per90
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(O.transfer_value_m, -1)
 				)
 				OR NOT EXISTS (
 					SELECT 1

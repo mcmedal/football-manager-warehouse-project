@@ -150,6 +150,29 @@ BEGIN
 END;
 
 -- -------------------------------------------------------------------
+-- Test 6: Valuation Population (transfer_value_m Not All NULL)
+-- -------------------------------------------------------------------
+SET @TotalTests = @TotalTests + 1;
+DECLARE @TotalValuations INT = 0;
+DECLARE @NonNullValuations INT = 0;
+
+SELECT 
+    @TotalValuations = COUNT(*),
+    @NonNullValuations = COUNT(transfer_value_m)
+FROM gold.fact_players_value;
+
+IF (@TotalValuations > 0 AND @NonNullValuations > 0)
+BEGIN
+    PRINT CONCAT('[PASS] Test 6: Valuation Population - Valuations populated successfully (', @NonNullValuations, ' of ', @TotalValuations, ' records).');
+    SET @PassedTests = @PassedTests + 1;
+END
+ELSE
+BEGIN
+    PRINT CONCAT('[FAIL] Test 6: Valuation Population - Valuations are entirely NULL across ', @TotalValuations, ' records.');
+    SET @FailedTests = @FailedTests + 1;
+END;
+
+-- -------------------------------------------------------------------
 -- Test Summary Report
 -- -------------------------------------------------------------------
 PRINT '==========================================================';
@@ -159,3 +182,4 @@ PRINT '==========================================================';
 IF @FailedTests > 0
     THROW 52000, 'Data Integrity verification failed.', 1;
 GO
+

@@ -1182,8 +1182,8 @@ BEGIN
 			WHERE S.dwh_current_validity = 1
 				AND (
 					S.team_key != N.team_key
-					OR S.wage_per_week_k != N.wage_per_week_k
-					OR S.transfer_value_m != N.transfer_value_m
+					OR ISNULL(S.wage_per_week_k, -1) != ISNULL(N.wage_per_week_k, -1)
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
 
 		PRINT '>>> Inserting New Records in GOLD.FACT_PLAYERS_VALUE';
@@ -1272,8 +1272,8 @@ BEGIN
 				AND O.dwh_current_validity = 1
 				WHERE (
 					S.team_key != O.team_key
-					OR S.wage_per_week_k != O.wage_per_week_k
-					OR S.transfer_value_m != O.transfer_value_m
+					OR ISNULL(S.wage_per_week_k, -1) != ISNULL(O.wage_per_week_k, -1)
+					OR ISNULL(S.transfer_value_m, -1) != ISNULL(O.transfer_value_m, -1)
 				)
 			OR NOT EXISTS (
 				SELECT 1

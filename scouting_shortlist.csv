@@ -1,51 +1,51 @@
 Moneyball_Rank,Player,Position,Age,Club,Division,Minutes,Transfer_Value_M,NPxG_plus_xA_per90,Cost_per_xGI
-1,Samuel Gueulette,M (L),26,RAAL La Louvière,Jupiler Pro League,1578.0,0.006,0.13,46.15
-2,Aaron Meijers,M (L),38,FC Volendam,Eredivisie,1699.0,0.018,0.27,66.67
-3,Thibaut Van Acker,DM,34,Club Brugge,Jupiler Pro League,1757.0,0.01,0.15,66.67
-4,Bebeto,D (R),36,Tondela,Liga Portugal Betclic,1992.0,0.01,0.13,76.92
-5,Jordi Liongola,AM (R),26,RAAL La Louvière,Jupiler Pro League,1101.0,0.035,0.4,87.5
-6,Ryotaro Ito,AM (C),28,Sint-Truiden,Jupiler Pro League,1100.0,0.06,0.5,120.0
-7,Jens Toornstra,M (C),37,Sparta Rotterdam,Eredivisie,1338.0,0.055,0.42,130.95
-8,Zakaria El Kababri,M (C),19,FCV Dender,Jupiler Pro League,1131.0,0.03,0.21,142.86
-9,Matt Godden,ST (C),34,Charlton,Sky Bet Championship,2053.0,0.026,0.18,144.44
-10,Mohamed Berte,AM (L),24,FCV Dender,Jupiler Pro League,1372.0,0.045,0.31,145.16
-11,Leonardo Pavoletti,ST (C),37,Cagliari,Serie A TIM,2156.0,0.045,0.3,150.0
-12,Cassiano,ST (C),36,Casa Pia,Liga Portugal Betclic,2340.0,0.05,0.26,192.31
-13,Marlon Pack,M (C),35,Portsmouth,Sky Bet Championship,1986.0,0.018,0.09,200.0
-14,Kobe Cools,D (C),28,FCV Dender,Jupiler Pro League,1259.0,0.022,0.11,200.0
-15,Barry Bannan,M (C),36,Sheffield Wednesday,Sky Bet Championship,3219.0,0.06,0.29,206.9
-16,Maxime Mejjati-Alami,AM (C),21,Standard Liège,Jupiler Pro League,1232.0,0.04,0.18,222.22
-17,Jeffrey Sarpong,AM (L),37,SC Telstar,Eredivisie,1413.0,0.035,0.14,250.0
-18,Adam Forshaw,DM,34,Blackburn,Sky Bet Championship,2304.0,0.065,0.22,295.45
-19,Harry Cornick,AM (R),31,Bristol City,Sky Bet Championship,1540.0,0.13,0.39,333.33
-20,Redouane Halhal,D (C),23,Mechelen,Jupiler Pro League,2115.0,0.028,0.08,350.0
-21,Macaulay Langstaff,ST (C),29,Millwall,Sky Bet Championship,2349.0,0.2,0.55,363.64
-22,Harvey Knibbs,AM (C),27,Charlton,Sky Bet Championship,1151.0,0.13,0.35,371.43
-23,Pizzi,AM (C),36,Estoril Praia,Liga Portugal Betclic,2791.0,0.075,0.2,375.0
-24,Dani Rodríguez,AM (C),37,Mallorca,LALIGA EA SPORTS,2488.0,0.09,0.23,391.3
-25,Craig Forsyth,D (L),37,Derby County,Sky Bet Championship,2277.0,0.02,0.05,400.0
-26,Bryan Goncalves,D (C),29,FCV Dender,Jupiler Pro League,3170.0,0.06,0.15,400.0
-27,Miguel Puche,ST (C),25,Arouca,Liga Portugal Betclic,1391.0,0.19,0.47,404.26
-28,Loïc Nego,D (R),35,Le Havre,Ligue 1 Uber Eats,1906.0,0.1,0.24,416.67
-29,David Hrncar,AM (R),28,FCV Dender,Jupiler Pro League,2501.0,0.14,0.32,437.5
-30,Robert Mühren,ST (C),37,FC Volendam,Eredivisie,2553.0,0.075,0.16,468.75
-31,Nathaniel Clyne,D (R),35,Crystal Palace,Premier League,1617.0,0.085,0.18,472.22
-32,Elliot Lee,AM (C),31,Wrexham,Sky Bet Championship,2528.0,0.18,0.38,473.68
-33,Aderllan Santos,D (C),37,AVS SAD,Liga Portugal Betclic,2252.0,0.024,0.05,480.0
-34,Tjaronn Chery,AM (C),37,N.E.C.,Eredivisie,1711.0,0.15,0.31,483.87
-35,Nökkvi Þeyr Þórisson,AM (L),26,Sparta Rotterdam,Eredivisie,1145.0,0.18,0.36,500.0
-36,Liam Palmer,DM,34,Sheffield Wednesday,Sky Bet Championship,3205.0,0.06,0.12,500.0
-37,Maxime Colin,D (R),34,Metz,Ligue 1 Uber Eats,1331.0,0.045,0.09,500.0
-38,Corey Blackett-Taylor,AM (L),28,Derby County,Sky Bet Championship,1657.0,0.24,0.44,545.45
-39,Greg Leigh,D (L),31,Oxford United,Sky Bet Championship,2163.0,0.1,0.18,555.56
-40,Oscar Trejo,AM (C),38,Rayo Vallecano,LALIGA EA SPORTS,1844.0,0.15,0.27,555.56
-41,Melvyn Dapa,D (R),19,Genk,Jupiler Pro League,2017.0,0.095,0.17,558.82
-42,Owen Maës,AM (L),27,RAAL La Louvière,Jupiler Pro League,2687.0,0.22,0.39,564.1
-43,Cícero Alves,M (C),29,Tondela,Liga Portugal Betclic,1474.0,0.07,0.12,583.33
-44,Noë Dussenne,D (C),34,OH Leuven,Jupiler Pro League,2306.0,0.03,0.04,600.0
-45,Daniel Cruz,ST (C),25,Gil Vicente,Liga Portugal Betclic,1183.0,0.23,0.38,605.26
-46,Franco Vázquez,AM (C),37,Cremonese,Serie A TIM,2933.0,0.16,0.26,615.38
-47,Stefán Teitur Þórðarson,M (C),27,Preston,Sky Bet Championship,2427.0,0.21,0.34,617.65
-48,Sam Long,D (R),31,Oxford United,Sky Bet Championship,1525.0,0.085,0.13,653.85
-49,David Bates,D (C),29,Standard Liège,Jupiler Pro League,1978.0,0.07,0.1,700.0
-50,Maxence Maisonneuve,D (C),27,RAAL La Louvière,Jupiler Pro League,1247.0,0.065,0.09,722.22
+1,Dean Bradley,ST (C),34,Swindon Town,Ligue 4,1210.0,0.001,0.61,1.64
+2,Augusto Ortigoza,ST (C),42,Libertad,Brasileiro Série B,1175.0,0.001,0.43,2.33
+3,Marc Bubb,AM (R),34,Mansfield,2. Lig,2084.0,0.001,0.43,2.33
+4,Federico Benedetti,ST (C),38,Gimnasia y Esgrima de Jujuy,Brasileiro Série D,2305.0,0.001,0.4,2.5
+5,Lorenzo Rota,ST (C),38,Elversberg,Serie D,993.0,0.0015,0.6,2.5
+6,Jivanílson Salgueiro,ST (C),36,Vila Nova,Brasileiro Série C,1425.0,0.001,0.39,2.56
+7,Lucas Zulueta,AM (R),37,Cobresal,Brasileiro Série D,1668.0,0.001,0.38,2.63
+8,Umut Öztürk,M (R),34,Alanyaspor,Serie B,950.0,0.001,0.35,2.86
+9,Robert de León,ST (C),33,Alvarado,Tercera División,2297.0,0.0015,0.52,2.88
+10,Eric Allan,AM (C),34,Livingston,League Two,1691.0,0.001,0.34,2.94
+11,Cosimo Dall'Agnol,ST (C),36,Ternana,Serie C,1587.0,0.0015,0.48,3.12
+12,Jeffrey Brenes,AM (C),36,Alajuelense,Liga MX,3220.0,0.001,0.32,3.12
+13,Iván Chaparro,M (R),34,Alte. Brown,Segunda División,3389.0,0.001,0.32,3.12
+14,Gil Amoço,ST (C),36,Almagro,Tercera División,1833.0,0.001,0.29,3.45
+15,Jan Puschmann,M (R),33,Ionikos,2. Lig,1551.0,0.001,0.28,3.57
+16,Victor Aubry,AM (C),35,Servette,Ligue 2,1023.0,0.002,0.53,3.77
+17,Juan Ignacio Gaitán,ST (C),36,Deportivo Cuenca,Liga Promérica,938.0,0.002,0.52,3.85
+18,Troels Vestergaard,M (C),34,FC Helsingør,National League North,1284.0,0.0015,0.38,3.95
+19,Hugo Cruz,ST (C),32,Mazatlán,Major League Soccer,960.0,0.002,0.49,4.08
+20,Marcos Lombardi,D (C),35,Dep. Riestra,Tercera División,2750.0,0.001,0.23,4.35
+21,Fábio Sousa,ST (C),34,CSA,Brasileiro Série C,1012.0,0.001,0.23,4.35
+22,Robbie Hobson,M (R),36,Accrington Stanley,Eliteserien,2011.0,0.002,0.45,4.44
+23,Abdul Eshun,ST (C),34,Boreham Wood,National League South,1881.0,0.002,0.44,4.55
+24,John Kelly,M (R),33,Cliftonville,National League North,1936.0,0.001,0.22,4.55
+25,Phil Cooke,AM (R),29,Slough Town,National League North,1862.0,0.001,0.22,4.55
+26,Robbie Flynn,DM,35,Accrington Stanley,Eliteserien,2148.0,0.001,0.22,4.55
+27,Park Sung-Hwa,AM (R),35,Ulsan HD,A-League,1097.0,0.003,0.64,4.69
+28,Lasse Schultz,ST (C),28,Racing de Ferrol,LaLiga 4,1032.0,0.0015,0.3,5.0
+29,Gabby Bernard,ST (C),31,Torquay United,Ligue 4,908.0,0.001,0.2,5.0
+30,Gaëtan Mercier,D (R),37,Concarneau,Ligue 4,1113.0,0.0015,0.29,5.17
+31,Max Börner,AM (L),26,Carl Zeiss Jena,Bundesliga 4,1327.0,0.0015,0.29,5.17
+32,Robert Laco,AM (R),36,Zlaté Moravce,National League West,2052.0,0.003,0.57,5.26
+33,Dave Boon,ST (C),26,Dover Athletic,National League North,2228.0,0.001,0.19,5.26
+34,Anel Spahic,D (C),36,Asteras Aktor,Serie C,1753.0,0.001,0.18,5.56
+35,Pablo Barrionuevo,D (C),34,Aldosivi,Segunda División,2233.0,0.001,0.17,5.88
+36,Tinashe Ncube,D (L),32,Notts County,Liga 3,2811.0,0.001,0.17,5.88
+37,Jordan Crowe,D (C),25,Rudeš,Serie D,1263.0,0.001,0.17,5.88
+38,Francisco,D (L),38,Gimnàstic Tarragona,LaLiga 4,3192.0,0.001,0.17,5.88
+39,Cleomar,AM (R),34,Santo André,Brasileiro Série D,1842.0,0.0015,0.25,6.0
+40,Keith Scullion,ST (C),24,Queen's Park,National League,1225.0,0.0015,0.25,6.0
+41,Lucas Otero,ST (C),34,Agropecuario Argentino,Tercera División,2303.0,0.003,0.48,6.25
+42,Luis Alvarado,AM (C),36,ADT,Liga 3,1704.0,0.002,0.32,6.25
+43,Rafael,ST (C),36,Daegu FC,A2 League,1223.0,0.0035,0.56,6.25
+44,Vivaldy Kayembe,ST (C),34,Schaffhausen,Serie D,1533.0,0.0025,0.36,6.94
+45,Federico Pompili,ST (C),35,Catania,Serie C,2045.0,0.004,0.57,7.02
+46,Marin Božić,AM (L),33,Zrinjski Mostar,Serie B,974.0,0.0015,0.21,7.14
+47,Kevin Ball,D (R),31,York City,Eliteserien,1161.0,0.0025,0.35,7.14
+48,Daiki Adachi,M (C),35,Urawa Red Diamonds,A3 League,1244.0,0.001,0.14,7.14
+49,Marcos,D (R),36,Badajoz,LaLiga 4,2568.0,0.0015,0.2,7.5
+50,Paul Clough,ST (C),34,York City,Eliteserien,1321.0,0.0015,0.2,7.5

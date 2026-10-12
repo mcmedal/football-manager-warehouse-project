@@ -33,7 +33,7 @@ Table gold.dim_player_info {
   player_id int
   player_name varchar
   team_key varchar
-  is_own_squad int [note: "1 = Fiorentina squad, 0 = Potential buy"]
+  is_own_squad int [note: "1 = Own squad, 0 = Potential buy"]
   contracted int
   age int
   position varchar

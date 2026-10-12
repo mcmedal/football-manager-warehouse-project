@@ -176,7 +176,7 @@ Execute [`sql scripts/tests/test_vw_similar_positions.sql`](sql%20scripts/tests/
 * Confirms zero `NULL` Euclidean distance values exist across all 8 positional views.
 
 ### 6.3. Squad Report Calculations
-Execute [`sql scripts/tests/test_vw_fiorentina_central_defender_reports.sql`](sql%20scripts/tests/test_vw_fiorentina_central_defender_reports.sql):
+Execute [`sql scripts/tests/test_vw_squad_central_defender_reports.sql`](sql%20scripts/tests/test_vw_squad_central_defender_reports.sql):
 * Validates derived calculation formulas for squad performance reports.
 
 ---

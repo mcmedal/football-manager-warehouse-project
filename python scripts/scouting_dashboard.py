@@ -131,7 +131,7 @@ def generate_scatter_plot(df, output_path="moneyball_quadrant.png"):
 
     # Scatter points
     plt.scatter(targets["transfer_val_m"], targets["npxg_plus_xa"], color="#1f77b4", alpha=0.5, s=40, label="Transfer Targets")
-    plt.scatter(starters["transfer_val_m"], starters["npxg_plus_xa"], color="#d62728", s=90, edgecolors="black", linewidths=1.5, label="Fiorentina Squad")
+    plt.scatter(starters["transfer_val_m"], starters["npxg_plus_xa"], color="#d62728", s=90, edgecolors="black", linewidths=1.5, label="Own Squad")
 
     # Quadrant lines
     plt.axvline(med_val, color="gray", linestyle="--", alpha=0.7)

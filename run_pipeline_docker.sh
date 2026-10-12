@@ -28,7 +28,9 @@ cd "${PROJECT_ROOT}"
 
 # Load .env if present
 if [[ -f .env ]]; then
-    export $(grep -v '^#' .env | xargs)
+    set -a
+    source .env
+    set +a
 fi
 
 CONTAINER_NAME="${CONTAINER_NAME:-sql_server}"
@@ -104,8 +106,11 @@ done
 echo -e "${GREEN}[OK] SQL Server is active and accepting connections.${NC}"
 
 # -------------------------------------------------------------------
-# 3. Synchronize CSV Documents & SQL Scripts inside Container
+# 3. Prepare and Synchronize FM Data Exports inside Container
 # -------------------------------------------------------------------
+echo -e "${BLUE}>>> Preparing and synchronizing FM data exports...${NC}"
+python3 "python scripts/prepare_ingestion.py" --target-dir documents/
+
 echo -e "${BLUE}>>> Verifying volume mounts / container directories...${NC}"
 # If /data or /scripts are not mounted as volumes, ensure they exist and copy files
 docker exec -u 0 "${CONTAINER_NAME}" mkdir -p /data /scripts >/dev/null 2>&1 || true
@@ -163,7 +168,7 @@ echo -e "${BLUE}================================================================
 test_suites=(
     "Data Warehouse Integrity & Sanity Suite|/scripts/tests/test_data_integrity.sql"
     "Positional Replacement Similarity Engines Suite|/scripts/tests/test_vw_similar_positions.sql"
-    "Central Defender Analytical Reports Suite|/scripts/tests/test_vw_fiorentina_central_defender_reports.sql"
+    "Central Defender Analytical Reports Suite|/scripts/tests/test_vw_squad_central_defender_reports.sql"
 )
 
 ALL_TESTS_PASSED=true

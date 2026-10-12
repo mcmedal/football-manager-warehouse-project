@@ -47,7 +47,7 @@ BEGIN TRANSACTION;
 BEGIN TRY
     -- Arrange: Insert team keys and starter benchmark + 2 candidate targets
     INSERT INTO gold.dim_team_info (team_key, league, club_name, dwh_current_validity)
-    VALUES ('FIO', 'Serie A', 'Fiorentina', 1),
+    VALUES ('OWN', 'Serie A', 'Own Club', 1),
            ('EXT1', 'LaLiga', 'External Club 1', 1),
            ('EXT2', 'Ligue 1', 'External Club 2', 1);
 
@@ -55,7 +55,7 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
     ) VALUES 
-        (-201, 888201, 'Starter CD Alpha', 'FIO', 1, 1, 27, 'Central Defender', 1),
+        (-201, 888201, 'Starter CD Alpha', 'OWN', 1, 1, 27, 'Central Defender', 1),
         (-202, 888202, 'Target CD Close',  'EXT1', 0, 0, 24, 'Central Defender', 1),
         (-203, 888203, 'Target CD Far',    'EXT2', 0, 0, 29, 'Central Defender', 1);
     SET IDENTITY_INSERT gold.dim_player_info OFF;
@@ -63,7 +63,7 @@ BEGIN TRY
     INSERT INTO gold.fact_players_value (
         player_key, team_key, wage_per_week_k, transfer_value_m, dwh_current_validity
     ) VALUES 
-        (-201, 'FIO',  50.0, 20.0, 1),
+        (-201, 'OWN',  50.0, 20.0, 1),
         (-202, 'EXT1', 25.0, 10.0, 1),
         (-203, 'EXT2', 40.0, 15.0, 1);
 
@@ -77,7 +77,7 @@ BEGIN TRY
         fouls_made_per90, yellow_cards_per90, red_cards_per90,
         dwh_current_validity
     ) VALUES 
-        (-201, 'FIO', 2000, 5.0, 60.0, 2.0, 0.80, 2.0, 5.0, 1.0, 6.0, 0.70, 0.5, 0.1, 0.0, 1),
+        (-201, 'OWN', 2000, 5.0, 60.0, 2.0, 0.80, 2.0, 5.0, 1.0, 6.0, 0.70, 0.5, 0.1, 0.0, 1),
         -- Close match stats
         (-202, 'EXT1', 1800, 5.1, 58.0, 2.1, 0.79, 1.9, 4.9, 1.1, 5.9, 0.71, 0.6, 0.1, 0.0, 1),
         -- Far match stats (low aerial, low passing, high fouls)
@@ -125,13 +125,13 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
     ) VALUES 
-        (-204, 888204, 'Own Striker Starter', 'FIO', 1, 1, 26, 'Striker', 1);
+        (-204, 888204, 'Own Striker Starter', 'OWN', 1, 1, 26, 'Striker', 1);
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_players_value (
         player_key, team_key, wage_per_week_k, transfer_value_m, dwh_current_validity
     ) VALUES 
-        (-204, 'FIO', 60.0, 30.0, 1);
+        (-204, 'OWN', 60.0, 30.0, 1);
 
     INSERT INTO gold.fact_outfield_player_stats (
         player_key, team_key, minutes_played,
@@ -140,7 +140,7 @@ BEGIN TRY
         pressures_attempted_per90, possession_won_per90,
         dwh_current_validity
     ) VALUES 
-        (-204, 'FIO', 2200, 0.45, 2.5, 1.3, 4.0, 0.60, 10.0, 2.5, 1);
+        (-204, 'OWN', 2200, 0.45, 2.5, 1.3, 4.0, 0.60, 10.0, 2.5, 1);
 
     -- Act & Assert
     IF NOT EXISTS (SELECT 1 FROM gold.vw_similar_strikers WHERE player_key = -204)
@@ -171,20 +171,20 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
     ) VALUES 
-        (-205, 888205, 'Starter Winger', 'FIO', 1, 1, 25, 'Left Attacking Midfielder', 1),
+        (-205, 888205, 'Starter Winger', 'OWN', 1, 1, 25, 'Left Attacking Midfielder', 1),
         (-206, 888206, 'Low Min Winger', 'EXT1', 0, 0, 19, 'Left Attacking Midfielder', 1);
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_players_value (
         player_key, team_key, wage_per_week_k, transfer_value_m, dwh_current_validity
     ) VALUES 
-        (-205, 'FIO',  30.0, 12.0, 1),
+        (-205, 'OWN',  30.0, 12.0, 1),
         (-206, 'EXT1',  5.0,  2.0, 1);
 
     INSERT INTO gold.fact_outfield_player_stats (
         player_key, team_key, minutes_played, dwh_current_validity
     ) VALUES 
-        (-205, 'FIO', 1800, 1),
+        (-205, 'OWN', 1800, 1),
         (-206, 'EXT1', 500, 1); -- Under 900 minutes threshold
 
     -- Act & Assert
@@ -213,21 +213,21 @@ BEGIN TRANSACTION;
 BEGIN TRY
     -- Arrange: Starter + Target with zero shots, passes, or tackles (ratios are NULL)
     INSERT INTO gold.dim_team_info (team_key, league, club_name, dwh_current_validity)
-    VALUES ('FIO', 'Serie A', 'Fiorentina', 1),
+    VALUES ('OWN', 'Serie A', 'Own Club', 1),
            ('EXT1', 'LaLiga', 'External Club 1', 1);
 
     SET IDENTITY_INSERT gold.dim_player_info ON;
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
     ) VALUES 
-        (-207, 888207, 'Starter Striker', 'FIO', 1, 1, 28, 'Striker', 1),
+        (-207, 888207, 'Starter Striker', 'OWN', 1, 1, 28, 'Striker', 1),
         (-208, 888208, 'Zero Stats Striker', 'EXT1', 0, 0, 22, 'Striker', 1);
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_players_value (
         player_key, team_key, wage_per_week_k, transfer_value_m, dwh_current_validity
     ) VALUES 
-        (-207, 'FIO',  40.0, 15.0, 1),
+        (-207, 'OWN',  40.0, 15.0, 1),
         (-208, 'EXT1', 10.0,  3.0, 1);
 
     INSERT INTO gold.fact_outfield_player_stats (
@@ -237,7 +237,7 @@ BEGIN TRY
         pressures_attempted_per90, possession_won_per90,
         dwh_current_validity
     ) VALUES 
-        (-207, 'FIO', 1500, 2.0, 1.0, 0.40, 4.0, 0.50, 8.0, 2.0, 1),
+        (-207, 'OWN', 1500, 2.0, 1.0, 0.40, 4.0, 0.50, 8.0, 2.0, 1),
         (-208, 'EXT1', 1000, 0.0, 0.0, 0.00, 0.0, 0.00, 0.0, 0.0, 1); -- All ratios will be NULL
 
     -- Act
@@ -272,7 +272,7 @@ BEGIN TRANSACTION;
 BEGIN TRY
     -- Arrange: Starting GK + 2 target GKs
     INSERT INTO gold.dim_team_info (team_key, league, club_name, dwh_current_validity)
-    VALUES ('FIO', 'Serie A', 'Fiorentina', 1),
+    VALUES ('OWN', 'Serie A', 'Own Club', 1),
            ('EXT1', 'LaLiga', 'External Club 1', 1),
            ('EXT2', 'Ligue 1', 'External Club 2', 1);
 
@@ -280,7 +280,7 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
     ) VALUES 
-        (-209, 888209, 'Starter GK Alpha', 'FIO', 1, 1, 30, 'Goalkeeper', 1),
+        (-209, 888209, 'Starter GK Alpha', 'OWN', 1, 1, 30, 'Goalkeeper', 1),
         (-210, 888210, 'Target GK Twin',   'EXT1', 0, 0, 23, 'Goalkeeper', 1),
         (-211, 888211, 'Target GK Opp',    'EXT2', 0, 0, 28, 'Goalkeeper', 1);
     SET IDENTITY_INSERT gold.dim_player_info OFF;
@@ -288,7 +288,7 @@ BEGIN TRY
     INSERT INTO gold.fact_players_value (
         player_key, team_key, wage_per_week_k, transfer_value_m, dwh_current_validity
     ) VALUES 
-        (-209, 'FIO',  35.0, 15.0, 1),
+        (-209, 'OWN',  35.0, 15.0, 1),
         (-210, 'EXT1', 15.0,  5.0, 1),
         (-211, 'EXT2', 25.0,  8.0, 1);
 
@@ -300,7 +300,7 @@ BEGIN TRY
         passes_attempted_per90, pass_accuracy,
         dwh_current_validity
     ) VALUES 
-        (-209, 'FIO',  2500, 0.78, 0.72, 0.35, 3.5, 1.8, 0.8, 0.4, 25.0, 0.82, 1),
+        (-209, 'OWN',  2500, 0.78, 0.72, 0.35, 3.5, 1.8, 0.8, 0.4, 25.0, 0.82, 1),
         -- Twin profile
         (-210, 'EXT1', 2000, 0.77, 0.73, 0.33, 3.4, 1.7, 0.7, 0.5, 24.0, 0.81, 1),
         -- Opposite profile (negative shot stopping, no sweeper actions)

@@ -8,15 +8,28 @@ This guide walks through configuring custom views in Football Manager 2024, expo
 
 Football Manager allows users to print or save any active grid view as a Web Page (`.html`) or Text file (`.txt` / `.csv`) via the standard `Ctrl + P` shortcut.
 
-Place the player and goalkeeper CSV exports in the `/documents/` folder:
+Place the player and goalkeeper CSV or HTML exports in your configured export directory or the project `/documents/` folder:
 
 ```text
 documents/
 ├── team_players.csv               # Your squad's outfield players
 ├── team_gks.csv                   # Your squad's goalkeepers
-├── interested_out_players*.csv    # Scouted outfield targets (1, 2, 3... up to 8+ or single file)
+├── interested_out_players*.csv    # Scouted outfield targets (1, 2, 3... up to 13+ partitions or single file)
 ├── interested_gks.csv             # Scouted goalkeeper targets
 ```
+
+### Linux / Steam Proton Default Location
+When playing Football Manager 2024 via Steam on Linux, FM24 writes exports inside the Proton Wine prefix:
+```text
+/home/<username>/.local/share/Steam/steamapps/compatdata/2252570/pfx/drive_c/users/steamuser/Documents/Sports Interactive/Football Manager 2024/exported data/
+```
+
+To ingest directly from this directory without moving files manually:
+1. Configure `FM_DATA_DIR` in your [`.env`](file:///.env) file:
+   ```bash
+   FM_DATA_DIR="/home/mcmedal/.local/share/Steam/steamapps/compatdata/2252570/pfx/drive_c/users/steamuser/Documents/Sports Interactive/Football Manager 2024/exported data/"
+   ```
+2. Run `./run_pipeline_docker.sh` (or `python "python scripts/prepare_ingestion.py"`). The pipeline automatically discovers, converts (HTML $\to$ CSV), normalizes goalkeeper columns, deduplicates outfield scouting partitions, and loads everything into SQL Server.
 
 ---
 

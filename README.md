@@ -234,6 +234,7 @@ football-manager-warehouse-project/
 │   └── PYTHON_ANALYTICS.md             # Python CLI, radar charts & scatter plots
 ├── documents/                          # Raw FM24 CSV exports (teams and targets)
 ├── python scripts/
+│   ├── prepare_ingestion.py            # Steam Proton / Wine automated pre-processor & deduplicator
 │   ├── html_to_csv.py                  # HTML export to standardized CSV converter
 │   └── scouting_dashboard.py           # Python Moneyball radar charts, scatter plots & exporter
 ├── sql scripts/
@@ -254,7 +255,7 @@ football-manager-warehouse-project/
 │   └── tests/                          # Automated TDD unit tests & data integrity suites
 │       ├── test_data_integrity.sql
 │       ├── test_vw_similar_positions.sql
-│       └── test_vw_fiorentina_central_defender_reports.sql
+│       └── test_vw_squad_central_defender_reports.sql
 ├── scouting_shortlist.csv              # Exported Top 50 recruitment shortlist
 └── README.md                           # Main repository overview & quickstart
 ```

@@ -1,0 +1,13 @@
+# Environment variables & secrets
+.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Output shortlists or temporary files
+scouting_shortlist.csv

@@ -1,16 +1,16 @@
 /*
 ======================================================================
-Unit Test Suite: gold.vw_fiorentina_central_defender_reports
+Unit Test Suite: gold.vw_squad_central_defender_detailed_reports
 ======================================================================
 Purpose:
     Test-Driven Development (TDD) automated unit tests verifying the
     calculations, boundary conditions, and filtering logic of
-    gold.vw_fiorentina_central_defender_reports.
+    gold.vw_squad_central_defender_detailed_reports.
 
 Execution:
     Execute in SQL Server Management Studio (SSMS), Azure Data Studio,
     or via sqlcmd:
-    sqlcmd -S <server> -d DW -i test_vw_fiorentina_central_defender_reports.sql
+    sqlcmd -S <server> -d DW -i test_vw_squad_central_defender_reports.sql
 
 Safety:
     All tests execute within transactions that ROLLBACK upon completion,
@@ -24,7 +24,7 @@ GO
 SET NOCOUNT ON;
 
 PRINT '==========================================================';
-PRINT 'Starting Unit Tests: gold.vw_fiorentina_central_defender_reports';
+PRINT 'Starting Unit Tests: gold.vw_squad_central_defender_detailed_reports';
 PRINT '==========================================================';
 
 DECLARE @TotalTests INT = 0;
@@ -42,7 +42,7 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, contracted, age, position, dwh_current_validity
     ) VALUES (
-        -101, 999101, 'Test Defender Alpha', 'FIO', 1, 26, 'Central Defender', 1
+        -101, 999101, 'Test Defender Alpha', 'OWN', 1, 26, 'Central Defender', 1
     );
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
@@ -57,7 +57,7 @@ BEGIN TRY
         headers_attempted_per90, heading_accuracy,
         dwh_current_validity
     ) VALUES (
-        -101, 'FIO', 1200,
+        -101, 'OWN', 1200,
         2.50, 1.00,       -- tG_diff = 1.50
         0.50, 2.00, 50.00,-- kP_per_ProgP = 0.25; ProgRate_per_Pass = 4.00%
         3.00, 0.75, 1.20,
@@ -79,7 +79,7 @@ BEGIN TRY
         @press_acc = pressure_accuracy,
         @poss_diff = possession_differential,
         @w_def = Wdefensive_actions
-    FROM gold.vw_fiorentina_central_defender_reports
+    FROM gold.vw_squad_central_defender_detailed_reports
     WHERE player_key = -101;
 
     -- Assert
@@ -116,7 +116,7 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, contracted, age, position, dwh_current_validity
     ) VALUES (
-        -102, 999102, 'Test Defender Zeroes', 'FIO', 1, 24, 'Central Defender', 1
+        -102, 999102, 'Test Defender Zeroes', 'OWN', 1, 24, 'Central Defender', 1
     );
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
@@ -126,7 +126,7 @@ BEGIN TRY
         pressures_attempted_per90, pressures_completed_per90,
         dwh_current_validity
     ) VALUES (
-        -102, 'FIO', 1050,
+        -102, 'OWN', 1050,
         0.00, 0.00, 0.00, -- Zero progressive passes and zero passes attempted
         0.00, 0.00,       -- Zero pressures attempted
         1
@@ -139,7 +139,7 @@ BEGIN TRY
         @zero_kP_prog = kP_per_ProgP,
         @zero_prog_rate = ProgRate_per_Pass,
         @zero_press_acc = pressure_accuracy
-    FROM gold.vw_fiorentina_central_defender_reports
+    FROM gold.vw_squad_central_defender_detailed_reports
     WHERE player_key = -102;
 
     -- Assert: Should return NULL without crashing
@@ -172,21 +172,21 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, contracted, age, position, dwh_current_validity
     ) VALUES 
-        (-103, 999103, 'Under Threshold', 'FIO', 1, 22, 'Central Defender', 1),
-        (-104, 999104, 'At Threshold',    'FIO', 1, 23, 'Central Defender', 1);
+        (-103, 999103, 'Under Threshold', 'OWN', 1, 22, 'Central Defender', 1),
+        (-104, 999104, 'At Threshold',    'OWN', 1, 23, 'Central Defender', 1);
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_outfield_player_stats (
         player_key, team_key, minutes_played, dwh_current_validity
     ) VALUES 
-        (-103, 'FIO', 999,  1),
-        (-104, 'FIO', 1000, 1);
+        (-103, 'OWN', 999,  1),
+        (-104, 'OWN', 1000, 1);
 
     -- Act
     DECLARE @found_under BIT = 0, @found_at BIT = 0;
-    IF EXISTS (SELECT 1 FROM gold.vw_fiorentina_central_defender_reports WHERE player_key = -103)
+    IF EXISTS (SELECT 1 FROM gold.vw_squad_central_defender_detailed_reports WHERE player_key = -103)
         SET @found_under = 1;
-    IF EXISTS (SELECT 1 FROM gold.vw_fiorentina_central_defender_reports WHERE player_key = -104)
+    IF EXISTS (SELECT 1 FROM gold.vw_squad_central_defender_detailed_reports WHERE player_key = -104)
         SET @found_at = 1;
 
     -- Assert
@@ -219,18 +219,18 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, contracted, age, position, dwh_current_validity
     ) VALUES (
-        -105, 999105, 'Test Striker', 'FIO', 1, 25, 'Striker', 1
+        -105, 999105, 'Test Striker', 'OWN', 1, 25, 'Striker', 1
     );
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_outfield_player_stats (
         player_key, team_key, minutes_played, dwh_current_validity
     ) VALUES (
-        -105, 'FIO', 1500, 1
+        -105, 'OWN', 1500, 1
     );
 
     -- Act & Assert
-    IF NOT EXISTS (SELECT 1 FROM gold.vw_fiorentina_central_defender_reports WHERE player_key = -105)
+    IF NOT EXISTS (SELECT 1 FROM gold.vw_squad_central_defender_detailed_reports WHERE player_key = -105)
     BEGIN
         PRINT '[PASS] Test 4: Position Filter - Non-central defenders are excluded.';
         SET @PassedTests = @PassedTests + 1;
@@ -259,18 +259,18 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, contracted, age, position, dwh_current_validity
     ) VALUES (
-        -106, 999106, 'Test Free Agent', 'FIO', 0, 29, 'Central Defender', 1
+        -106, 999106, 'Test Free Agent', 'OWN', 0, 29, 'Central Defender', 1
     );
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_outfield_player_stats (
         player_key, team_key, minutes_played, dwh_current_validity
     ) VALUES (
-        -106, 'FIO', 1500, 1
+        -106, 'OWN', 1500, 1
     );
 
     -- Act & Assert
-    IF NOT EXISTS (SELECT 1 FROM gold.vw_fiorentina_central_defender_reports WHERE player_key = -106)
+    IF NOT EXISTS (SELECT 1 FROM gold.vw_squad_central_defender_detailed_reports WHERE player_key = -106)
     BEGIN
         PRINT '[PASS] Test 5: Contract Filter - Uncontracted players are excluded.';
         SET @PassedTests = @PassedTests + 1;
@@ -299,18 +299,18 @@ BEGIN TRY
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, contracted, age, position, dwh_current_validity
     ) VALUES (
-        -107, 999107, 'Test Historical Defender', 'FIO', 1, 28, 'Central Defender', 0
+        -107, 999107, 'Test Historical Defender', 'OWN', 1, 28, 'Central Defender', 0
     );
     SET IDENTITY_INSERT gold.dim_player_info OFF;
 
     INSERT INTO gold.fact_outfield_player_stats (
         player_key, team_key, minutes_played, dwh_current_validity
     ) VALUES (
-        -107, 'FIO', 1500, 0
+        -107, 'OWN', 1500, 0
     );
 
     -- Act & Assert
-    IF NOT EXISTS (SELECT 1 FROM gold.vw_fiorentina_central_defender_reports WHERE player_key = -107)
+    IF NOT EXISTS (SELECT 1 FROM gold.vw_squad_central_defender_detailed_reports WHERE player_key = -107)
     BEGIN
         PRINT '[PASS] Test 6: SCD Type 2 Filter - Inactive historical records are excluded.';
         SET @PassedTests = @PassedTests + 1;

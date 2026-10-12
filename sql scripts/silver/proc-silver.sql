@@ -1637,7 +1637,11 @@ BEGIN
 					dwh_create_date,
 					dwh_cd_valid_till,
 					dwh_current_validity
-				FROM cleaned
+				FROM (
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY minutes_played DESC) AS _rn
+					FROM cleaned
+				) cleaned
+				WHERE cleaned._rn = 1
 			)
 			UPDATE S
 			SET 
@@ -1993,7 +1997,11 @@ BEGIN
 					dwh_create_date,
 					dwh_cd_valid_till,
 					dwh_current_validity
-				FROM cleaned
+				FROM (
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY minutes_played DESC) AS _rn
+					FROM cleaned
+				) cleaned
+				WHERE cleaned._rn = 1
 			)
 			INSERT INTO silver.fmdata_interested_out_players
 				(

@@ -7,11 +7,12 @@ Script Purpose:
     1. gold.mart_outfield_scouting_summary: Wide summary mart for all outfield players.
     2. gold.mart_gk_scouting_summary: Wide summary mart for goalkeepers.
     3. gold.vw_transfer_targets_outfield: Filtered scouting target pool with percentiles.
-    4. gold.vw_fiorentina_central_defender_reports: Core CD squad report (TDD verified).
-    5. gold.vw_fiorentina_flank_defender_reports: Fullback & wingback squad report.
-    6. gold.vw_fiorentina_midfielder_reports: Central midfielder squad report.
-    7. gold.vw_fiorentina_attacking_midfielder_reports: Attacking midfielder squad report.
-    8. gold.vw_fiorentina_striker_reports: Striker squad report.
+    4. gold.vw_squad_central_defender_detailed_reports: Core CD squad detailed report (TDD verified).
+    5. gold.vw_squad_central_defender_reports: Central defender squad report.
+    6. gold.vw_squad_flank_defender_reports: Fullback & wingback squad report.
+    7. gold.vw_squad_midfielder_reports: Central midfielder squad report.
+    8. gold.vw_squad_attacking_midfielder_reports: Attacking midfielder squad report.
+    9. gold.vw_squad_striker_reports: Striker squad report.
     9. Positional Replacement Similarity Engines:
        - gold.vw_similar_strikers (ST)
        - gold.vw_similar_central_defenders (CD)
@@ -49,7 +50,7 @@ SELECT
     t.club_name,
     t.league,
     COALESCE(l.league_difficulty_coef, 1.00) AS league_difficulty_coef,
-    p.is_own_squad,                      -- 1 = Fiorentina squad, 0 = Potential buy
+    p.is_own_squad,                      -- 1 = Own squad, 0 = Potential buy
     p.contracted,
     s.minutes_played,
 
@@ -220,10 +221,18 @@ WHERE is_own_squad = 0                  -- Potential Buys Only
   AND minutes_played >= 900;
 GO
 
+-- Drop legacy club-specific views if they exist
+DROP VIEW IF EXISTS gold.vw_fiorentina_central_defender_reports;
+DROP VIEW IF EXISTS gold.vw_fiorentina_flank_defender_reports;
+DROP VIEW IF EXISTS gold.vw_fiorentina_midfielder_reports;
+DROP VIEW IF EXISTS gold.vw_fiorentina_attacking_midfielder_reports;
+DROP VIEW IF EXISTS gold.vw_fiorentina_striker_reports;
+GO
+
 -- ======================================================================
--- 4. FIORENTINA SQUAD REPORT: CENTRAL DEFENDERS (TDD Validated)
+-- 4. SQUAD REPORT: CENTRAL DEFENDERS (TDD Validated Detailed Metrics)
 -- ======================================================================
-CREATE OR ALTER VIEW gold.vw_fiorentina_central_defender_reports AS
+CREATE OR ALTER VIEW gold.vw_squad_central_defender_detailed_reports AS
 WITH eligible_defenders AS (
     SELECT 
         fact.player_key,
@@ -368,9 +377,7 @@ WHERE (is_own_squad = 1 OR contracted = 1)
   AND minutes_played >= 1000;
 GO
 
-CREATE OR ALTER VIEW gold.vw_fiorentina_flank_defender_reports AS
-SELECT * FROM gold.vw_squad_flank_defender_reports;
-GO
+
 
 -- ======================================================================
 -- 7. SQUAD REPORTS: CENTRAL MIDFIELDERS
@@ -405,9 +412,7 @@ WHERE (is_own_squad = 1 OR contracted = 1)
   AND minutes_played >= 1000;
 GO
 
-CREATE OR ALTER VIEW gold.vw_fiorentina_midfielder_reports AS
-SELECT * FROM gold.vw_squad_midfielder_reports;
-GO
+
 
 -- ======================================================================
 -- 8. SQUAD REPORTS: ATTACKING MIDFIELDERS
@@ -441,9 +446,7 @@ WHERE (is_own_squad = 1 OR contracted = 1)
   AND minutes_played >= 1000;
 GO
 
-CREATE OR ALTER VIEW gold.vw_fiorentina_attacking_midfielder_reports AS
-SELECT * FROM gold.vw_squad_attacking_midfielder_reports;
-GO
+
 
 -- ======================================================================
 -- 9. SQUAD REPORTS: STRIKERS
@@ -482,9 +485,7 @@ WHERE (is_own_squad = 1 OR contracted = 1)
   AND minutes_played >= 1000;
 GO
 
-CREATE OR ALTER VIEW gold.vw_fiorentina_striker_reports AS
-SELECT * FROM gold.vw_squad_striker_reports;
-GO
+
 
 -- ======================================================================
 -- 10. SCOUTING SIMILARITY ENGINES (BY POSITION)

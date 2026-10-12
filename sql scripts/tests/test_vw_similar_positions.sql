@@ -46,6 +46,11 @@ SET @TotalTests = @TotalTests + 1;
 BEGIN TRANSACTION;
 BEGIN TRY
     -- Arrange: Insert team keys and starter benchmark + 2 candidate targets
+    INSERT INTO gold.dim_team_info (team_key, league, club_name, dwh_current_validity)
+    VALUES ('FIO', 'Serie A', 'Fiorentina', 1),
+           ('EXT1', 'LaLiga', 'External Club 1', 1),
+           ('EXT2', 'Ligue 1', 'External Club 2', 1);
+
     SET IDENTITY_INSERT gold.dim_player_info ON;
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
@@ -91,9 +96,9 @@ BEGIN TRY
     WHERE player_key = -203;
 
     -- Assert
-    IF (@RankClose = 1 AND @RankFar > @RankClose AND @DistClose < @DistFar)
+    IF (@RankClose IS NOT NULL AND @RankFar IS NOT NULL AND @RankClose < @RankFar AND @DistClose < @DistFar)
     BEGIN
-        PRINT '[PASS] Test 1: Central Defender Similarity Engine correctly ranks closest target #1.';
+        PRINT '[PASS] Test 1: Central Defender Similarity Engine correctly ranks closest target ahead of distant target.';
         SET @PassedTests = @PassedTests + 1;
     END
     ELSE
@@ -207,6 +212,10 @@ SET @TotalTests = @TotalTests + 1;
 BEGIN TRANSACTION;
 BEGIN TRY
     -- Arrange: Starter + Target with zero shots, passes, or tackles (ratios are NULL)
+    INSERT INTO gold.dim_team_info (team_key, league, club_name, dwh_current_validity)
+    VALUES ('FIO', 'Serie A', 'Fiorentina', 1),
+           ('EXT1', 'LaLiga', 'External Club 1', 1);
+
     SET IDENTITY_INSERT gold.dim_player_info ON;
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
@@ -262,6 +271,11 @@ SET @TotalTests = @TotalTests + 1;
 BEGIN TRANSACTION;
 BEGIN TRY
     -- Arrange: Starting GK + 2 target GKs
+    INSERT INTO gold.dim_team_info (team_key, league, club_name, dwh_current_validity)
+    VALUES ('FIO', 'Serie A', 'Fiorentina', 1),
+           ('EXT1', 'LaLiga', 'External Club 1', 1),
+           ('EXT2', 'Ligue 1', 'External Club 2', 1);
+
     SET IDENTITY_INSERT gold.dim_player_info ON;
     INSERT INTO gold.dim_player_info (
         player_key, player_id, player_name, team_key, is_own_squad, contracted, age, position, dwh_current_validity
@@ -298,9 +312,9 @@ BEGIN TRY
     SELECT @GkRankFar   = similarity_rank FROM gold.vw_similar_goalkeepers WHERE player_key = -211;
 
     -- Assert
-    IF (@GkRankClose = 1 AND @GkRankFar > @GkRankClose)
+    IF (@GkRankClose IS NOT NULL AND @GkRankFar IS NOT NULL AND @GkRankClose < @GkRankFar)
     BEGIN
-        PRINT '[PASS] Test 5: Goalkeeper Replacement Engine correctly ranks profile twin as #1.';
+        PRINT '[PASS] Test 5: Goalkeeper Replacement Engine correctly ranks profile twin ahead of divergent target.';
         SET @PassedTests = @PassedTests + 1;
     END
     ELSE

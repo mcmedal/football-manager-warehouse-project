@@ -36,9 +36,25 @@ BEGIN
     DECLARE @StepStart DATETIME2, @StepEnd DATETIME2;
     DECLARE @Duration INT;
 
+    -- Detect host operating system (Linux vs Windows)
+    DECLARE @HostPlatform NVARCHAR(50) = 'Windows';
+    BEGIN TRY
+        SELECT @HostPlatform = host_platform FROM sys.dm_os_host_info;
+    END TRY
+    BEGIN CATCH
+        SET @HostPlatform = 'Windows';
+    END CATCH;
+
+    -- If running on Linux and path is Windows default, default to Docker container /data/
+    IF @HostPlatform = 'Linux' AND (@DataPath LIKE 'C:\%' OR @DataPath LIKE 'D:\%')
+    BEGIN
+        SET @DataPath = '/data/';
+    END;
+
     PRINT '======================================================================';
     PRINT CONCAT('STARTING WAREHOUSE ETL PIPELINE - BATCH: ', CAST(@BatchId AS NVARCHAR(50)));
-    PRINT CONCAT('TARGET SEASON: ', @Season);
+    PRINT CONCAT('HOST PLATFORM:  ', @HostPlatform);
+    PRINT CONCAT('TARGET SEASON:  ', @Season);
     PRINT CONCAT('DATA DIRECTORY: ', @DataPath);
     PRINT '======================================================================';
 

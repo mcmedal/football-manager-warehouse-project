@@ -58,17 +58,36 @@ Execute [`sql scripts/orchestration/run_pipeline.sql`](sql%20scripts/orchestrati
 
 ## 3. Running the Pipeline
 
-### 3.1. Master End-to-End Execution
+### 3.1. Linux / Docker Automated Execution (Recommended)
+On a Linux host with Docker, the repository provides a 1-click execution script that starts or attaches to SQL Server, verifies connectivity, deploys all DDL/procedures, ingests CSV partitions, and runs the test suites:
+
+```bash
+# 1. (Optional) Customize environment variables
+cp .env.example .env
+
+# 2. Run the orchestrator
+./run_pipeline_docker.sh
+```
+
+Or spin up SQL Server via Docker Compose and execute through `sqlcmd`:
+```bash
+docker compose up -d
+
+# Inside container (or from host with mapped port):
+docker exec -it sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'McMedal@14' -C -d DW \
+    -Q "EXEC dbo.usp_run_warehouse_pipeline @Season = '2023/24', @RunTests = 1;"
+```
+
+### 3.2. Native SQL Execution (Windows / SSMS / Azure Data Studio)
 To run Bronze ingestion, Silver cleansing, Gold dimensional loading, and integrity sanity checks in a single automated transaction with audit logging:
 
 ```sql
 USE DW;
 GO
 
--- Execute pipeline for initial season 2023/24 (with optional custom data directory)
+-- Execute pipeline for initial season 2023/24 (auto-detects Linux /data/ vs Windows paths)
 EXEC dbo.usp_run_warehouse_pipeline 
     @Season = '2023/24', 
-    @DataPath = 'C:\Users\<username>\Documents\FM data\', -- optional: customize if needed
     @RunTests = 1;
 ```
 

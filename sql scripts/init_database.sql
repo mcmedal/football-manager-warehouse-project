@@ -26,8 +26,9 @@ BEGIN
 END;
 GO
 
--- Create the "DW" db
-CREATE DATABASE DW;
+-- Create the "DW" db with UTF-8 collation for cross-platform Linux & Windows support
+CREATE DATABASE DW COLLATE Latin1_General_100_CI_AS_SC_UTF8;
+GO
 
 USE DW;
 GO
@@ -37,4 +38,6 @@ GO
 CREATE SCHEMA silver;
 GO
 CREATE SCHEMA gold;
+GO
+CREATE SCHEMA audit;
 GO

@@ -67,6 +67,7 @@ SELECT
     (s.assists_per90 - s.xAssits_per90) AS assist_luck,
     CAST(s.xGoals_overperformance * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(5,2)) AS finishing_overperf_shrunk,
     CAST(s.non_penalty_xGoals_per90 / NULLIF(s.non_penalty_xGoals_per90 + s.xAssits_per90, 0) AS DECIMAL(5,2)) AS goal_threat_share,
+    s.shots_per90,
     CAST(s.shots_on_target_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(5,2)) AS shot_on_target_rate,
     s.xGoals_per_shot,
     CAST(s.shots_outside_the_box_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(5,2)) AS shots_outside_box_ratio,

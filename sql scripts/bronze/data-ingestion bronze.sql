@@ -35,17 +35,47 @@ BEGIN
 	DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME;
 	DECLARE @sql NVARCHAR(MAX);
 
-	-- Normalize data directory path with trailing backslash
-	IF RIGHT(@DataPath, 1) != '\' AND RIGHT(@DataPath, 1) != '/'
+	-- Detect host operating system (Linux vs Windows)
+	DECLARE @HostPlatform NVARCHAR(50) = 'Windows';
+	BEGIN TRY
+		SELECT @HostPlatform = host_platform FROM sys.dm_os_host_info;
+	END TRY
+	BEGIN CATCH
+		SET @HostPlatform = 'Windows';
+	END CATCH;
+
+	-- If running on Linux and path is Windows default, default to Docker container /data/
+	IF @HostPlatform = 'Linux' AND (@DataPath LIKE 'C:\%' OR @DataPath LIKE 'D:\%')
 	BEGIN
-		SET @DataPath = @DataPath + '\';
+		SET @DataPath = '/data/';
 	END;
+
+	-- Normalize data directory path with trailing separator based on platform/path format
+	DECLARE @Sep CHAR(1) = CASE WHEN @DataPath LIKE '/%' OR @DataPath LIKE '%/%' THEN '/' ELSE '\' END;
+	IF RIGHT(@DataPath, 1) != '/' AND RIGHT(@DataPath, 1) != '\'
+	BEGIN
+		SET @DataPath = @DataPath + @Sep;
+	END;
+	IF @Sep = '/'
+	BEGIN
+		SET @DataPath = REPLACE(@DataPath, '\', '/');
+	END;
+
+	-- Build cross-platform BULK INSERT options
+	-- (SQL Server on Linux supports CODEPAGE = 'RAW' with UTF-8 collation; Windows supports CODEPAGE = '65001')
+	DECLARE @BulkOptions NVARCHAR(500) = N'FIRSTROW = 2, FORMAT = ''CSV'', TABLOCK';
+	IF @HostPlatform = 'Linux'
+		SET @BulkOptions = @BulkOptions + N', CODEPAGE = ''RAW''';
+	ELSE
+		SET @BulkOptions = @BulkOptions + N', CODEPAGE = ''65001''';
 
 	BEGIN TRY
 		SET @batch_start_time = GETDATE();
 		PRINT '=======================================================';
 		PRINT 'LOADING BRONZE LAYER (DYNAMIC INGESTION)';
+		PRINT 'HOST PLATFORM:    ' + @HostPlatform;
 		PRINT 'SOURCE DIRECTORY: ' + @DataPath;
+		PRINT 'BULK OPTIONS:     ' + @BulkOptions;
 		PRINT '=======================================================';
 
 		-- ------------------------------------------------------------
@@ -62,12 +92,7 @@ BEGIN
 		PRINT '>>INSERTING DATA FROM: ' + @DataPath + 'team_players.csv';
 		SET @sql = N'BULK INSERT bronze.fmdata_team_players
 		             FROM ''' + @DataPath + N'team_players.csv''
-		             WITH (
-		                 FIRSTROW = 2,
-		                 FORMAT = ''CSV'',
-		                 CODEPAGE = ''65001'',
-		                 TABLOCK
-		             );';
+		             WITH (' + @BulkOptions + N');';
 		EXEC sp_executesql @sql;
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
@@ -86,12 +111,7 @@ BEGIN
 		PRINT '>>INSERTING DATA FROM: ' + @DataPath + 'team_gks.csv';
 		SET @sql = N'BULK INSERT bronze.fmdata_team_gks
 		             FROM ''' + @DataPath + N'team_gks.csv''
-		             WITH (
-		                 FIRSTROW = 2,
-		                 FORMAT = ''CSV'',
-		                 CODEPAGE = ''65001'',
-		                 TABLOCK
-		             );';
+		             WITH (' + @BulkOptions + N');';
 		EXEC sp_executesql @sql;
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';
@@ -221,12 +241,7 @@ BEGIN
 				
 				SET @sql = N'BULK INSERT bronze.fmdata_interested_out_players
 				             FROM ''' + @cur_partition_path + N'''
-				             WITH (
-				                 FIRSTROW = 2,
-				                 FORMAT = ''CSV'',
-				                 CODEPAGE = ''65001'',
-				                 TABLOCK
-				             );';
+				             WITH (' + @BulkOptions + N');';
 				EXEC sp_executesql @sql;
 
 				SET @partitions_loaded = @partitions_loaded + 1;
@@ -257,12 +272,7 @@ BEGIN
 		PRINT '>>INSERTING DATA FROM: ' + @DataPath + 'interested_gks.csv';
 		SET @sql = N'BULK INSERT bronze.fmdata_interested_gks
 		             FROM ''' + @DataPath + N'interested_gks.csv''
-		             WITH (
-		                 FIRSTROW = 2,
-		                 FORMAT = ''CSV'',
-		                 CODEPAGE = ''65001'',
-		                 TABLOCK
-		             );';
+		             WITH (' + @BulkOptions + N');';
 		EXEC sp_executesql @sql;
 		SET @end_time = GETDATE();
 		PRINT '>>DURATION: ' + CAST(DATEDIFF(millisecond, @start_time, @end_time) AS NVARCHAR) + ' milliseconds';

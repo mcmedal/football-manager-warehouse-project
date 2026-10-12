@@ -121,14 +121,32 @@ With Slowly Changing Dimensions (SCD Type 2), historical seasons are never overw
 
 ---
 
-## ⚡ Quickstart & Sample Analytical Queries
+## ⚡ Quickstart & Pipeline Execution
 
-### 1. Execute the Master Pipeline
+### Option A: Linux & Docker Quickstart (Recommended for Linux)
+Run the entire end-to-end pipeline (spin up container, initialize UTF-8 database, run Bronze/Silver/Gold ETL, and execute test suites) in a single command:
+```bash
+# 1. (Optional) Customize SA password or port in .env
+cp .env.example .env
+
+# 2. Run the automated Docker pipeline runner
+./run_pipeline_docker.sh
+```
+Or start SQL Server via Docker Compose manually:
+```bash
+docker compose up -d
+```
+
+### Option B: Native SQL Execution (Windows / SSMS / Azure Data Studio)
 ```sql
 USE DW;
 GO
 EXEC dbo.usp_run_warehouse_pipeline @Season = '2023/24', @RunTests = 1;
 ```
+
+---
+
+## 🔍 Sample Analytical Queries
 
 ### 2. Find Top 5 Striker Replacements for Your Starter
 ```sql
@@ -202,6 +220,9 @@ python "python scripts/scouting_dashboard.py" --mode scatter
 
 ```text
 football-manager-warehouse-project/
+├── docker-compose.yml                  # Docker Compose configuration for SQL Server 2022
+├── .env.example                        # Environment variable template for Docker
+├── run_pipeline_docker.sh              # 1-click Linux/Docker ETL orchestrator & test runner
 ├── docs/                               # Comprehensive project documentation
 │   ├── README.md                       # Documentation navigation hub
 │   ├── SCOUTING_PLAYBOOK.md            # Step-by-step practical recruitment workflows
@@ -213,9 +234,10 @@ football-manager-warehouse-project/
 │   └── PYTHON_ANALYTICS.md             # Python CLI, radar charts & scatter plots
 ├── documents/                          # Raw FM24 CSV exports (teams and targets)
 ├── python scripts/
-│   ├── scouting_dashboard.py           # Python Moneyball radar charts, scatter plots & exporter
+│   ├── html_to_csv.py                  # HTML export to standardized CSV converter
+│   └── scouting_dashboard.py           # Python Moneyball radar charts, scatter plots & exporter
 ├── sql scripts/
-│   ├── init_database.sql               # Database & schema creation script
+│   ├── init_database.sql               # Database & schema creation script (UTF-8 collation)
 │   ├── bronze/                         # Landing layer DDL & ingestion scripts
 │   │   ├── ddl-bronze.sql
 │   │   └── data-ingestion bronze.sql

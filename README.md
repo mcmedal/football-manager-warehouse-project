@@ -79,27 +79,36 @@ flowchart TD
 ## 🥇 Gold Layer: Core Analytical Features
 
 ### 1. Unified Scouting Marts
-* **[`gold.mart_outfield_scouting_summary`](sql%20scripts/gold/views-gold.sql#L37):** Wide summary mart combining demographics, financials, and tactical metrics across both your squad and scouted external targets.
+* **[`gold.mart_outfield_scouting_summary`](sql%20scripts/gold/views-gold.sql#L42):** Wide summary mart combining demographics, financials, and tactical metrics across both your squad and scouted external targets.
 * **[`gold.mart_gk_scouting_summary`](sql%20scripts/gold/views-gold.sql#L128):** Dedicated goalkeeper mart featuring shot-stopping delta, hold rate %, sweeper keeper activity, and distribution efficiency.
-* **[`gold.vw_transfer_targets_outfield`](sql%20scripts/gold/views-gold.sql#L198):** Pre-filtered scouting target pool (`is_own_squad = 0`, `minutes >= 900`) enriched with `PERCENT_RANK()` percentiles across key performance indices.
+* **[`gold.vw_transfer_targets_outfield`](sql%20scripts/gold/views-gold.sql#L180):** Pre-filtered scouting target pool (`is_own_squad = 0`, `minutes >= 900`) enriched with `PERCENT_RANK()` percentiles across key performance indices.
 
-### 2. Positional Replacement Similarity Engines
+### 2. Positional Squad Performance Reports
+Deep positional evaluations of your own squad members and contracted players ($\text{Minutes} \ge 1,000$) to identify team weaknesses and benchmark starter profiles:
+* **[`gold.vw_squad_central_defender_detailed_reports`](sql%20scripts/gold/views-gold.sql#L235):** In-depth tactical CD report with weighted defensive actions ($W_{\text{def}}$), line-breaking progression rate, and key passes per progression ($kP/\text{ProgP}$).
+* **[`gold.vw_squad_central_defender_reports`](sql%20scripts/gold/views-gold.sql#L321):** Standard squad CD performance appraisal.
+* **[`gold.vw_squad_flank_defender_reports`](sql%20scripts/gold/views-gold.sql#L351):** Fullback & wingback report covering crossing threat, ball retention, and high-intensity sprint volume.
+* **[`gold.vw_squad_midfielder_reports`](sql%20scripts/gold/views-gold.sql#L385):** Central midfielder report analyzing passing tempo, dual-phase output, and duel win rates.
+* **[`gold.vw_squad_attacking_midfielder_reports`](sql%20scripts/gold/views-gold.sql#L420):** Attacking midfielder and winger appraisal measuring chance creation danger ($xA/\text{OP-KP}$), take-ons, and goal threat.
+* **[`gold.vw_squad_striker_reports`](sql%20scripts/gold/views-gold.sql#L454):** Forward evaluation tracking regression-shrunk finishing overperformance, shot quality ($xG/\text{shot}$), and conversion rates.
+
+### 3. Positional Replacement Similarity Engines
 Instead of subjective scouting, the warehouse features **scale-weighted Euclidean distance profile matchers** that compare external targets against your primary starting lineup (`is_own_squad = 1`, ordered by minutes played):
 
 $$D(\mathbf{Target}, \mathbf{Incumbent}) = \sqrt{\sum_{i=1}^n w_i \cdot \left(\text{Target}_i - \text{Incumbent}_i\right)^2}$$
 
 | Position | Engine View | Tactical Focus & Metrics |
 | :--- | :--- | :--- |
-| **Striker (ST)** | [`gold.vw_similar_strikers`](sql%20scripts/gold/views-gold.sql#L487) | $NPxG/90$, Shot on Target %, Aerials Won, Heading Acc, $xG/\text{shot}$, Goal Threat Share |
-| **Central Defender (CD)** | [`gold.vw_similar_central_defenders`](sql%20scripts/gold/views-gold.sql#L549) | Aerial Duels Won, Heading Acc, Progressive Passes, Tackle %, Reactive vs Positional, Discipline Index |
-| **Fullback / Wingback** | [`gold.vw_similar_flank_defenders`](sql%20scripts/gold/views-gold.sql#L614) | Completed Crosses/90, Open-play Cross Acc, Progressive Rate/Pass, Turnover %, Sprints/90 |
-| **Defensive Midfielder (DM)** | [`gold.vw_similar_defensive_midfielders`](sql%20scripts/gold/views-gold.sql#L674) | Defensive Actions/90, Tackle Acc, Reactive vs Positional, Aerials Won, Pass Acc, Pressure Efficiency |
-| **Central Midfielder (CM)** | [`gold.vw_similar_central_midfielders`](sql%20scripts/gold/views-gold.sql#L750) | Progressive Passes/90, Progression Share, Passes Attempted, Pass Acc, $NPxG+xA$, Press Efficiency |
-| **Winger / Wide Attacker** | [`gold.vw_similar_wingers`](sql%20scripts/gold/views-gold.sql#L824) | $NPxG+xA$, Dribbles/90, Completed Crosses/90, $xA/\text{OP-KP}$, Sprints/90, Goal Threat Share |
-| **Attacking Midfielder (CAM)**| [`gold.vw_similar_attacking_midfielders`](sql%20scripts/gold/views-gold.sql#L899) | $NPxG+xA$, $xA/\text{OP-KP}$, Open-Play Key Passes/90, Progression Share, Turnover %, Press Efficiency |
-| **Goalkeeper (GK)** | [`gold.vw_similar_goalkeepers`](sql%20scripts/gold/views-gold.sql#L972) | Shot Stopping Delta ($\text{Save \%} - \text{xSave \%}$), $xG\text{ Prevented}$, Hold Rate %, Sweeper Index, Distribution |
+| **Striker (ST)** | [`gold.vw_similar_strikers`](sql%20scripts/gold/views-gold.sql#L501) | $NPxG/90$, Shot on Target %, Aerials Won, Heading Acc, $xG/\text{shot}$, Goal Threat Share |
+| **Central Defender (CD)** | [`gold.vw_similar_central_defenders`](sql%20scripts/gold/views-gold.sql#L563) | Aerial Duels Won, Heading Acc, Progressive Passes, Tackle %, Reactive vs Positional, Discipline Index |
+| **Fullback / Wingback** | [`gold.vw_similar_flank_defenders`](sql%20scripts/gold/views-gold.sql#L629) | Completed Crosses/90, Open-play Cross Acc, Progressive Rate/Pass, Turnover %, Sprints/90 |
+| **Defensive Midfielder (DM)** | [`gold.vw_similar_defensive_midfielders`](sql%20scripts/gold/views-gold.sql#L690) | Defensive Actions/90, Tackle Acc, Reactive vs Positional, Aerials Won, Pass Acc, Pressure Efficiency |
+| **Central Midfielder (CM)** | [`gold.vw_similar_central_midfielders`](sql%20scripts/gold/views-gold.sql#L765) | Progressive Passes/90, Progression Share, Passes Attempted, Pass Acc, $NPxG+xA$, Press Efficiency |
+| **Winger / Wide Attacker** | [`gold.vw_similar_wingers`](sql%20scripts/gold/views-gold.sql#L835) | $NPxG+xA$, Dribbles/90, Completed Crosses/90, $xA/\text{OP-KP}$, Sprints/90, Goal Threat Share |
+| **Attacking Midfielder (CAM)**| [`gold.vw_similar_attacking_midfielders`](sql%20scripts/gold/views-gold.sql#L905) | $NPxG+xA$, $xA/\text{OP-KP}$, Open-Play Key Passes/90, Progression Share, Turnover %, Press Efficiency |
+| **Goalkeeper (GK)** | [`gold.vw_similar_goalkeepers`](sql%20scripts/gold/views-gold.sql#L971) | Shot Stopping Delta ($\text{Save \%} - \text{xSave \%}$), $xG\text{ Prevented}$, Hold Rate %, Sweeper Index, Distribution |
 
-### 3. Ad-Hoc Player Replacement Stored Procedure
+### 4. Ad-Hoc Player Replacement Stored Procedure
 Want to replace a specific aging star, an injured player, or find the closest budget alternative to an opposition superstar?
 ```sql
 -- Search replacements for any specific player in the database:
@@ -107,17 +116,20 @@ EXEC gold.usp_scout_similar_players @TargetPlayerName = 'Edin Džeko', @TopN = 1
 EXEC gold.usp_scout_similar_players @TargetPlayerName = 'Rolando Mandragora', @TopN = 5;
 ```
 
-### 4. Squad Succession Planning & Bargain Watch
-* **[`gold.vw_squad_succession_plan`](sql%20scripts/gold/views-gold.sql#L1204):** Categorizes your squad into *Prospects (U23)*, *Peak (24–29)*, and *Aging Starters ($\ge 30$)*. For every aging starter, it automatically surfaces the top 3 U23 successors from the scouting pool based on positional profile match and cost efficiency.
-* **[`gold.vw_bargain_watch`](sql%20scripts/gold/views-gold.sql#L1312):** Surfaces players with elite per-90 output whose transfer value or wages are drastically below market value:
-  $$\text{Cost per xGI} = \frac{\text{Transfer Value (€M)} \times 1000 + \text{Annual Wage (€k)}}{\text{NPxG} + \text{xA}}$$
-* **[`gold.vw_tactical_archetypes`](sql%20scripts/gold/views-gold.sql#L1338):** Automatically classifies players into FM tactical roles (*Ball-Playing Defender*, *Stopper*, *Deep-Lying Playmaker*, *Ball-Winning Midfielder*, *Inside Forward*, *Poacher*, *Sweeper Keeper*).
+### 5. Squad Succession Planning & Bargain Watch
+* **[`gold.vw_squad_succession_plan`](sql%20scripts/gold/views-gold.sql#L1211):** Categorizes your squad into *Prospects (U23)*, *Peak (24–29)*, and *Aging Starters ($\ge 30$)*. For every aging starter, it automatically surfaces the top 3 U23 successors from the scouting pool based on positional profile match and cost efficiency.
+* **[`gold.vw_bargain_watch`](sql%20scripts/gold/views-gold.sql#L1320):** Surfaces players with elite per-90 output whose transfer value or wages are drastically below market value using `attacking_bargain_index`, `defensive_bargain_index`, and:
+  $$\text{Cost per xGI} = \frac{\text{Transfer Value (€M)} \times 1000 + (\text{Weekly Wage (€k)} \times 52.0)}{\text{NPxG} + \text{xA}}$$
+* **[`gold.vw_tactical_archetypes`](sql%20scripts/gold/views-gold.sql#L1348):** Automatically classifies players into 21 FM tactical roles (*Ball-Playing Defender*, *Stopper*, *Deep-Lying Playmaker*, *Ball-Winning Midfielder*, *Inside Forward*, *Poacher*, *Sweeper Keeper*).
 
-### 5. Multi-Season Player Growth & Development
+### 6. Multi-Season Player Growth & Development
 With Slowly Changing Dimensions (SCD Type 2), historical seasons are never overwritten:
-* **[`gold.mart_outfield_historical_snapshots`](sql%20scripts/gold/views-gold.sql#L1021):** Full chronological record of all player seasons.
-* **[`gold.vw_player_growth_tracking`](sql%20scripts/gold/views-gold.sql#L1063):** Computes exact season-over-season deltas:
+* **[`gold.mart_outfield_historical_snapshots`](sql%20scripts/gold/views-gold.sql#L1031):** Full chronological record of all player seasons.
+* **[`gold.vw_player_growth_tracking`](sql%20scripts/gold/views-gold.sql#L1071):** Computes exact season-over-season deltas:
   $$\Delta (\text{NPxG} + \text{xA}), \quad \Delta \text{Progressive Passes}, \quad \Delta \text{Transfer Value}, \quad \Delta \text{Defensive Actions}$$
+* **[`gold.vw_gk_growth_tracking`](sql%20scripts/gold/views-gold.sql#L1146):** Tracks goalkeeper development deltas ($\Delta$ Shot Stopping Delta, $\Delta$ Hold Rate %, $\Delta$ Sweeper Index).
+
+> 💡 *For complete column schemas, grains, data types, and mathematical formulas of all 24 views, see [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md#7-analytical-views--derived-metrics-catalog).*
 
 ---
 

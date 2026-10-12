@@ -86,9 +86,26 @@ $$\text{Turnover Rate} = \frac{\text{Possession Lost per 90}}{\text{Passes Attem
 * **Hold Rate %:**
   $$\text{Hold Rate} = \frac{\text{Saves Held per 90}}{\text{Saves Made per 90}}$$
 * **Sweeper Keeper Index:**
-  $$\text{Sweeper Index} = \text{Interceptions per 90} + \text{Clearances per 90}$$
+  $$\text{Sweeper Index} = \text{Clearances per 90} + \text{Distance Covered (km) per 90}$$
+  *(In longitudinal growth tracking, calculated as $\text{Clearances}/90 + \text{Interceptions}/90$)*
+* **Distribution Value:**
+  $$\text{Distribution Value} = \text{Passes Attempted per 90} \times \text{Pass Accuracy \%}$$
 
 ---
+
+### 3.8. Weighted Defensive Impact Score ($W_{\text{def}}$)
+Used in `gold.vw_squad_central_defender_detailed_reports` to separate high-value anticipatory defending from last-ditch desperation clearances:
+
+$$W_{\text{def}} = (\text{Interceptions}/90 \times 0.50) + (\text{Clearances}/90 \times 0.25) + ((\text{Blocks}/90 + \text{Shots Blocked}/90) \times 0.25)$$
+
+* **Tactical Interpretation:** Prioritizes intelligence and positioning (interceptions carry 2x the weight of standard clearances).
+
+---
+
+### 3.9. Key Passes per Progressive Pass ($kP/\text{ProgP}$)
+$$\text{kP per ProgP} = \frac{\text{Open-Play Key Passes per 90}}{\text{Progressive Passes per 90}}$$
+
+* **Tactical Interpretation:** Evaluates whether a defender's forward passing translates directly into final-third shooting opportunities or merely recycles possession into midfield.
 
 ## 4. Scale-Weighted Euclidean Similarity Engine
 
@@ -276,15 +293,34 @@ graph TD
 
 ## 7. Financial Recruitment: Cost per xGI & Bargain Watch
 
-To uncover market inefficiencies, `gold.vw_bargain_watch` calculates the **total capital expenditure required to purchase 1 expected goal involvement ($NPxG + xA$)**:
+To uncover market inefficiencies, `gold.vw_bargain_watch` evaluates player production against total amortized financial commitments through three distinct metrics:
 
-$$\text{Cost per xGI} = \frac{\text{Transfer Value (€M)} \times 1,000 + \text{Annual Wage (€k)}}{\text{NPxG} + \text{xA}}$$
+### 7.1. Cost per xGI
+Measures the total capital expenditure (acquisition fee plus annual wage) required to acquire one non-penalty expected goal involvement ($NPxG + xA$):
 
-* **Filtering Criteria:**
-  1. $Mins \ge 900$ (sufficient competitive sample size).
-  2. $NPxG + xA \ge 0.25$ per 90 (meaningful offensive contribution).
-  3. $is\_own\_squad = 0$ (external targets only).
-* **Strategic Outcome:** Identifies players generating elite top-tier output playing for lower-reputation clubs or expiring contracts whose total cost per goal creation is a fraction of market value.
+$$\text{Cost per xGI} = \frac{\text{Transfer Value (€M)} \times 1,000 + (\text{Weekly Wage (€k)} \times 52.0)}{\text{NPxG} + \text{xA}}$$
+
+### 7.2. Attacking Bargain Index
+Quantifies direct attacking output delivered per €1M of total annual financial cost:
+
+$$\text{Attacking Bargain Index} = \frac{(\text{NPxG} + \text{xA}) \times 100.0}{\text{Transfer Value (€M)} + (\text{Weekly Wage (€k)} \times 0.052)}$$
+
+* Cast as `DECIMAL(10,2)` to support extreme values without arithmetic overflow when acquiring high-performing youth or lower-league players on nominal wages (£20–£80/week).
+
+### 7.3. Defensive Bargain Index
+Quantifies defensive interventions delivered per €1M of total annual financial cost:
+
+$$\text{Defensive Bargain Index} = \frac{\text{Defensive Actions per 90} \times 10.0}{\text{Transfer Value (€M)} + (\text{Weekly Wage (€k)} \times 0.052)}$$
+
+* Cast as `DECIMAL(10,2)` to provide scale headroom for low-cost defensive stoppers.
+
+### 7.4. Bargain Watch Qualification Criteria
+* $Mins \ge 900$ (statistically valid competitive sample size).
+* $is\_own\_squad = 0$ (external recruitment targets only).
+* Budget Qualification: $\text{Transfer Value} \le €15.0\text{M}$ **OR** $\text{Weekly Wage} \le €30.0\text{k}$.
+* Performance Qualification: $NPxG + xA \ge 0.30$ **OR** $\text{Defensive Actions}/90 \ge 5.00$.
+
+* **Strategic Outcome:** Identifies players generating elite top-tier output playing for lower-reputation clubs or expiring contracts whose total cost per goal creation or defensive contribution is a fraction of market value.
 
 ---
 

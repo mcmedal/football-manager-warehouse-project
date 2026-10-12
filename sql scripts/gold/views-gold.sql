@@ -1334,8 +1334,8 @@ SELECT
     progressive_passes_per90,
     defensive_actions_per90,
     cost_per_xgi,
-    CAST((npxg_plus_xa_per90 * 100.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(6,2)) AS attacking_bargain_index,
-    CAST((defensive_actions_per90 * 10.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(6,2)) AS defensive_bargain_index,
+    CAST((npxg_plus_xa_per90 * 100.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(10,2)) AS attacking_bargain_index,
+    CAST((defensive_actions_per90 * 10.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(10,2)) AS defensive_bargain_index,
     DENSE_RANK() OVER (ORDER BY cost_per_xgi ASC) AS cost_efficiency_rank
 FROM gold.mart_outfield_scouting_summary
 WHERE is_own_squad = 0

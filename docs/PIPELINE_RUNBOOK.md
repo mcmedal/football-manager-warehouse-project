@@ -94,7 +94,7 @@ EXEC dbo.usp_run_warehouse_pipeline
     @RunTests = 1;
 ```
 
-### 3.2. Loading Subsequent Seasons (Multi-Season SCD2)
+### 3.3. Loading Subsequent Seasons (Multi-Season SCD2)
 When transitioning to a new in-game season (e.g. at the conclusion of 2023/24):
 1. Export fresh CSV files from FM24 for the new season.
 2. Execute the master orchestrator passing the new season string:
@@ -106,6 +106,25 @@ EXEC dbo.usp_run_warehouse_pipeline
 ```
 
 * `gold.load_gold` will automatically expire old records (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`) and insert the new snapshot without deleting past history.
+
+### 3.4. Midseason & Winter Transfer Ingestion (Intra-Season SCD2)
+The warehouse natively supports midseason data exports (e.g. at the January transfer window or during a midseason tactical review) without affecting or distorting subsequent end-of-season loads:
+
+1. **Intra-Season Execution:** Export current form and squad data from FM24 midseason and run the pipeline specifying the current season:
+   ```sql
+   EXEC dbo.usp_run_warehouse_pipeline 
+       @Season = '2023/24', 
+       @RunTests = 1;
+   ```
+2. **Winter Transfers & Attribute Shifts:**
+   * If a player transfers between clubs (e.g., from Midseason FC to Winter Transfer United), the previous dimension and fact records are retired (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`).
+   * A new active dimension and fact record is generated linking to the player's new club and updated match statistics.
+3. **End-of-Season Convergence:**
+   * When the end-of-season export is ingested at the conclusion of May, the pipeline retires the midseason snapshot and activates the definitive season totals.
+   * Exactly **1 active row** (`dwh_current_validity = 1`) exists per player across `gold.dim_player_info`, `gold.fact_outfield_player_stats`, `gold.fact_gk_stats`, and `gold.fact_players_value`.
+4. **Isolated Multi-Season Progression:**
+   * Analytical growth views ([`gold.vw_player_growth_tracking`](file:///sql%20scripts/gold/views-gold.sql) and [`gold.vw_gk_growth_tracking`](file:///sql%20scripts/gold/views-gold.sql)) partition historical snapshots by `season` and select the definitive snapshot (`rn_season_latest = 1`).
+   * This guarantees that delta comparisons (e.g., season-over-season wage increases or transfer valuation changes) compare true full-season baselines without confusing intra-season midseason snapshots for full separate campaigns.
 
 ---
 
@@ -181,6 +200,13 @@ Execute [`sql scripts/tests/test_vw_similar_positions.sql`](sql%20scripts/tests/
 ### 6.3. Squad Report Calculations
 Execute [`sql scripts/tests/test_vw_squad_central_defender_reports.sql`](sql%20scripts/tests/test_vw_squad_central_defender_reports.sql):
 * Validates derived calculation formulas for squad performance reports.
+
+### 6.4. Midseason & Intra-Season SCD2 Isolation Tests
+Execute [`sql scripts/tests/test_midseason_ingestion.sql`](sql%20scripts/tests/test_midseason_ingestion.sql):
+* **Intra-Season Ingestion:** Asserts active records are properly created during January midseason exports.
+* **Winter Transfers:** Confirms club transfers resolve to the active team upon end-of-season load without orphan keys.
+* **Active Record Convergence:** Validates that end-of-season ingestion retires midseason snapshots and leaves exactly 1 active record across `gold.dim_player_info` and all three fact tables (`fact_outfield_player_stats`, `fact_gk_stats`, `fact_players_value`).
+* **Multi-Season Growth Continuity:** Asserts that [`gold.vw_player_growth_tracking`](file:///sql%20scripts/gold/views-gold.sql) accurately calculates season-over-season deltas across distinct campaigns without confusing intra-season intermediate snapshots for full independent seasons.
 
 ---
 

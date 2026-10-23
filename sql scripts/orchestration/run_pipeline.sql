@@ -166,8 +166,8 @@ BEGIN
         SET @StepStart = GETDATE();
         PRINT '>>> Step 4: Verifying Data Warehouse Integrity Assertions...';
 
-        DECLARE @DuplicateActiveCount INT = 0;
-        SELECT @DuplicateActiveCount = COUNT(*)
+        DECLARE @DuplicateActivePlayerCount INT = 0;
+        SELECT @DuplicateActivePlayerCount = COUNT(*)
         FROM (
             SELECT player_id, COUNT(*) AS cnt
             FROM gold.dim_player_info
@@ -176,13 +176,46 @@ BEGIN
             HAVING COUNT(*) > 1
         ) d;
 
-        IF @DuplicateActiveCount > 0
+        DECLARE @DuplicateActiveOutfieldFactCount INT = 0;
+        SELECT @DuplicateActiveOutfieldFactCount = COUNT(*)
+        FROM (
+            SELECT player_key, COUNT(*) AS cnt
+            FROM gold.fact_outfield_player_stats
+            WHERE dwh_current_validity = 1
+            GROUP BY player_key
+            HAVING COUNT(*) > 1
+        ) d;
+
+        DECLARE @DuplicateActiveGkFactCount INT = 0;
+        SELECT @DuplicateActiveGkFactCount = COUNT(*)
+        FROM (
+            SELECT player_key, COUNT(*) AS cnt
+            FROM gold.fact_gk_stats
+            WHERE dwh_current_validity = 1
+            GROUP BY player_key
+            HAVING COUNT(*) > 1
+        ) d;
+
+        DECLARE @DuplicateActiveValueFactCount INT = 0;
+        SELECT @DuplicateActiveValueFactCount = COUNT(*)
+        FROM (
+            SELECT player_key, COUNT(*) AS cnt
+            FROM gold.fact_players_value
+            WHERE dwh_current_validity = 1
+            GROUP BY player_key
+            HAVING COUNT(*) > 1
+        ) d;
+
+        IF @DuplicateActivePlayerCount > 0 OR @DuplicateActiveOutfieldFactCount > 0 OR @DuplicateActiveGkFactCount > 0 OR @DuplicateActiveValueFactCount > 0
         BEGIN
-            PRINT CONCAT('    [WARNING] Found ', @DuplicateActiveCount, ' duplicate active player records in dim_player_info.');
+            PRINT CONCAT('    [WARNING] Duplicate active records detected! (dim_player_info: ', @DuplicateActivePlayerCount,
+                         ', fact_outfield: ', @DuplicateActiveOutfieldFactCount,
+                         ', fact_gk: ', @DuplicateActiveGkFactCount,
+                         ', fact_value: ', @DuplicateActiveValueFactCount, ')');
         END
         ELSE
         BEGIN
-            PRINT '    [PASS] dim_player_info has zero duplicate active records.';
+            PRINT '    [PASS] Zero duplicate active records across dim_player_info and all fact tables.';
         END
 
         SET @StepEnd = GETDATE();

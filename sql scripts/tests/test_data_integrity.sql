@@ -26,10 +26,13 @@ DECLARE @PassedTests INT = 0;
 DECLARE @FailedTests INT = 0;
 
 -- -------------------------------------------------------------------
--- Test 1: Uniqueness of Active Records in dim_player_info
+-- Test 1: Uniqueness of Active Records in Dimension and Fact Tables
 -- -------------------------------------------------------------------
 SET @TotalTests = @TotalTests + 1;
 DECLARE @DuplicateActivePlayers INT = 0;
+DECLARE @DuplicateActiveOutfieldFacts INT = 0;
+DECLARE @DuplicateActiveGkFacts INT = 0;
+DECLARE @DuplicateActiveValueFacts INT = 0;
 
 SELECT @DuplicateActivePlayers = COUNT(*)
 FROM (
@@ -40,14 +43,44 @@ FROM (
     HAVING COUNT(*) > 1
 ) dup;
 
-IF @DuplicateActivePlayers = 0
+SELECT @DuplicateActiveOutfieldFacts = COUNT(*)
+FROM (
+    SELECT player_key
+    FROM gold.fact_outfield_player_stats
+    WHERE dwh_current_validity = 1
+    GROUP BY player_key
+    HAVING COUNT(*) > 1
+) dup;
+
+SELECT @DuplicateActiveGkFacts = COUNT(*)
+FROM (
+    SELECT player_key
+    FROM gold.fact_gk_stats
+    WHERE dwh_current_validity = 1
+    GROUP BY player_key
+    HAVING COUNT(*) > 1
+) dup;
+
+SELECT @DuplicateActiveValueFacts = COUNT(*)
+FROM (
+    SELECT player_key
+    FROM gold.fact_players_value
+    WHERE dwh_current_validity = 1
+    GROUP BY player_key
+    HAVING COUNT(*) > 1
+) dup;
+
+IF (@DuplicateActivePlayers = 0 AND @DuplicateActiveOutfieldFacts = 0 AND @DuplicateActiveGkFacts = 0 AND @DuplicateActiveValueFacts = 0)
 BEGIN
-    PRINT '[PASS] Test 1: Active Player Uniqueness - No duplicate active player records.';
+    PRINT '[PASS] Test 1: Active Record Uniqueness - Zero duplicate active records in dim_player_info and all fact tables.';
     SET @PassedTests = @PassedTests + 1;
 END
 ELSE
 BEGIN
-    PRINT CONCAT('[FAIL] Test 1: Active Player Uniqueness - Found ', @DuplicateActivePlayers, ' duplicate active players.');
+    PRINT CONCAT('[FAIL] Test 1: Active Record Uniqueness - Found duplicates (dim_player_info: ', @DuplicateActivePlayers,
+                 ', fact_outfield: ', @DuplicateActiveOutfieldFacts,
+                 ', fact_gk: ', @DuplicateActiveGkFacts,
+                 ', fact_value: ', @DuplicateActiveValueFacts, ').');
     SET @FailedTests = @FailedTests + 1;
 END;
 

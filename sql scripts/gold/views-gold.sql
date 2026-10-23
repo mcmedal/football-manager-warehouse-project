@@ -1037,6 +1037,7 @@ SELECT
     t.league,
     p.is_own_squad,
     p.age,
+    s.season,
     s.minutes_played,
     v.wage_per_week_k,
     v.transfer_value_m,
@@ -1069,7 +1070,7 @@ GO
 
 -- B. OUTFIELD PLAYER SEASON-OVER-SEASON DEVELOPMENT COMPARISON ENGINE
 CREATE OR ALTER VIEW gold.vw_player_growth_tracking AS
-WITH snapshots AS (
+WITH season_snapshots AS (
     SELECT 
         player_id,
         player_name,
@@ -1078,6 +1079,7 @@ WITH snapshots AS (
         league,
         is_own_squad,
         age,
+        season,
         minutes_played,
         wage_per_week_k,
         transfer_value_m,
@@ -1091,7 +1093,9 @@ WITH snapshots AS (
         aerial_duels_won_per90,
         pressure_efficiency,
         snapshot_date,
-        snapshot_version
+        snapshot_version,
+        DENSE_RANK() OVER (PARTITION BY player_id ORDER BY season ASC) AS season_num,
+        ROW_NUMBER() OVER (PARTITION BY player_id, season ORDER BY snapshot_date DESC) AS rn_season_latest
     FROM gold.mart_outfield_historical_snapshots
 )
 SELECT 
@@ -1101,8 +1105,10 @@ SELECT
     curr.club_name AS current_club,
     prev.club_name AS previous_club,
     curr.is_own_squad,
-    curr.snapshot_version AS current_season_num,
-    prev.snapshot_version AS previous_season_num,
+    curr.season AS current_season,
+    prev.season AS previous_season,
+    curr.season_num AS current_season_num,
+    prev.season_num AS previous_season_num,
     curr.age AS current_age,
     prev.age AS previous_age,
     curr.minutes_played AS current_minutes,
@@ -1136,10 +1142,12 @@ SELECT
 
     curr.snapshot_date AS current_snapshot_date,
     prev.snapshot_date AS previous_snapshot_date
-FROM snapshots curr
-INNER JOIN snapshots prev 
+FROM season_snapshots curr
+INNER JOIN season_snapshots prev 
     ON curr.player_id = prev.player_id 
-   AND curr.snapshot_version = prev.snapshot_version + 1;
+   AND curr.rn_season_latest = 1
+   AND prev.rn_season_latest = 1
+   AND curr.season_num = prev.season_num + 1;
 GO
 
 -- C. GOALKEEPER SEASON-OVER-SEASON DEVELOPMENT COMPARISON ENGINE
@@ -1151,6 +1159,7 @@ WITH gk_snapshots AS (
         t.club_name,
         p.is_own_squad,
         p.age,
+        s.season,
         s.minutes_played,
         v.transfer_value_m,
         v.wage_per_week_k,
@@ -1164,7 +1173,9 @@ WITH gk_snapshots AS (
         s.pass_accuracy,
         s.dwh_create_date AS snapshot_date,
         s.dwh_current_validity,
-        DENSE_RANK() OVER (PARTITION BY p.player_id ORDER BY s.dwh_create_date ASC) AS snapshot_version
+        DENSE_RANK() OVER (PARTITION BY p.player_id ORDER BY s.dwh_create_date ASC) AS snapshot_version,
+        DENSE_RANK() OVER (PARTITION BY p.player_id ORDER BY s.season ASC) AS season_num,
+        ROW_NUMBER() OVER (PARTITION BY p.player_id, s.season ORDER BY s.dwh_create_date DESC) AS rn_season_latest
     FROM gold.fact_gk_stats s
     INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
     INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
@@ -1176,8 +1187,10 @@ SELECT
     curr.club_name AS current_club,
     prev.club_name AS previous_club,
     curr.is_own_squad,
-    curr.snapshot_version AS current_season_num,
-    prev.snapshot_version AS previous_season_num,
+    curr.season AS current_season,
+    prev.season AS previous_season,
+    curr.season_num AS current_season_num,
+    prev.season_num AS previous_season_num,
     curr.age AS current_age,
     prev.age AS previous_age,
     curr.minutes_played AS current_minutes,
@@ -1200,7 +1213,9 @@ SELECT
 FROM gk_snapshots curr
 INNER JOIN gk_snapshots prev 
     ON curr.player_id = prev.player_id 
-   AND curr.snapshot_version = prev.snapshot_version + 1;
+   AND curr.rn_season_latest = 1
+   AND prev.rn_season_latest = 1
+   AND curr.season_num = prev.season_num + 1;
 GO
 
 -- ======================================================================

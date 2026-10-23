@@ -39,13 +39,13 @@ BEGIN
 			WITH dim_league AS (
 				SELECT DISTINCT TRIM(league) AS league
 				FROM (
-					SELECT league FROM silver.fmdata_team_players WHERE league IS NOT NULL AND TRIM(league) != ''
+					SELECT league FROM silver.fmdata_team_players WHERE league IS NOT NULL AND TRIM(league) != '' AND dwh_current_validity = 1
 					UNION
-					SELECT league FROM silver.fmdata_team_gks WHERE league IS NOT NULL AND TRIM(league) != ''
+					SELECT league FROM silver.fmdata_team_gks WHERE league IS NOT NULL AND TRIM(league) != '' AND dwh_current_validity = 1
 					UNION
-					SELECT league FROM silver.fmdata_interested_out_players WHERE league IS NOT NULL AND TRIM(league) != ''
+					SELECT league FROM silver.fmdata_interested_out_players WHERE league IS NOT NULL AND TRIM(league) != '' AND dwh_current_validity = 1
 					UNION
-					SELECT league FROM silver.fmdata_interested_gks WHERE league IS NOT NULL AND TRIM(league) != ''
+					SELECT league FROM silver.fmdata_interested_gks WHERE league IS NOT NULL AND TRIM(league) != '' AND dwh_current_validity = 1
 				) AS all_leagues
 			)
 			INSERT INTO gold.dim_league (league, league_difficulty_coef)
@@ -161,13 +161,13 @@ BEGIN
 			WITH dim_club AS (
 				SELECT DISTINCT TRIM(club_name) AS club_name
 				FROM (
-					SELECT club_name FROM silver.fmdata_team_players WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					SELECT club_name FROM silver.fmdata_team_players WHERE club_name IS NOT NULL AND TRIM(club_name) != '' AND dwh_current_validity = 1
 					UNION
-					SELECT club_name FROM silver.fmdata_team_gks WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					SELECT club_name FROM silver.fmdata_team_gks WHERE club_name IS NOT NULL AND TRIM(club_name) != '' AND dwh_current_validity = 1
 					UNION
-					SELECT club_name FROM silver.fmdata_interested_out_players WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					SELECT club_name FROM silver.fmdata_interested_out_players WHERE club_name IS NOT NULL AND TRIM(club_name) != '' AND dwh_current_validity = 1
 					UNION
-					SELECT club_name FROM silver.fmdata_interested_gks WHERE club_name IS NOT NULL AND TRIM(club_name) != ''
+					SELECT club_name FROM silver.fmdata_interested_gks WHERE club_name IS NOT NULL AND TRIM(club_name) != '' AND dwh_current_validity = 1
 				) AS all_clubs
 			)
 			INSERT INTO gold.dim_club (club)
@@ -193,13 +193,13 @@ BEGIN
 			WITH source_teams AS (
 				SELECT DISTINCT TRIM(club_name) AS club_name, TRIM(league) AS league
 				FROM (
-					SELECT club_name, league FROM silver.fmdata_team_players WHERE club_name IS NOT NULL AND league IS NOT NULL
+					SELECT club_name, league FROM silver.fmdata_team_players WHERE club_name IS NOT NULL AND league IS NOT NULL AND dwh_current_validity = 1
 					UNION
-					SELECT club_name, league FROM silver.fmdata_team_gks WHERE club_name IS NOT NULL AND league IS NOT NULL
+					SELECT club_name, league FROM silver.fmdata_team_gks WHERE club_name IS NOT NULL AND league IS NOT NULL AND dwh_current_validity = 1
 					UNION
-					SELECT club_name, league FROM silver.fmdata_interested_out_players WHERE club_name IS NOT NULL AND league IS NOT NULL
+					SELECT club_name, league FROM silver.fmdata_interested_out_players WHERE club_name IS NOT NULL AND league IS NOT NULL AND dwh_current_validity = 1
 					UNION
-					SELECT club_name, league FROM silver.fmdata_interested_gks WHERE club_name IS NOT NULL AND league IS NOT NULL
+					SELECT club_name, league FROM silver.fmdata_interested_gks WHERE club_name IS NOT NULL AND league IS NOT NULL AND dwh_current_validity = 1
 				) AS raw_teams
 			),
 			cleaned AS (
@@ -250,13 +250,13 @@ BEGIN
 		PRINT '>>> Acknowledging Old Records in GOLD.DIM_PLAYER_INFO';
 			WITH position AS (
 				SELECT DISTINCT(position) FROM (
-						SELECT position FROM silver.fmdata_team_players WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_team_players WHERE position IS NOT NULL AND dwh_current_validity = 1
 						UNION
-						SELECT position FROM silver.fmdata_team_gks WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_team_gks WHERE position IS NOT NULL AND dwh_current_validity = 1
 						UNION
-						SELECT position FROM silver.fmdata_interested_out_players WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_interested_out_players WHERE position IS NOT NULL AND dwh_current_validity = 1
 						UNION
-						SELECT position FROM silver.fmdata_interested_gks WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_interested_gks WHERE position IS NOT NULL AND dwh_current_validity = 1
 					) AS Q
 			), raw_player_info AS (
 				SELECT
@@ -266,13 +266,15 @@ BEGIN
 					0 AS is_own_squad,
 					0 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date
 				FROM silver.fmdata_interested_out_players AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
-				WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players)
+				WHERE A.dwh_current_validity = 1
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1)
 			UNION ALL
 				SELECT
 					A.player_id,
@@ -281,12 +283,14 @@ BEGIN
 					1 AS is_own_squad,
 					1 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date
 				FROM silver.fmdata_team_players AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
+				WHERE A.dwh_current_validity = 1
 			UNION ALL
 				SELECT
 					A.player_id,
@@ -295,15 +299,17 @@ BEGIN
 					0 AS is_own_squad,
 					0 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date
 				FROM silver.fmdata_interested_gks AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
-				WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks)
-				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players)
-				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_interested_out_players)
+				WHERE A.dwh_current_validity = 1
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1)
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1)
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_interested_out_players WHERE dwh_current_validity = 1)
 			UNION ALL
 				SELECT
 					A.player_id,
@@ -312,12 +318,14 @@ BEGIN
 					1 AS is_own_squad,
 					1 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date
 				FROM silver.fmdata_team_gks AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
+				WHERE A.dwh_current_validity = 1
 			), cleaned AS (
 				SELECT
 					player_id,
@@ -328,7 +336,7 @@ BEGIN
 					age,
 					position
 				FROM (
-					SELECT *, ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY is_own_squad DESC) AS rn
+					SELECT *, ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY is_own_squad DESC, dwh_create_date DESC) AS rn
 					FROM raw_player_info
 				) p
 				WHERE p.rn = 1
@@ -347,19 +355,20 @@ BEGIN
 					OR S.position != N.position
 					OR S.is_own_squad != N.is_own_squad
 					OR S.contracted != N.contracted
+					OR S.season != @Season
 				)
 				AND S.dwh_current_validity = 1;
 
 		PRINT '>>> Inserting New Records in GOLD.DIM_PLAYER_INFO';
 			WITH position AS (
 				SELECT DISTINCT(position) FROM (
-						SELECT position FROM silver.fmdata_team_players WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_team_players WHERE position IS NOT NULL AND dwh_current_validity = 1
 						UNION
-						SELECT position FROM silver.fmdata_team_gks WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_team_gks WHERE position IS NOT NULL AND dwh_current_validity = 1
 						UNION
-						SELECT position FROM silver.fmdata_interested_out_players WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_interested_out_players WHERE position IS NOT NULL AND dwh_current_validity = 1
 						UNION
-						SELECT position FROM silver.fmdata_interested_gks WHERE position IS NOT NULL
+						SELECT position FROM silver.fmdata_interested_gks WHERE position IS NOT NULL AND dwh_current_validity = 1
 					) AS Q
 			), raw_player_info AS (
 				SELECT
@@ -369,13 +378,15 @@ BEGIN
 					0 AS is_own_squad,
 					0 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date AS silver_create_date
 				FROM silver.fmdata_interested_out_players AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
-				WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players)
+				WHERE A.dwh_current_validity = 1
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1)
 			UNION ALL
 				SELECT
 					A.player_id,
@@ -384,12 +395,14 @@ BEGIN
 					1 AS is_own_squad,
 					1 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date AS silver_create_date
 				FROM silver.fmdata_team_players AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
+				WHERE A.dwh_current_validity = 1
 			UNION ALL
 				SELECT
 					A.player_id,
@@ -398,15 +411,17 @@ BEGIN
 					0 AS is_own_squad,
 					0 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date AS silver_create_date
 				FROM silver.fmdata_interested_gks AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
-				WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks)
-				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players)
-				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_interested_out_players)
+				WHERE A.dwh_current_validity = 1
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1)
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1)
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_interested_out_players WHERE dwh_current_validity = 1)
 			UNION ALL
 				SELECT
 					A.player_id,
@@ -415,20 +430,36 @@ BEGIN
 					1 AS is_own_squad,
 					1 AS contracted,
 					A.age,
-					C.position
+					C.position,
+					A.dwh_create_date AS silver_create_date
 				FROM silver.fmdata_team_gks AS A
 				INNER JOIN gold.dim_team_info AS B
 					ON A.club_name = B.club_name AND A.league = B.league
 				INNER JOIN position AS C
 					ON A.position = C.position
+				WHERE A.dwh_current_validity = 1
 			), cleaned AS (
 				SELECT 
-					*,
+					player_id,
+					player_name,
+					team_key,
+					is_own_squad,
+					contracted,
+					age,
+					position,
 					GETDATE() AS dwh_create_date,
 					'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 					1 AS dwh_current_validity
 				FROM (
-					SELECT *, ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY is_own_squad DESC) AS rn
+					SELECT 
+						player_id,
+						player_name,
+						team_key,
+						is_own_squad,
+						contracted,
+						age,
+						position,
+						ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY is_own_squad DESC, silver_create_date DESC) AS rn
 					FROM raw_player_info
 				) p
 				WHERE p.rn = 1
@@ -458,6 +489,7 @@ BEGIN
 					OR S.position != O.position
 					OR S.is_own_squad != O.is_own_squad
 					OR S.contracted != O.contracted
+					OR O.season != @Season
 				)
 				OR NOT EXISTS (
 					SELECT 1
@@ -486,6 +518,7 @@ BEGIN
 		PRINT '>>> Acknowledging Old Records in GOLD.FACT_OUTFIELD_STATS';
 			WITH cleaned AS (
 				SELECT
+					A.player_id,
 					B.player_key,
 					C.team_key,
 					A.minutes_played,
@@ -545,9 +578,11 @@ BEGIN
 					ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 				INNER JOIN gold.dim_team_info AS C
 					ON A.club_name = C.club_name AND A.league = C.league
-				WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players) -- If present, ignore our players
+				WHERE A.dwh_current_validity = 1
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1) -- If present, ignore our players
 				UNION
 				SELECT
+					A.player_id,
 					B.player_key,
 					C.team_key,
 					A.minutes_played,
@@ -607,17 +642,21 @@ BEGIN
 					ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 				INNER JOIN gold.dim_team_info AS C
 					ON A.club_name = C.club_name AND A.league = C.league
+				WHERE A.dwh_current_validity = 1
 				)
 			UPDATE S
 			SET 
 				dwh_cd_valid_till = GETDATE(),
 				dwh_current_validity = 0
 			FROM gold.fact_outfield_player_stats AS S
+			INNER JOIN gold.dim_player_info AS P
+				ON S.player_key = P.player_key
 			INNER JOIN cleaned AS N
-				ON S.player_key = N.player_key
+				ON P.player_id = N.player_id
 			WHERE S.dwh_current_validity = 1
 				AND (
-					S.team_key != N.team_key
+					S.player_key != N.player_key
+					OR S.team_key != N.team_key
 					OR S.minutes_played != N.minutes_played
 					OR S.team_goals_scored_per90 != N.team_goals_scored_per90
 					OR S.team_goals_conceded_per90 != N.team_goals_conceded_per90
@@ -629,6 +668,7 @@ BEGIN
 					OR S.headers_attempted_per90 != N.headers_attempted_per90
 					OR S.distance_covered_km_per90 != N.distance_covered_km_per90
 					OR S.fouls_made_per90 != N.fouls_made_per90
+					OR S.season != @Season
 				);
 
 		PRINT '>>> Inserting New Records in GOLD.FACT_OUTFIELD_STATS';
@@ -693,7 +733,8 @@ BEGIN
 					ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 				INNER JOIN gold.dim_team_info AS C
 					ON A.club_name = C.club_name AND A.league = C.league
-				WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players) -- If present, ignore our players
+				WHERE A.dwh_current_validity = 1
+				  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1) -- If present, ignore our players
 				UNION
 				SELECT
 					B.player_key,
@@ -755,6 +796,7 @@ BEGIN
 					ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 				INNER JOIN gold.dim_team_info AS C
 					ON A.club_name = C.club_name AND A.league = C.league
+				WHERE A.dwh_current_validity = 1
 				)
 			INSERT INTO gold.fact_outfield_player_stats (
 					player_key, team_key, minutes_played, team_goals_scored_per90, team_goals_conceded_per90, goals, goals_outside_the_box,
@@ -840,12 +882,13 @@ BEGIN
 					OR S.headers_attempted_per90 != O.headers_attempted_per90
 					OR S.distance_covered_km_per90 != O.distance_covered_km_per90
 					OR S.fouls_made_per90 != O.fouls_made_per90
+					OR O.season != @Season
 				)
 			OR NOT EXISTS (
 				SELECT 1
 				FROM gold.fact_outfield_player_stats AS N
 				WHERE N.player_key = S.player_key
-					AND S.dwh_current_validity = 1
+					AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();
@@ -866,6 +909,7 @@ BEGIN
 		PRINT '>>> Acknowledging Old Records in GOLD.FACT_GK_STATS';
 			WITH cleaned AS (
 					SELECT
+						A.player_id,
 						B.player_key,
 						C.team_key,
 						A.minutes_played,
@@ -898,9 +942,11 @@ BEGIN
 						ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 					INNER JOIN gold.dim_team_info AS C
 						ON A.club_name = C.club_name AND A.league = C.league
-					WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks) -- If present, ignore our players
+					WHERE A.dwh_current_validity = 1
+					  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1) -- If present, ignore our players
 					UNION
 					SELECT
+						A.player_id,
 						B.player_key,
 						C.team_key,
 						A.minutes_played,
@@ -933,17 +979,21 @@ BEGIN
 						ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 					INNER JOIN gold.dim_team_info AS C
 						ON A.club_name = C.club_name AND A.league = C.league
+					WHERE A.dwh_current_validity = 1
 				)
 			UPDATE S
 			SET 
 				dwh_cd_valid_till = GETDATE(),
 				dwh_current_validity = 0
 			FROM gold.fact_gk_stats AS S
+			INNER JOIN gold.dim_player_info AS P
+				ON S.player_key = P.player_key
 			INNER JOIN cleaned AS N
-				ON S.player_key = N.player_key
+				ON P.player_id = N.player_id
 			WHERE S.dwh_current_validity = 1
 				AND (
-					S.team_key != N.team_key
+					S.player_key != N.player_key
+					OR S.team_key != N.team_key
 					OR S.minutes_played != N.minutes_played
 					OR S.team_goals_scored_per90 != N.team_goals_scored_per90
 					OR S.team_goals_conceded_per90 != N.team_goals_conceded_per90
@@ -951,10 +1001,10 @@ BEGIN
 					OR S.saves_tipped_per90 != N.saves_tipped_per90
 					OR S.saves_parried_per90 != N.saves_parried_per90
 					OR S.passes_attempted_per90 != N.passes_attempted_per90
-					OR S.passes_attempted_per90 != N.passes_attempted_per90
 					OR S.clearances_per90 != N.clearances_per90
 					OR S.distance_covered_km_per90 != N.distance_covered_km_per90
 					OR S.possession_lost_per90 != N.possession_lost_per90
+					OR S.season != @Season
 				);
 		PRINT '>>> Inserting New Records in GOLD.FACT_GK_STATS';
 			WITH cleaned AS (
@@ -991,7 +1041,8 @@ BEGIN
 						ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 					INNER JOIN gold.dim_team_info AS C
 						ON A.club_name = C.club_name AND A.league = C.league
-					WHERE A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks) -- If present, ignore our players
+					WHERE A.dwh_current_validity = 1
+					  AND A.player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1) -- If present, ignore our players
 					UNION
 					SELECT
 						B.player_key,
@@ -1026,6 +1077,7 @@ BEGIN
 						ON A.player_id = B.player_id AND B.dwh_current_validity = 1
 					INNER JOIN gold.dim_team_info AS C
 						ON A.club_name = C.club_name AND A.league = C.league
+					WHERE A.dwh_current_validity = 1
 				)
 			INSERT INTO gold.fact_gk_stats (
 				player_key, team_key, minutes_played, team_goals_scored_per90, team_goals_conceded_per90,	 goals_conceded_per90,	
@@ -1080,12 +1132,13 @@ BEGIN
 					OR S.clearances_per90 != O.clearances_per90
 					OR S.distance_covered_km_per90 != O.distance_covered_km_per90
 					OR S.possession_lost_per90 != O.possession_lost_per90
+					OR O.season != @Season
 				)
 			OR NOT EXISTS (
 				SELECT 1
 				FROM gold.fact_gk_stats AS N
 				WHERE N.player_key = S.player_key
-					AND S.dwh_current_validity = 1
+					AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();
@@ -1114,7 +1167,8 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_interested_out_players
-					WHERE player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players) -- If present, ignore our players
+					WHERE dwh_current_validity = 1
+					  AND player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1) -- If present, ignore our players
 					UNION
 					SELECT
 						player_id,
@@ -1124,7 +1178,8 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_interested_gks
-					WHERE player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks) -- If present, ignore our players
+					WHERE dwh_current_validity = 1
+					  AND player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1) -- If present, ignore our players
 				),
 				cleaned_silver_team AS (
 					SELECT
@@ -1135,6 +1190,7 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_team_players
+					WHERE dwh_current_validity = 1
 					UNION
 					SELECT
 						player_id,
@@ -1144,9 +1200,11 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_team_gks
+					WHERE dwh_current_validity = 1
 				),
 				cleaned AS (
 					SELECT
+						A.player_id,
 						A.player_key,
 						A.team_key,
 						B.wage_per_week_k,
@@ -1158,8 +1216,10 @@ BEGIN
 					INNER JOIN cleaned_silver AS B
 						ON A.player_id = B.player_id
 					WHERE A.dwh_current_validity = 1
+					  AND A.player_id NOT IN (SELECT player_id FROM cleaned_silver_team)
 					UNION
 					SELECT
+						A.player_id,
 						A.player_key,
 						A.team_key,
 						B.wage_per_week_k,
@@ -1177,13 +1237,17 @@ BEGIN
 				dwh_cd_valid_till = GETDATE(),
 				dwh_current_validity = 0
 			FROM gold.fact_players_value AS S
+			INNER JOIN gold.dim_player_info AS P
+				ON S.player_key = P.player_key
 			INNER JOIN cleaned AS N
-				ON S.player_key = N.player_key
+				ON P.player_id = N.player_id
 			WHERE S.dwh_current_validity = 1
 				AND (
-					S.team_key != N.team_key
+					S.player_key != N.player_key
+					OR S.team_key != N.team_key
 					OR ISNULL(S.wage_per_week_k, -1) != ISNULL(N.wage_per_week_k, -1)
 					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
+					OR S.season != @Season
 				);
 
 		PRINT '>>> Inserting New Records in GOLD.FACT_PLAYERS_VALUE';
@@ -1196,7 +1260,8 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_interested_out_players
-					WHERE player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players) -- If present, ignore our players
+					WHERE dwh_current_validity = 1
+					  AND player_id NOT IN (SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1) -- If present, ignore our players
 					UNION
 					SELECT
 						player_id,
@@ -1206,7 +1271,8 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_interested_gks
-					WHERE player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks) -- If present, ignore our players
+					WHERE dwh_current_validity = 1
+					  AND player_id NOT IN (SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1) -- If present, ignore our players
 				),
 				cleaned_silver_team AS (
 					SELECT
@@ -1217,6 +1283,7 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_team_players
+					WHERE dwh_current_validity = 1
 					UNION
 					SELECT
 						player_id,
@@ -1226,6 +1293,7 @@ BEGIN
 						'9999-12-31 23:59:59.9999999' AS dwh_cd_valid_till,
 						1 AS dwh_current_validity
 					FROM silver.fmdata_team_gks
+					WHERE dwh_current_validity = 1
 				),
 				cleaned AS (
 					SELECT
@@ -1240,6 +1308,7 @@ BEGIN
 					INNER JOIN cleaned_silver AS B
 						ON A.player_id = B.player_id
 					WHERE A.dwh_current_validity = 1
+					  AND A.player_id NOT IN (SELECT player_id FROM cleaned_silver_team)
 					UNION
 					SELECT
 						A.player_key,
@@ -1274,12 +1343,13 @@ BEGIN
 					S.team_key != O.team_key
 					OR ISNULL(S.wage_per_week_k, -1) != ISNULL(O.wage_per_week_k, -1)
 					OR ISNULL(S.transfer_value_m, -1) != ISNULL(O.transfer_value_m, -1)
+					OR O.season != @Season
 				)
 			OR NOT EXISTS (
 				SELECT 1
 				FROM gold.fact_players_value AS N
 				WHERE N.player_key = S.player_key
-					AND S.dwh_current_validity = 1
+					AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();

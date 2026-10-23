@@ -62,12 +62,15 @@ Execute [`sql scripts/orchestration/run_pipeline.sql`](sql%20scripts/orchestrati
 On a Linux host with Docker, the repository provides a 1-click execution script that starts or attaches to SQL Server, verifies connectivity, deploys all DDL/procedures, ingests CSV partitions, and runs the test suites:
 
 ```bash
-# 1. (Optional) Customize environment variables
+# 1. (Optional) Customize environment variables (e.g. set FM_DATA_DIR to your custom FM export directory)
 cp .env.example .env
 
 # 2. Run the orchestrator
 ./run_pipeline_docker.sh
 ```
+
+> [!TIP]
+> **Customizing Data Directories:** To point to a custom export path outside Steam Proton or adjust Docker volume mounts, see [Section 1.2 of the FM Export Guide](file:///docs/FM_EXPORT_GUIDE.md#12-changing-export--ingestion-directories).
 
 Or spin up SQL Server via Docker Compose and execute through `sqlcmd`:
 ```bash

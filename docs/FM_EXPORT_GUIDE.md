@@ -18,18 +18,67 @@ documents/
 ├── interested_gks.csv             # Scouted goalkeeper targets
 ```
 
-### Linux / Steam Proton Default Location
-When playing Football Manager 2024 via Steam on Linux, FM24 writes exports inside the Proton Wine prefix:
-```text
-/home/<username>/.local/share/Steam/steamapps/compatdata/2252570/pfx/drive_c/users/steamuser/Documents/Sports Interactive/Football Manager 2024/exported data/
-```
+### 1.1. Default Export Locations
+* **Linux (Steam Proton):**
+  ```text
+  /home/<username>/.local/share/Steam/steamapps/compatdata/2252570/pfx/drive_c/users/steamuser/Documents/Sports Interactive/Football Manager 2024/exported data/
+  ```
+* **Windows (Native):**
+  ```text
+  C:\Users\<username>\Documents\Sports Interactive\Football Manager 2024\exported data\
+  ```
 
-To ingest directly from this directory without moving files manually:
-1. Configure `FM_DATA_DIR` in your [`.env`](file:///.env) file:
+### 1.2. Changing Export & Ingestion Directories
+
+If you store FM exports in a custom directory or want to change where standardized files are staged, configure the following:
+
+#### A. Changing the Raw FM24 Source Directory (`FM_DATA_DIR`)
+1. **Via `.env` file (Recommended):**
+   Set `FM_DATA_DIR` in your [`.env`](file:///.env) file:
    ```bash
-   FM_DATA_DIR="/home/mcmedal/.local/share/Steam/steamapps/compatdata/2252570/pfx/drive_c/users/steamuser/Documents/Sports Interactive/Football Manager 2024/exported data/"
+   FM_DATA_DIR="/path/to/your/custom/FM/exported data/"
    ```
-2. Run `./run_pipeline_docker.sh` (or `python "python scripts/prepare_ingestion.py"`). The pipeline automatically discovers, converts (HTML $\to$ CSV), normalizes goalkeeper columns, deduplicates outfield scouting partitions, and loads everything into SQL Server.
+   The ingestion pre-processor ([`python scripts/prepare_ingestion.py`](file:///python%20scripts/prepare_ingestion.py)) automatically detects `FM_DATA_DIR`, converts HTML exports to CSV, normalizes goalkeeper schemas, and deduplicates outfield partitions.
+2. **Via Command Line:**
+   Override the source directory explicitly when running the pre-processor:
+   ```bash
+   python3 "python scripts/prepare_ingestion.py" --source-dir "/path/to/your/custom/FM/exported data/"
+   ```
+
+#### B. Changing the Repository Staging Directory (`documents/`)
+By default, the standardized UTF-8 CSVs ready for warehouse bulk insertion are written to the [`documents/`](file:///documents) directory. To change this destination:
+1. **Pass `--target-dir` to the pre-processor:**
+   ```bash
+   python3 "python scripts/prepare_ingestion.py" --target-dir "custom_data_dir/"
+   ```
+2. **Update the Docker mount in [`docker-compose.yml`](file:///docker-compose.yml):**
+   ```yaml
+   volumes:
+     - mssql_data:/var/opt/mssql
+     - ./custom_data_dir:/data:ro     # Map your custom directory to /data
+     - ./sql scripts:/scripts:ro
+   ```
+3. **Update [`run_pipeline_docker.sh`](file:///run_pipeline_docker.sh):**
+   Update `--target-dir` (line 112) and the `docker cp` command (line 117) to reference your new folder.
+
+#### C. Changing the SQL Server `BULK INSERT` Directory (`@DataPath`)
+When executing stored procedures natively in SQL Server (SSMS, Azure Data Studio, or `sqlcmd`), pass your custom folder path to the `@DataPath` parameter:
+* **Master Pipeline ([`sql scripts/orchestration/run_pipeline.sql`](file:///sql%20scripts/orchestration/run_pipeline.sql)):**
+  ```sql
+  EXEC dbo.usp_run_warehouse_pipeline 
+      @Season = '2023/24', 
+      @DataPath = 'C:\CustomPath\FM Data\', -- Use '/data/' for Docker container
+      @RunTests = 1;
+  ```
+* **Bronze Loader ([`sql scripts/bronze/data-ingestion bronze.sql`](file:///sql%20scripts/bronze/data-ingestion%20bronze.sql)):**
+  ```sql
+  EXEC bronze.load_bronze @DataPath = 'C:\CustomPath\FM Data\';
+  ```
+
+#### D. Changing Analytical Dashboard Export Locations
+The Python analytics engine ([`python scripts/scouting_dashboard.py`](file:///python%20scripts/scouting_dashboard.py)) outputs:
+* **Moneyball Shortlist:** Defaults to `scouting_shortlist.csv` in the root directory. You can specify a custom path in [`export_shortlist(df, output_path="path/to/shortlist.csv")`](file:///python%20scripts/scouting_dashboard.py).
+* **Visual Plots:** Radar (`radar_chart.png`) and scatter (`scatter_plot.png`) charts save directly to the working directory, configurable via `output_path` in `generate_radar_chart()` and `generate_scatter_plot()`.
 
 ---
 

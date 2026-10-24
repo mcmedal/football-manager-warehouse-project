@@ -58,62 +58,115 @@ SELECT
     v.wage_per_week_k,
     v.transfer_value_m,
 
-    -- Attacking & Chance Creation (User Defined Moneyball Tweaks)
+    -- Attacking & Chance Creation: Core Outputs
     s.goals_per90,
     s.assists_per90,
     s.xGoals_per90,
     s.non_penalty_xGoals_per90,
     s.xAssits_per90,
+    s.xAssits_per90 AS xAssists_per90,
     (s.non_penalty_xGoals_per90 + s.xAssits_per90) AS npxg_plus_xa_per90,
-    (s.assists_per90 - s.xAssits_per90) AS assist_luck,
-    CAST(s.xGoals_overperformance * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(5,2)) AS finishing_overperf_shrunk,
-    CAST(s.non_penalty_xGoals_per90 / NULLIF(s.non_penalty_xGoals_per90 + s.xAssits_per90, 0) AS DECIMAL(5,2)) AS goal_threat_share,
     s.shots_per90,
-    CAST(s.shots_on_target_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(5,2)) AS shot_on_target_rate,
     s.xGoals_per_shot,
-    CAST(s.shots_outside_the_box_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(5,2)) AS shots_outside_box_ratio,
-    CAST(s.chances_created_per90 / NULLIF(s.passes_attempted_per90, 0) * 100.0 AS DECIMAL(5,2)) AS chance_creation_per_pass_pct,
-    CAST(s.xAssits_per90 / NULLIF(s.open_play_key_passes_per90, 0) AS DECIMAL(5,2)) AS xa_per_op_kp,
-    CAST(s.crosses_attempted_per90 * s.cross_accuracy AS DECIMAL(5,2)) AS completed_crosses_per90,
-    s.open_play_cross_accuracy,
+    CAST(s.shots_on_target_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(7,4)) AS shot_on_target_rate,
     s.conversion_rate,
+    s.open_play_key_passes_per90,
+    s.chances_created_per90,
+    s.dribbles_made_per90,
 
-    -- Passing & Ball Security
+    -- Attacking & Chance Creation: Shrunk & Advanced Ratios
+    CAST((s.goals_per90 - s.xGoals_per90) * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(7,4)) AS finishing_overperf_shrunk,
+    CAST((s.goals_per90 - s.xGoals_per90) * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(7,4)) AS goals_minus_xg_per90,
+    CAST((s.assists_per90 - s.xAssits_per90) * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(7,4)) AS assist_luck,
+    CAST((s.assists_per90 - s.xAssits_per90) * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(7,4)) AS assist_luck_shrunk,
+    CAST(s.non_penalty_xGoals_per90 / NULLIF(s.non_penalty_xGoals_per90 + s.xAssits_per90, 0) AS DECIMAL(7,4)) AS goal_threat_share,
+    CAST(s.shots_outside_the_box_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(7,4)) AS shots_outside_box_ratio,
+    CAST(CAST(s.goals_outside_the_box AS DECIMAL(7,4)) / NULLIF(s.goals, 0) AS DECIMAL(7,4)) AS long_range_goal_share,
+    CAST(s.chances_created_per90 / NULLIF(s.passes_attempted_per90, 0) * 100.0 AS DECIMAL(7,4)) AS chance_creation_per_pass_pct,
+    CAST(s.xAssits_per90 / NULLIF(s.open_play_key_passes_per90, 0) AS DECIMAL(7,4)) AS xa_per_op_kp,
+    CAST(s.assists_per90 / NULLIF(s.open_play_key_passes_per90, 0) AS DECIMAL(7,4)) AS assists_per_op_kp,
+    CAST(s.non_penalty_xGoals_per90 / NULLIF(s.shots_per90, 0) AS DECIMAL(7,4)) AS npxg_per_shot,
+    CAST(s.shots_per90 * s.xGoals_per_shot AS DECIMAL(7,4)) AS box_presence_proxy,
+
+    -- Crossing Dynamics
+    s.crosses_attempted_per90,
+    s.cross_accuracy,
+    CAST(s.crosses_attempted_per90 * s.cross_accuracy AS DECIMAL(7,4)) AS completed_crosses_per90,
+    s.open_play_crosses_attempted_per90,
+    s.open_play_cross_accuracy,
+    CAST(s.open_play_crosses_attempted_per90 * s.open_play_cross_accuracy AS DECIMAL(7,4)) AS open_play_completed_crosses_per90,
+    CAST((s.crosses_attempted_per90 * s.cross_accuracy) / NULLIF(s.chances_created_per90, 0) AS DECIMAL(7,4)) AS crosses_share_of_creation,
+
+    -- Passing, Progression & Ball Security
     s.passes_attempted_per90,
     s.pass_accuracy,
+    CAST(s.passes_attempted_per90 * s.pass_accuracy AS DECIMAL(7,4)) AS completed_passes_per90,
     s.progressive_passes_per90,
-    CAST(s.progressive_passes_per90 / NULLIF(s.passes_attempted_per90, 0) * 100.0 AS DECIMAL(5,2)) AS prog_rate_per_pass,
-    CAST(s.possession_lost_per90 / NULLIF(s.passes_attempted_per90 + s.dribbles_made_per90, 0) AS DECIMAL(5,2)) AS turnover_rate,
-    CAST(s.progressive_passes_per90 / NULLIF(s.passes_attempted_per90 + s.dribbles_made_per90, 0) AS DECIMAL(5,2)) AS progressive_share_of_actions,
-    s.dribbles_made_per90,
-    s.open_play_key_passes_per90,
+    CAST(s.progressive_passes_per90 + s.dribbles_made_per90 AS DECIMAL(7,4)) AS progressive_actions_per90,
+    CAST(s.progressive_passes_per90 / NULLIF(s.passes_attempted_per90, 0) * 100.0 AS DECIMAL(7,4)) AS prog_rate_per_pass,
+    CAST(s.possession_lost_per90 / NULLIF(s.passes_attempted_per90 + s.dribbles_made_per90, 0) AS DECIMAL(7,4)) AS turnover_rate,
+    CAST(s.progressive_passes_per90 / NULLIF(s.passes_attempted_per90 + s.dribbles_made_per90, 0) AS DECIMAL(7,4)) AS progressive_share_of_actions,
+    CAST((s.passes_attempted_per90 * s.pass_accuracy) - s.possession_lost_per90 AS DECIMAL(7,4)) AS net_ball_security,
+    s.possession_won_per90,
+    s.possession_lost_per90,
+    (s.possession_won_per90 - s.possession_lost_per90) AS possession_differential,
 
-    -- Defending & Physical Engine
-    CAST(((s.tackles_attempted_per90 * s.tackle_accuracy) + s.interceptions_per90 + s.blocks_per90 + s.clearances_per90) AS DECIMAL(5,2)) AS defensive_actions_per90,
-    CAST(s.interceptions_per90 / NULLIF(s.interceptions_per90 + (s.tackles_attempted_per90 * s.tackle_accuracy), 0) AS DECIMAL(5,2)) AS reactive_vs_positional,
-    CAST(s.possession_won_per90 / NULLIF(s.pressures_attempted_per90, 0) AS DECIMAL(5,2)) AS pressure_efficiency,
-    CAST(s.pressures_completed_per90 / NULLIF(s.pressures_attempted_per90, 0) * 100.0 AS DECIMAL(5,2)) AS pressure_accuracy,
-    CAST(s.fouls_made_per90 + (3.0 * s.yellow_cards_per90) + (8.0 * s.red_cards_per90) AS DECIMAL(5,2)) AS discipline_index,
-    CAST(s.fouls_made_per90 / NULLIF(s.tackles_attempted_per90, 0) AS DECIMAL(5,2)) AS foul_per_tackle,
-    CAST(s.clearances_per90 / NULLIF(s.headers_attempted_per90, 0) AS DECIMAL(5,2)) AS clearance_per_aerial,
-    CAST(s.headers_attempted_per90 * s.heading_accuracy AS DECIMAL(5,2)) AS aerial_duels_won_per90,
-    s.heading_accuracy,
+    -- Defending & Interventions
     s.tackles_attempted_per90,
     s.tackle_accuracy,
     s.key_tackles_per90,
     s.interceptions_per90,
-    s.clearances_per90,
     s.blocks_per90,
-    s.sprints_per90,
-    s.distance_covered_km_per90,
-    (s.possession_won_per90 - s.possession_lost_per90) AS possession_differential,
+    s.shots_blocked_per90,
+    s.clearances_per90,
+    CAST(((s.tackles_attempted_per90 * s.tackle_accuracy) + s.interceptions_per90 + s.blocks_per90 + s.shots_blocked_per90 + s.clearances_per90) AS DECIMAL(7,4)) AS defensive_actions_per90,
+    CAST(((s.tackles_attempted_per90 * s.tackle_accuracy) + s.interceptions_per90 + s.blocks_per90 + s.shots_blocked_per90) AS DECIMAL(7,4)) AS non_clearance_def_actions_per90,
+    CAST(s.interceptions_per90 / NULLIF(s.interceptions_per90 + (s.tackles_attempted_per90 * s.tackle_accuracy), 0) AS DECIMAL(7,4)) AS reactive_vs_positional,
+
+    -- Aerial & Duels
+    s.headers_attempted_per90,
+    s.heading_accuracy,
+    s.key_headers_per90,
+    CAST(s.headers_attempted_per90 * s.heading_accuracy AS DECIMAL(7,4)) AS aerial_duels_won_per90,
+    CAST((s.tackles_attempted_per90 * s.tackle_accuracy) + (s.headers_attempted_per90 * s.heading_accuracy) AS DECIMAL(7,4)) AS duels_won_per90,
+    CAST(s.fouls_made_per90 / NULLIF(s.tackles_attempted_per90 + s.headers_attempted_per90, 0) AS DECIMAL(7,4)) AS foul_per_duel,
+    CAST(s.fouls_made_per90 / NULLIF(s.tackles_attempted_per90, 0) AS DECIMAL(7,4)) AS foul_per_tackle,
+    CAST(s.clearances_per90 / NULLIF(s.headers_attempted_per90, 0) AS DECIMAL(7,4)) AS clearance_per_aerial,
     s.mistakes_leading_to_goals_per90,
 
-    -- Moneyball Efficiency Indices
-    CAST((v.wage_per_week_k * 52.0 + v.transfer_value_m * 1000.0) / NULLIF(s.non_penalty_xGoals_per90 + s.xAssits_per90, 0) AS DECIMAL(10,2)) AS cost_per_xgi,
+    -- Physical, Pressing & Discipline
+    s.pressures_attempted_per90,
+    s.pressures_completed_per90,
+    CAST(s.pressures_completed_per90 / NULLIF(s.pressures_attempted_per90, 0) * 100.0 AS DECIMAL(7,4)) AS pressure_accuracy,
+    CAST(s.pressures_completed_per90 / NULLIF(s.pressures_attempted_per90, 0) AS DECIMAL(7,4)) AS pressure_efficiency,
+    s.sprints_per90,
+    s.distance_covered_km_per90,
+    CAST(s.sprints_per90 / NULLIF(s.distance_covered_km_per90, 0) AS DECIMAL(7,4)) AS sprints_per_km,
+    CAST(s.pressures_attempted_per90 * (s.sprints_per90 / NULLIF(s.distance_covered_km_per90, 0)) AS DECIMAL(7,4)) AS high_press_load,
+    s.fouls_made_per90,
+    s.fouls_against_per90,
+    CAST(s.fouls_against_per90 - s.fouls_made_per90 AS DECIMAL(7,4)) AS fouls_won_net,
+    s.yellow_cards_per90,
+    s.red_cards_per90,
+    CAST(s.fouls_made_per90 + (3.0 * s.yellow_cards_per90) + (8.0 * s.red_cards_per90) AS DECIMAL(7,4)) AS discipline_index,
+    CAST((s.yellow_cards_per90 + s.red_cards_per90) / NULLIF(s.fouls_made_per90, 0) AS DECIMAL(7,4)) AS cards_per_foul,
 
-    -- On-Pitch Context (Teammate benchmark only)
-    (s.team_goals_scored_per90 - s.team_goals_conceded_per90) AS on_pitch_goal_diff_per90
+    -- League Difficulty Normalized Outputs (_adj)
+    CAST(s.goals_per90 * COALESCE(l.league_difficulty_coef, 1.00) AS DECIMAL(7,4)) AS goals_per90_adj,
+    CAST(s.xGoals_per90 * COALESCE(l.league_difficulty_coef, 1.00) AS DECIMAL(7,4)) AS xGoals_per90_adj,
+    CAST(s.non_penalty_xGoals_per90 * COALESCE(l.league_difficulty_coef, 1.00) AS DECIMAL(7,4)) AS non_penalty_xGoals_per90_adj,
+    CAST(s.xAssits_per90 * COALESCE(l.league_difficulty_coef, 1.00) AS DECIMAL(7,4)) AS xAssists_per90_adj,
+    CAST((s.non_penalty_xGoals_per90 + s.xAssits_per90) * COALESCE(l.league_difficulty_coef, 1.00) AS DECIMAL(7,4)) AS npxg_plus_xa_per90_adj,
+
+    -- Moneyball Efficiency Indices & Valuation
+    CAST(((v.wage_per_week_k * 52.0) + (v.transfer_value_m * 1000.0 / 3.0)) / NULLIF((s.non_penalty_xGoals_per90 + s.xAssits_per90) * (s.minutes_played / 90.0), 0) AS DECIMAL(10,2)) AS cost_per_xgi,
+    CAST(((s.non_penalty_xGoals_per90 + s.xAssits_per90) * (s.minutes_played / 90.0)) / NULLIF((v.wage_per_week_k * 0.052) + (v.transfer_value_m / 3.0), 0) AS DECIMAL(7,4)) AS xgi_per_cost_m,
+    CAST((PERCENT_RANK() OVER (ORDER BY (s.non_penalty_xGoals_per90 + s.xAssits_per90)) * 100.0) - 
+         (PERCENT_RANK() OVER (ORDER BY COALESCE(v.transfer_value_m, 0.10)) * 100.0) AS DECIMAL(5,1)) AS value_gap,
+
+    -- On-Pitch Context
+    (s.team_goals_scored_per90 - s.team_goals_conceded_per90) AS on_pitch_goal_diff_per90,
+    CAST((s.team_goals_scored_per90 - s.team_goals_conceded_per90) * (CAST(s.minutes_played AS DECIMAL(10,2)) / (s.minutes_played + 900.0)) AS DECIMAL(7,4)) AS on_pitch_gd_shrunk
 FROM gold.fact_outfield_player_stats s
 INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
 INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
@@ -144,28 +197,67 @@ SELECT
     v.wage_per_week_k,
     v.transfer_value_m,
 
-    -- Goalkeeper Performance Metrics (User Defined Tweaks)
-    (s.saves_percentage - s.xSave_rate) AS shot_stopping_delta,
+    -- 1. Workload & Sample Size (Foundation for Workload & Shrinkage)
+    CAST(s.saves_made_per90 + s.goals_conceded_per90 AS DECIMAL(7,4)) AS shots_faced_per90,
+    CAST((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0) AS DECIMAL(7,2)) AS shots_faced_total,
+    CAST(s.xGoals_prevented_per90 + s.goals_conceded_per90 AS DECIMAL(7,4)) AS xgot_faced_per90,
+    CAST((s.xGoals_prevented_per90 + s.goals_conceded_per90) / NULLIF(s.saves_made_per90 + s.goals_conceded_per90, 0) AS DECIMAL(7,4)) AS shot_difficulty,
+
+    -- 2. Shot-Stopping Metrics (Workload-Normalized & Shrunk by Shots Faced k=300)
+    CAST(s.xGoals_prevented_per90 / NULLIF(s.saves_made_per90 + s.goals_conceded_per90, 0) AS DECIMAL(7,4)) AS xgp_per_shot,
+    CAST((((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) * (s.xGoals_prevented_per90 / NULLIF(s.saves_made_per90 + s.goals_conceded_per90, 0))) / (((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) + 300.0) AS DECIMAL(7,4)) AS xgp_per_shot_shrunk,
+    CAST(s.goals_conceded_per90 / NULLIF(s.xGoals_prevented_per90 + s.goals_conceded_per90, 0) AS DECIMAL(7,4)) AS goals_vs_xgot_ratio,
+    CAST(s.xGoals_prevented_per90 * 38.0 AS DECIMAL(7,4)) AS xgp_per_season,
+    CAST((((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) / (((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) + 300.0)) * s.xGoals_prevented_per90 * 38.0 AS DECIMAL(7,4)) AS xgp_per_season_shrunk,
+    
+    CAST(s.saves_percentage - s.xSave_rate AS DECIMAL(7,4)) AS shot_stopping_delta,
+    CAST((((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) * (s.saves_percentage - s.xSave_rate)) / (((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) + 300.0) AS DECIMAL(7,4)) AS shot_stopping_delta_shrunk,
     s.xGoals_prevented_per90,
     s.saves_made_per90,
     s.saves_percentage,
     s.xSave_rate,
     s.goals_conceded_per90,
-    CAST(s.saves_held_per90 / NULLIF(s.saves_held_per90 + s.saves_parried_per90 + s.saves_tipped_per90, 0) * 100.0 AS DECIMAL(5,2)) AS hold_rate_pct,
+
+    -- 3. Save Handling & Risk (Parry Risk vs Hold Over Expected)
+    CAST(s.saves_parried_per90 / NULLIF(s.saves_made_per90, 0) AS DECIMAL(7,4)) AS parry_rate,
+    CAST(s.saves_tipped_per90 / NULLIF(s.saves_made_per90, 0) AS DECIMAL(7,4)) AS tip_rate,
+    CAST(s.saves_held_per90 / NULLIF(s.saves_made_per90, 0) AS DECIMAL(7,4)) AS hold_rate,
+    CAST((s.saves_made_per90 * (s.minutes_played / 90.0) * (s.saves_held_per90 / NULLIF(s.saves_made_per90, 0)) + 150.0 * 0.30) / (s.saves_made_per90 * (s.minutes_played / 90.0) + 150.0) AS DECIMAL(7,4)) AS hold_rate_shrunk,
+    CAST((s.saves_held_per90 / NULLIF(s.saves_made_per90, 0)) - (0.1143 + 0.5230 * ((s.xGoals_prevented_per90 + s.goals_conceded_per90) / NULLIF(s.saves_made_per90 + s.goals_conceded_per90, 0))) AS DECIMAL(7,4)) AS hold_rate_over_expected,
+    CAST(s.saves_held_per90 / NULLIF(s.saves_held_per90 + s.saves_parried_per90 + s.saves_tipped_per90, 0) * 100.0 AS DECIMAL(7,4)) AS hold_rate_pct,
     s.saves_tipped_per90,
     s.saves_parried_per90,
     s.saves_held_per90,
-    (s.clearances_per90 + s.distance_covered_km_per90) AS sweeper_index,
-    CAST(s.passes_attempted_per90 * s.pass_accuracy AS DECIMAL(5,2)) AS distribution_value,
-    s.passes_attempted_per90,
-    s.pass_accuracy,
+
+    -- 4. Sweeping Actions (Proactive Interceptions vs Reactive Clearances)
+    CAST(s.interceptions_per90 + s.clearances_per90 AS DECIMAL(7,4)) AS sweeper_actions_per90,
+    CAST(s.interceptions_per90 / NULLIF(s.interceptions_per90 + s.clearances_per90, 0) AS DECIMAL(7,4)) AS sweeper_share,
+    CAST(s.interceptions_per90 + s.clearances_per90 AS DECIMAL(7,4)) AS sweeper_index, -- Backward compatible alias
     s.interceptions_per90,
     s.clearances_per90,
+
+    -- 5. Distribution Efficiency & Style
+    CAST(s.passes_attempted_per90 * s.pass_accuracy AS DECIMAL(7,4)) AS completed_passes_per90,
+    CAST(s.passes_attempted_per90 * (1.0 - s.pass_accuracy) AS DECIMAL(7,4)) AS giveaways_per90,
+    s.passes_attempted_per90 AS passing_involvement,
+    CAST(s.passes_attempted_per90 * s.pass_accuracy AS DECIMAL(7,4)) AS distribution_value, -- Backward compatible alias
+    s.passes_attempted_per90,
+    s.pass_accuracy,
+
+    -- 6. Penalties & Errors (Heavily Shrunk)
     s.penalties_faced_per90,
     s.penalties_save_percentage,
-    s.mistakes_leading_to_goals_per90 AS error_rate,
-    (s.possession_won_per90 - s.possession_lost_per90) AS possession_differential,
-    (s.team_goals_scored_per90 - s.team_goals_conceded_per90) AS on_pitch_goal_diff_per90
+    CAST((s.penalties_faced_per90 * (s.minutes_played / 90.0) * s.penalties_save_percentage + 20.0 * 0.20) / (s.penalties_faced_per90 * (s.minutes_played / 90.0) + 20.0) AS DECIMAL(7,4)) AS pen_save_shrunk,
+    CAST(s.mistakes_leading_to_goals_per90 AS DECIMAL(7,4)) AS errors_leading_to_goal_per90,
+    CAST((s.minutes_played * s.mistakes_leading_to_goals_per90 + 5000.0 * 0.0220) / (s.minutes_played + 5000.0) AS DECIMAL(7,4)) AS errors_leading_to_goal_shrunk,
+    CAST(s.mistakes_leading_to_goals_per90 AS DECIMAL(7,4)) AS error_rate, -- Backward compatible alias
+
+    -- 7. Team Context, Eligibility, Value Gap & Reliability
+    CAST(s.possession_won_per90 - s.possession_lost_per90 AS DECIMAL(7,4)) AS possession_differential,
+    CASE WHEN ((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) >= 40.0 THEN 1 ELSE 0 END AS is_eligible,
+    CAST(((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) / (((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) + 300.0) AS DECIMAL(7,4)) AS sample_reliability,
+    CAST((PERCENT_RANK() OVER (ORDER BY ((((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) * (s.xGoals_prevented_per90 / NULLIF(s.saves_made_per90 + s.goals_conceded_per90, 0))) / (((s.saves_made_per90 + s.goals_conceded_per90) * (s.minutes_played / 90.0)) + 300.0))) * 100.0) - 
+         (PERCENT_RANK() OVER (ORDER BY COALESCE(v.transfer_value_m, 0.10)) * 100.0) AS DECIMAL(5,1)) AS value_gap
 FROM gold.fact_gk_stats s
 INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
 INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
@@ -1417,4 +1509,160 @@ SELECT
     cost_per_xgi
 FROM gold.mart_outfield_scouting_summary
 WHERE minutes_played >= 450;
+GO
+
+-- ======================================================================
+-- D. TEAM TACTICAL ARCHETYPES VIEW
+-- ======================================================================
+CREATE OR ALTER VIEW gold.vw_team_tactical_archetypes AS
+SELECT 
+    team_key,
+    club_name,
+    league,
+    active_players,
+    total_minutes,
+    tactical_archetype,
+    tactical_framework,
+    tactical_description,
+    
+    -- Minutes-weighted team metrics per 90
+    pressures_attempted_per90,
+    pressures_completed_per90,
+    possession_won_per90,
+    possession_lost_per90,
+    passes_attempted_per90,
+    pass_accuracy,
+    progressive_passes_per90,
+    open_play_key_passes_per90,
+    chances_created_per90,
+    xGoals_per_shot,
+    crosses_attempted_per90,
+    open_play_crosses_attempted_per90,
+    headers_attempted_per90,
+    heading_accuracy,
+    clearances_per90,
+    blocks_per90,
+    shots_blocked_per90,
+    tackles_attempted_per90,
+    dribbles_made_per90,
+    sprints_per90,
+    distance_covered_km_per90,
+    fouls_made_per90,
+    shots_per90,
+    xGoals_per90,
+    
+    -- Tactical Framework Affinity Scores
+    gegenpressing_score,
+    tiki_taka_score,
+    vertical_tiki_taka_score,
+    fluid_counter_score,
+    direct_counter_score,
+    wing_play_score,
+    route_one_score,
+    catenaccio_score,
+    season
+FROM gold.dim_team_tactical_archetypes
+WHERE dwh_current_validity = 1;
+GO
+
+-- ======================================================================
+-- E. PLAYER TACTICAL SYSTEM OUTLIERS VIEW
+-- ======================================================================
+CREATE OR ALTER VIEW gold.vw_player_system_outliers AS
+SELECT 
+    p.player_key,
+    p.player_name,
+    p.age,
+    p.position,
+    p.club_name,
+    p.league,
+    p.is_own_squad,
+    p.minutes_played,
+    p.transfer_value_m,
+    p.wage_per_week_k,
+    
+    -- Team Tactical System
+    ta.tactical_archetype AS team_tactical_archetype,
+    ta.tactical_framework AS team_tactical_framework,
+    
+    -- Outlier Flag & Categorization
+    CASE 
+        -- 1. Striker maintaining high pass accuracy in Route One / Direct Counter
+        WHEN p.position = 'Striker' AND ta.tactical_archetype IN ('Route One', 'Direct Counter-Attack') AND p.pass_accuracy >= 0.84 AND p.passes_attempted_per90 >= 12.0
+            THEN 'High-Precision Striker in Direct System'
+            
+        -- 2. Defender logging massive clearances in Tiki-Taka / Possession
+        WHEN p.position LIKE '%Defender%' AND ta.tactical_archetype IN ('Tiki-Taka', 'Vertical Tiki-Taka', 'Control Possession') AND p.clearances_per90 >= 1.45
+            THEN 'High-Clearance Defender in Tiki-Taka'
+            
+        -- 3. Attacking Talisman in Deep Block / Catenaccio
+        WHEN ta.tactical_archetype = 'Catenaccio' AND p.npxg_plus_xa_per90 >= 0.35
+            THEN 'Attacking Talisman in Deep Block'
+            
+        -- 4. Lone Pressing Engine in passive system
+        WHEN p.position IN ('Striker', 'Central Attacking Midfielder') AND ta.pressures_attempted_per90 <= 7.2 AND p.pressures_attempted_per90 >= 13.0
+            THEN 'Lone Pressing Engine'
+            
+        -- 5. Dynamic Ball Carrier in Direct / Route One system
+        WHEN ta.tactical_archetype IN ('Route One', 'Direct Counter-Attack') AND p.dribbles_made_per90 >= 1.80
+            THEN 'Dynamic Ball Carrier in Direct System'
+            
+        -- 6. Central Playmaker in Flank System
+        WHEN ta.tactical_archetype = 'Wing Play' AND p.position IN ('Central Midfielder', 'Central Attacking Midfielder') AND p.open_play_key_passes_per90 >= 1.30 AND p.crosses_share_of_creation <= 0.25
+            THEN 'Central Incision Playmaker in Flank System'
+            
+        -- 7. Ball-Playing Quarterback in Direct System
+        WHEN p.position = 'Central Defender' AND ta.tactical_archetype IN ('Route One', 'Direct Counter-Attack') AND p.progressive_passes_per90 >= 4.50 AND p.pass_accuracy >= 0.86
+            THEN 'Ball-Playing Quarterback in Direct System'
+            
+        -- 8. Ball Retention Hub in High-Intensity Pressing
+        WHEN ta.tactical_archetype = 'Gegenpressing' AND p.position IN ('Central Midfielder', 'Defensive Midfielder') AND p.pass_accuracy >= 0.89 AND p.turnover_rate <= 0.14
+            THEN 'Ball Retention Hub in Gegenpress'
+            
+        ELSE NULL
+    END AS outlier_tag,
+    
+    CASE 
+        WHEN p.position = 'Striker' AND ta.tactical_archetype IN ('Route One', 'Direct Counter-Attack') AND p.pass_accuracy >= 0.84 AND p.passes_attempted_per90 >= 12.0
+            THEN 'Technical Striker defying direct aerial system: achieves high completion rate despite low team passing volume.'
+        WHEN p.position LIKE '%Defender%' AND ta.tactical_archetype IN ('Tiki-Taka', 'Vertical Tiki-Taka', 'Control Possession') AND p.clearances_per90 >= 1.45
+            THEN 'Resilient stopper executing emergency box clearances despite team philosophy prioritizing possession recycling.'
+        WHEN ta.tactical_archetype = 'Catenaccio' AND p.npxg_plus_xa_per90 >= 0.35
+            THEN 'High-efficiency attacking talisman creating elite expected goal involvement despite defensive suppression.'
+        WHEN p.position IN ('Striker', 'Central Attacking Midfielder') AND ta.pressures_attempted_per90 <= 7.2 AND p.pressures_attempted_per90 >= 13.0
+            THEN 'Elite individual pressing work rate operating in a passive low-intensity defensive structure.'
+        WHEN ta.tactical_archetype IN ('Route One', 'Direct Counter-Attack') AND p.dribbles_made_per90 >= 1.80
+            THEN 'Dynamic individual ball carrier breaking lines via ground take-ons in an aerial long-ball system.'
+        WHEN ta.tactical_archetype = 'Wing Play' AND p.position IN ('Central Midfielder', 'Central Attacking Midfielder') AND p.open_play_key_passes_per90 >= 1.30 AND p.crosses_share_of_creation <= 0.25
+            THEN 'Central playmaker providing line-breaking incision within an aggressive flank-crossing game model.'
+        WHEN p.position = 'Central Defender' AND ta.tactical_archetype IN ('Route One', 'Direct Counter-Attack') AND p.progressive_passes_per90 >= 4.50 AND p.pass_accuracy >= 0.86
+            THEN 'Elite progressive ball-playing distributor initiating transitions in a direct attrition setup.'
+        WHEN ta.tactical_archetype = 'Gegenpressing' AND p.position IN ('Central Midfielder', 'Defensive Midfielder') AND p.pass_accuracy >= 0.89 AND p.turnover_rate <= 0.14
+            THEN 'High-security retention anchor providing calm circulation in a high-turnover pressing system.'
+        ELSE NULL
+    END AS outlier_rationale,
+    
+    -- Player output metrics
+    p.pass_accuracy AS player_pass_accuracy,
+    p.passes_attempted_per90 AS player_passes_attempted_per90,
+    p.clearances_per90 AS player_clearances_per90,
+    p.npxg_plus_xa_per90 AS player_npxg_plus_xa_per90,
+    p.chances_created_per90 AS player_chances_created_per90,
+    p.open_play_key_passes_per90 AS player_open_play_key_passes_per90,
+    p.progressive_passes_per90 AS player_progressive_passes_per90,
+    p.dribbles_made_per90 AS player_dribbles_made_per90,
+    p.pressures_attempted_per90 AS player_pressures_attempted_per90,
+    p.turnover_rate AS player_turnover_rate,
+    
+    -- Team benchmarks
+    ta.passes_attempted_per90 AS team_passes_attempted_per90,
+    ta.pass_accuracy AS team_pass_accuracy,
+    ta.clearances_per90 AS team_clearances_per90,
+    ta.pressures_attempted_per90 AS team_pressures_attempted_per90,
+    ta.headers_attempted_per90 AS team_headers_attempted_per90,
+    ta.crosses_attempted_per90 AS team_crosses_attempted_per90,
+    ta.blocks_per90 AS team_blocks_per90
+FROM gold.mart_outfield_scouting_summary p
+JOIN gold.dim_team_tactical_archetypes ta ON p.club_name = ta.club_name AND ta.dwh_current_validity = 1
+WHERE p.minutes_played >= 450;
 GO

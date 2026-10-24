@@ -33,7 +33,7 @@ Before querying, understand the baseline thresholds used in elite football analy
 | **Prog. Passes / 90** | $\ge 5.50$ | $3.50 - 5.49$ | $< 2.00$ | Line-breaking vertical passing to advance attacks. |
 | **Aerial Duels Won / 90** | $\ge 4.00$ | $2.50 - 3.99$ | $< 1.50$ | First-ball dominance in aerial contests. |
 | **Heading Accuracy** | $\ge 65\%$ | $55\% - 64\%$ | $< 45\%$ | Duel win rate in the air. |
-| **Cost per xGI (€k)** | $< 3,000$ | $3,000 - 8,000$ | $> 15,000$ | Total fee + wage cost per expected goal involvement. |
+| **Cost per xGI (£k)** | $< 3,000$ | $3,000 - 8,000$ | $> 15,000$ | Total fee + wage cost per expected goal involvement. |
 
 ---
 
@@ -142,8 +142,8 @@ ORDER BY cost_per_xgi_k ASC;
 ```
 
 #### Analytical Breakdown:
-* **`cost_per_xgi_k`**: Total financial outlay (transfer fee in €k + annual wages in €k) divided by expected goal contributions ($NPxG + xA$).
-* A player with a score under `€2,500k / xGI` generates goals at **one-tenth the cost** of a Premier League regular.
+* **`cost_per_xgi_k`**: Total financial outlay (transfer fee in £k + annual wages in £k) divided by expected goal contributions ($NPxG + xA$).
+* A player with a score under `£2,500k / xGI` generates goals at **one-tenth the cost** of a Premier League regular.
 
 ---
 

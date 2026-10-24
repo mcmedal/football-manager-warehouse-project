@@ -11,7 +11,7 @@ While SQL Server serves as the enterprise data warehouse engine, the Python anal
 ### Key Capabilities
 1. **Recruitment Shortlist Generation:** Computes composite Moneyball output scores across the scouting pool and exports ranked shortlists to CSV (`scouting_shortlist.csv`).
 2. **Tactical Radar Comparison:** Renders 6-dimensional radar charts contrasting a prospective transfer target directly against your squad's incumbent starter.
-3. **Moneyball Scatter Plots:** Plots market valuation (€M) against per-90 offensive output ($NPxG + xA$) to visually map the efficiency frontier and identify undervalued bargains.
+3. **Moneyball Scatter Plots:** Plots market valuation (£M) against per-90 offensive output ($NPxG + xA$) to visually map the efficiency frontier and identify undervalued bargains.
 4. **Zero-Dependency Resilience:** Includes a standard library fallback (`csv`, `math`) that functions even on minimal environments lacking `pandas` or `matplotlib`.
 
 ---
@@ -79,7 +79,7 @@ Plots player valuation against on-pitch goal contribution rates:
 python "python scripts/scouting_dashboard.py" --mode scatter --position "Striker"
 ```
 
-* **X-Axis:** Estimated Transfer Value (€M).
+* **X-Axis:** Estimated Transfer Value (£M).
 * **Y-Axis:** Total Goal Contributions ($NPxG + xA$ per 90).
 * **Quadrant Analysis:**
   * **Top-Left (High Output, Low Valuation):** High-priority Moneyball bargains.

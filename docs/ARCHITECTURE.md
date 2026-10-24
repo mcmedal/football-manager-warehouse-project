@@ -75,7 +75,7 @@ flowchart TD
   1. **String Sanitization:** Removing UI artifact strings (e.g. replacing `' - Pick Player'` in names, trimming whitespace).
   2. **Null & Dash Handling:** FM24 exports empty or zero values as `'-'`. Silver converts these conditionally to `0` or `NULL`.
   3. **Percentage Parsing:** Converts string percentages (e.g. `'78%'`) to decimal proportions (`0.78` as `DECIMAL(5, 2)`).
-  4. **Financial Formatting:** Parses currency strings (e.g. `'€1.2M'`, `'€45K'`, `'€25,000 p/w'`) into numeric millions (`DECIMAL(10, 2)`) and thousands (`DECIMAL(10, 2)`).
+  4. **Financial Formatting:** Parses currency strings (e.g. `'£1.2M'`, `'£45K'`, `'£25,000 p/w'`) into numeric millions (`DECIMAL(10, 2)`) and thousands (`DECIMAL(10, 2)`).
   5. **Positional Standardization:** Standardizes abbreviated FM tactical positions (e.g. `'ST (C)'` $\to$ `'Striker'`, `'D (C)'` $\to$ `'Central Defender'`, `'WB (R)'` $\to$ `'Right Wingback'`).
 * **Contracted vs. Scouting Flagging:**
   * External scouting files (`interested_out_players.csv`) often contain players currently contracted to the user's club. Silver enforces filtering (`WHERE contracted = 1` vs `contracted = 0`) to prevent duplicate entity representation.
@@ -140,7 +140,7 @@ sequenceDiagram
 | :--- | :--- | :--- | :--- |
 | **`gold.fact_outfield_player_stats`** | `player_key`, `team_key` | Player per Team per Season | Core per-90 outfield performance metrics (shooting, passing, defending, athletic volume, creation). |
 | **`gold.fact_gk_stats`** | `player_key`, `team_key` | Goalkeeper per Team per Season | Goalkeeping performance (shot stopping, expected save %, sweep actions, parries/holds, distribution). |
-| **`gold.fact_players_value`** | `player_key`, `team_key` | Player per Team per Season | Financial metrics (weekly wage in €k, estimated transfer market valuation in €M). |
+| **`gold.fact_players_value`** | `player_key`, `team_key` | Player per Team per Season | Financial metrics (weekly wage in £k, estimated transfer market valuation in £M). |
 
 ---
 

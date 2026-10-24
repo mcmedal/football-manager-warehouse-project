@@ -44,6 +44,63 @@ CREATE TABLE gold.dim_team_info(
 IF OBJECT_ID ('gold.fact_teams_possession', 'U') IS NOT NULL
 	DROP TABLE gold.fact_teams_possession;
 
+-- GOLD.DIM_TEAM_TACTICAL_ARCHETYPES
+IF OBJECT_ID ('gold.dim_team_tactical_archetypes', 'U') IS NOT NULL
+	DROP TABLE gold.dim_team_tactical_archetypes;
+
+CREATE TABLE gold.dim_team_tactical_archetypes (
+	team_key VARCHAR(10) NOT NULL,
+	club_name NVARCHAR(35) NOT NULL,
+	league NVARCHAR(35),
+	active_players INT,
+	total_minutes INT,
+	tactical_archetype VARCHAR(35) NOT NULL,
+	tactical_framework VARCHAR(50) NOT NULL,
+	tactical_description NVARCHAR(500),
+
+	-- Team Aggregated Metrics (Minutes-Weighted Per 90)
+	pressures_attempted_per90 DECIMAL(5, 2),
+	pressures_completed_per90 DECIMAL(5, 2),
+	possession_won_per90 DECIMAL(5, 2),
+	possession_lost_per90 DECIMAL(5, 2),
+	passes_attempted_per90 DECIMAL(5, 2),
+	pass_accuracy DECIMAL(5, 3),
+	progressive_passes_per90 DECIMAL(5, 2),
+	open_play_key_passes_per90 DECIMAL(5, 2),
+	chances_created_per90 DECIMAL(5, 2),
+	xGoals_per_shot DECIMAL(5, 2),
+	crosses_attempted_per90 DECIMAL(5, 2),
+	open_play_crosses_attempted_per90 DECIMAL(5, 2),
+	headers_attempted_per90 DECIMAL(5, 2),
+	heading_accuracy DECIMAL(5, 3),
+	clearances_per90 DECIMAL(5, 2),
+	blocks_per90 DECIMAL(5, 2),
+	shots_blocked_per90 DECIMAL(5, 2),
+	tackles_attempted_per90 DECIMAL(5, 2),
+	interceptions_per90 DECIMAL(5, 2),
+	dribbles_made_per90 DECIMAL(5, 2),
+	sprints_per90 DECIMAL(5, 2),
+	distance_covered_km_per90 DECIMAL(5, 2),
+	fouls_made_per90 DECIMAL(5, 2),
+	shots_per90 DECIMAL(5, 2),
+	xGoals_per90 DECIMAL(5, 2),
+
+	-- Tactical Archetype Affinity Scores (0 - 100)
+	gegenpressing_score INT,
+	tiki_taka_score INT,
+	vertical_tiki_taka_score INT,
+	fluid_counter_score INT,
+	direct_counter_score INT,
+	wing_play_score INT,
+	route_one_score INT,
+	catenaccio_score INT,
+
+	season VARCHAR(9) DEFAULT '2023/24',
+	dwh_create_date DATETIME2 DEFAULT GETDATE(),
+	dwh_cd_valid_till DATETIME2 DEFAULT '9999-12-31 23:59:59.9999999',
+	dwh_current_validity BIT DEFAULT ((1))
+);
+
 -- GOLD.DIM_PLAYER_INFO
 IF OBJECT_ID ('gold.dim_player_info', 'U') IS NOT NULL
 	DROP TABLE gold.dim_player_info;

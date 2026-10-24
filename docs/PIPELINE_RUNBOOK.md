@@ -173,7 +173,7 @@ EXEC gold.usp_scout_similar_players
 The output returns:
 * Rank (#1 to #N)
 * Player Name, Age, Club, League, Minutes
-* Weekly Wage (€k) and Transfer Valuation (€M)
+* Weekly Wage (£k) and Transfer Valuation (£M)
 * Tactical similarity distance (Euclidean metric)
 * Tactical profile match percentage ($0 - 100\%$)
 
@@ -227,3 +227,57 @@ Execute [`sql scripts/tests/test_midseason_ingestion.sql`](sql%20scripts/tests/t
 ### Issue: `CREATE VIEW must be the only statement in the batch`
 * **Cause:** SQL Server requires `CREATE OR ALTER VIEW` to be the first statement in a batch.
 * **Fix:** Ensure every view in `views-gold.sql` is delimited with `GO` statements before and after the view definition.
+
+---
+
+## 8. Starting the Web Application (Interactive Analytics & Screener)
+
+The data warehouse includes an interactive full-stack Next.js web application modeled after FBref and Opta, featuring a TradingView-style quantitative player and goalkeeper screener.
+
+### 8.1. 1-Click Startup Script (Recommended)
+From the root of the project, execute:
+```bash
+./run_webapp.sh
+```
+
+The startup script handles the complete lifecycle:
+1. **Container Check:** Inspects Docker to see if `sql_server` is running. If not, it runs `docker compose up -d sql-server` and waits for database readiness.
+2. **Node Environment:** Validates that `node` and `npm` are in PATH (including `~/.local/bin`).
+3. **Dependencies:** Checks `webapp/node_modules/` and runs `npm install` automatically on first launch.
+4. **Environment Secrets:** Generates `webapp/.env.local` with default Docker SQL Server credentials if it does not already exist.
+5. **Boots Server:** Launches Next.js at [http://localhost:3000](http://localhost:3000).
+
+### 8.2. Manual Startup
+If you prefer running commands manually:
+```bash
+# 1. Ensure SQL Server Docker container is running:
+docker compose up -d sql-server
+
+# 2. Navigate to the webapp directory:
+cd webapp
+
+# 3. Install packages (first run only):
+npm install
+
+# 4. Start the Next.js development server:
+npm run dev
+```
+
+### 8.3. Database Connection Configuration
+Credentials are read by `lib/db.ts` from `webapp/.env.local`:
+```ini
+MSSQL_USER=sa
+MSSQL_PASSWORD=McMedal@14
+MSSQL_SERVER=localhost
+MSSQL_PORT=1433
+MSSQL_DATABASE=DW
+```
+
+### 8.4. Web Application Troubleshooting
+* **Issue: `ConnectionError: Failed to connect to localhost:1433`**
+  * *Fix:* Check if the container is running with `docker ps`. If stopped, run `docker compose up -d sql-server`.
+* **Issue: `Port 3000 is already in use`**
+  * *Fix:* Another process is listening on port 3000. Terminate it with `fuser -k 3000/tcp` or start Next.js on an alternate port with `npm run dev -- -p 3001`.
+* **Issue: `node: command not found`**
+  * *Fix:* Ensure Node.js (v18+) is installed and in your user PATH (e.g. `export PATH="$HOME/.local/bin:$PATH"`).
+

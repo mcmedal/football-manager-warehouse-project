@@ -25,6 +25,7 @@ Comprehensive technical, analytical, and operational documentation is available 
 | **[🚀 Pipeline Runbook & Operations](docs/PIPELINE_RUNBOOK.md)** | Step-by-step setup, database creation, execution orchestration, ad-hoc scouting procedures, automated testing, and troubleshooting. |
 | **[🎮 FM24 Data Export Guide](docs/FM_EXPORT_GUIDE.md)** | Practical walkthrough on setting up custom views in FM24, exporting CSV/HTML data, file placements, and configuring for any club/save. |
 | **[🐍 Python Analytics & Dashboard](docs/PYTHON_ANALYTICS.md)** | CLI documentation for `scouting_dashboard.py`, generating radar charts, Moneyball scatter plots, and CSV recruitment shortlists. |
+| **[🌐 Web Analytics Application](webapp/README.md)** | Full Next.js webapp documentation: Opta pizza charts, FBref scouting reports, TradingView quant screener, and 1-click startup. |
 
 ---
 
@@ -119,7 +120,7 @@ EXEC gold.usp_scout_similar_players @TargetPlayerName = 'Rolando Mandragora', @T
 ### 5. Squad Succession Planning & Bargain Watch
 * **[`gold.vw_squad_succession_plan`](sql%20scripts/gold/views-gold.sql#L1211):** Categorizes your squad into *Prospects (U23)*, *Peak (24–29)*, and *Aging Starters ($\ge 30$)*. For every aging starter, it automatically surfaces the top 3 U23 successors from the scouting pool based on positional profile match and cost efficiency.
 * **[`gold.vw_bargain_watch`](sql%20scripts/gold/views-gold.sql#L1320):** Surfaces players with elite per-90 output whose transfer value or wages are drastically below market value using `attacking_bargain_index`, `defensive_bargain_index`, and:
-  $$\text{Cost per xGI} = \frac{\text{Transfer Value (€M)} \times 1000 + (\text{Weekly Wage (€k)} \times 52.0)}{\text{NPxG} + \text{xA}}$$
+  $$\text{Cost per xGI} = \frac{\text{Transfer Value (£M)} \times 1000 + (\text{Weekly Wage (£k)} \times 52.0)}{\text{NPxG} + \text{xA}}$$
 * **[`gold.vw_tactical_archetypes`](sql%20scripts/gold/views-gold.sql#L1348):** Automatically classifies players into 21 FM tactical roles (*Ball-Playing Defender*, *Stopper*, *Deep-Lying Playmaker*, *Ball-Winning Midfielder*, *Inside Forward*, *Poacher*, *Sweeper Keeper*).
 
 ### 6. Multi-Season Player Growth & Development
@@ -228,6 +229,39 @@ python "python scripts/scouting_dashboard.py" --mode scatter
 
 ---
 
+## 🌐 Interactive Web Application (FBref & Opta Scouting Engine)
+
+The warehouse includes a full-stack Next.js web application coupled directly to the SQL Server data warehouse. It provides an interactive scouting suite modeled after **FBref** and **Opta/StatsBomb**, complete with an interactive **TradingView-style Player Screener** for both outfield players and goalkeepers.
+
+### ⚡ 1-Click Launch (Recommended)
+From the root of the repository, execute:
+```bash
+./run_webapp.sh
+```
+The script automatically verifies your SQL Server Docker container is running, checks your Node.js runtime, installs missing dependencies, creates `webapp/.env.local` if needed, and starts the server at **[http://localhost:3000](http://localhost:3000)**.
+
+### 🛠️ Manual Startup
+```bash
+cd webapp
+npm install        # First time only
+npm run dev        # Starts Next.js development server
+```
+
+### 🔍 Key Features & Routes
+* **[Scouting Hub (Home)](http://localhost:3000/) (`/`):** Live database search across 11,359 players and clubs with position filters, valuation/minutes sliders, and quick sorting.
+* **[TradingView Screener](http://localhost:3000/screener) (`/screener`):** Interactive quantitative screener featuring dynamic filter pill chips, preset strategies (*Wonderkids*, *Moneyball Gems*, *Elite Playmakers*, *Shot-Stoppers*), CSV export, and dual **Outfield** vs **🧤 Goalkeeper** modes.
+* **[Player Dossier](http://localhost:3000/player/1) (`/player/[id]`):** Comprehensive player profile featuring:
+  * **Opta / StatsBomb Pizza Radar Chart:** Radial slices and classic radar polygon views with category glow and hover tooltips.
+  * **FBref Percentile Benchmark Table:** 0–99th percentile progress bars across Attacking, Passing, Defending, and Physical metrics.
+  * **FBref Similar Players Widget:** Multi-metric Euclidean distance matching for both outfield positions and goalkeepers.
+  * **Career Progression (SCD Type 2):** Longitudinal tracking of output and market valuation across historical snapshots.
+* **[Head-to-Head Comparison](http://localhost:3000/compare) (`/compare`):** Side-by-side player search, overlaid dual radar chart, and statistical differential matrix.
+* **[Tactical Archetypes](http://localhost:3000/archetypes) (`/archetypes`):** Browse players grouped by 22 distinct tactical profiles from `gold.vw_tactical_archetypes`.
+
+For in-depth web application documentation, see [`webapp/README.md`](file:///home/mcmedal/Documents/Github/football-manager-warehouse-project/webapp/README.md).
+
+---
+
 ## 📂 Repository Structure
 
 ```text
@@ -235,6 +269,12 @@ football-manager-warehouse-project/
 ├── docker-compose.yml                  # Docker Compose configuration for SQL Server 2022
 ├── .env.example                        # Environment variable template for Docker
 ├── run_pipeline_docker.sh              # 1-click Linux/Docker ETL orchestrator & test runner
+├── run_webapp.sh                       # 1-click launcher for Next.js scouting web application
+├── webapp/                             # Full-stack Next.js FBref/Opta scouting web application
+│   ├── app/                            # App router pages (Scouting Hub, Screener, Player Dossier, Compare, Archetypes)
+│   ├── components/                     # PizzaRadarChart, PercentileTable, SimilarPlayers, Navbar
+│   ├── lib/db.ts                       # MSSQL connection pool with cached connection management
+│   └── README.md                       # Detailed webapp architecture & API reference
 ├── docs/                               # Comprehensive project documentation
 │   ├── README.md                       # Documentation navigation hub
 │   ├── SCOUTING_PLAYBOOK.md            # Step-by-step practical recruitment workflows

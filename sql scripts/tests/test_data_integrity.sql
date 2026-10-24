@@ -206,6 +206,33 @@ BEGIN
 END;
 
 -- -------------------------------------------------------------------
+-- Test 7: Goalkeeper Scale & Consistency Sanity Checks
+-- Validates:
+-- 1. saves_percentage and xSave_rate are strictly on [0.0, 1.0] scale.
+-- 2. saves_held + saves_parried + saves_tipped ≈ saves_made_per90.
+-- -------------------------------------------------------------------
+SET @TotalTests = @TotalTests + 1;
+DECLARE @GkScaleViolations INT = 0;
+DECLARE @GkComponentBreaks INT = 0;
+
+SELECT 
+    @GkScaleViolations = SUM(CASE WHEN saves_percentage < 0.0 OR saves_percentage > 1.0 OR xSave_rate < 0.0 OR xSave_rate > 1.0 THEN 1 ELSE 0 END),
+    @GkComponentBreaks = SUM(CASE WHEN ABS((saves_held_per90 + saves_parried_per90 + saves_tipped_per90) - saves_made_per90) > 1.5 THEN 1 ELSE 0 END)
+FROM gold.fact_gk_stats
+WHERE dwh_current_validity = 1 AND minutes_played >= 450;
+
+IF (@GkScaleViolations = 0 AND @GkComponentBreaks = 0)
+BEGIN
+    PRINT '[PASS] Test 7: Goalkeeper Scale & Metric Consistency - All GK ratios on [0.0, 1.0] scale and save action components sum approximately to saves made.';
+    SET @PassedTests = @PassedTests + 1;
+END
+ELSE
+BEGIN
+    PRINT CONCAT('[FAIL] Test 7: Goalkeeper Consistency - Found ', @GkScaleViolations, ' scale violations and ', @GkComponentBreaks, ' component breaks.');
+    SET @FailedTests = @FailedTests + 1;
+END;
+
+-- -------------------------------------------------------------------
 -- Test Summary Report
 -- -------------------------------------------------------------------
 PRINT '==========================================================';

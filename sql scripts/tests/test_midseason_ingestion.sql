@@ -322,7 +322,7 @@ BEGIN TRY
     -- If midseason was used (25.0M), delta would incorrectly be +40.0M.
     IF (@CurSeason = '2024/25' AND @PrevSeason = '2023/24' AND @DeltaValue = 20.00)
     BEGIN
-        PRINT CONCAT('[PASS] Test 8: True Season-over-Season Growth - Correct transition ', @PrevSeason, ' -> ', @CurSeason, ' with delta_transfer_value_m = +€', @DeltaValue, 'M.');
+        PRINT CONCAT('[PASS] Test 8: True Season-over-Season Growth - Correct transition ', @PrevSeason, ' -> ', @CurSeason, ' with delta_transfer_value_m = +£', @DeltaValue, 'M.');
         SET @PassedTests = @PassedTests + 1;
     END
     ELSE

@@ -146,7 +146,7 @@ def generate_scatter_plot(df, output_path="moneyball_quadrant.png"):
                      xytext=(6, 4), textcoords="offset points")
 
     plt.title("Football Manager Moneyball Engine: Chance Creation vs Transfer Valuation", fontsize=14, weight="bold", pad=15)
-    plt.xlabel("Transfer Value (€M)", fontsize=11, labelpad=10)
+    plt.xlabel("Transfer Value (£M)", fontsize=11, labelpad=10)
     plt.ylabel("NPxG + xA per 90 (Goal Threat)", fontsize=11, labelpad=10)
     plt.legend(frameon=True, facecolor="white", loc="upper right")
     plt.text(med_val * 0.2, med_out * 1.6, "★ MONEYBALL BARGAIN QUADRANT\n(High Output, Low Cost)", fontsize=10, color="green", weight="bold", alpha=0.8)

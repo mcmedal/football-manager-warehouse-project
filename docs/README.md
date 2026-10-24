@@ -17,6 +17,7 @@ This documentation suite covers every aspect of the data platform, from raw game
 | **[Pipeline Runbook & Operations](file:///home/mcmedal/Documents/Github/football-manager-warehouse-project/docs/PIPELINE_RUNBOOK.md)** | Step-by-step setup, database creation, execution orchestration, ad-hoc scouting procedures, automated testing, and troubleshooting. | Database Administrators, Users |
 | **[FM24 Data Export Guide](file:///home/mcmedal/Documents/Github/football-manager-warehouse-project/docs/FM_EXPORT_GUIDE.md)** | Practical walkthrough on setting up custom views in FM24, exporting CSV/HTML data, file placements, and configuring for any club/save. | Football Manager Players |
 | **[Python Analytics & Dashboard](file:///home/mcmedal/Documents/Github/football-manager-warehouse-project/docs/PYTHON_ANALYTICS.md)** | CLI documentation for `scouting_dashboard.py`, generating radar charts, Moneyball scatter plots, and CSV recruitment shortlists. | Data Scientists, End Users |
+| **[🌐 Interactive Web Application](file:///home/mcmedal/Documents/Github/football-manager-warehouse-project/webapp/README.md)** | Full-stack Next.js app with FBref reports, Opta pizza charts, similarity engines, and TradingView screener. | Scouts, Analysts, End Users |
 
 ---
 
@@ -57,6 +58,7 @@ flowchart LR
         P1[SQL Queries / SSMS]
         P2[Python Visual Dashboard]
         P3[Shortlist CSV Exports]
+        P4[Next.js FBref / Opta Web App]
     end
 
     Raw --> BP --> Bronze

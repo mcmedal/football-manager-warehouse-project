@@ -55,7 +55,7 @@ The database is divided into four distinct logical schemas:
   * Standardized positions to descriptive titles (`'Striker'`, `'Central Defender'`, etc.).
   * Percentage strings (`'75%'`) converted to `DECIMAL(5, 2)` ratios (`0.75`).
   * Numbers with comma separators (`'1,450'`) parsed to `INT` (`1450`).
-  * Financials parsed into weekly wage (€k) and market transfer value (€M).
+  * Financials parsed into weekly wage (£k) and market transfer value (£M).
 
 ### `silver.fmdata_interested_out_players`
 * **Grain:** One row per scouted outfield target.
@@ -103,6 +103,38 @@ The database is divided into four distinct logical schemas:
 | `dwh_cd_valid_till` | `DATETIME2` | NO | Expiration timestamp. |
 | `dwh_current_validity` | `BIT` | NO | Active record flag. |
 
+### `gold.dim_team_tactical_archetypes`
+* **Grain:** One row per team entity per competitive season snapshot (`dwh_current_validity = 1`).
+* **Source Tables:** `gold.fact_outfield_player_stats` (minutes-weighted aggregation), `gold.dim_team_info`.
+* **Business Purpose:** Central dimension classifying each club into one of 7 tactical frameworks (Gegenpressing, Tiki-Taka, Vertical Tiki-Taka, Counter-Attack, Wing Play, Route One, Catenaccio) based on minutes-weighted event metrics per 90, computing archetype affinity scores ($0\text{--}100$).
+
+| Column Name | Data Type | Nullable | Description / Metric Formula |
+| :--- | :--- | :--- | :--- |
+| `team_key` | `VARCHAR(10)` | **NO** (FK) | Reference to `gold.dim_team_info`. |
+| `club_name` | `NVARCHAR(35)` | NO | Club name. |
+| `league` | `NVARCHAR(35)` | YES | League name. |
+| `active_players` | `INT` | NO | Number of outfield players in sample ($\ge 180$ mins). |
+| `total_minutes` | `INT` | NO | Cumulative minutes played by squad outfield players. |
+| `tactical_archetype`| `VARCHAR(35)` | NO | Primary classified tactical archetype. |
+| `tactical_framework`| `VARCHAR(50)` | NO | Parent tactical framework category (1–7). |
+| `tactical_description`| `NVARCHAR(500)`| YES | Tactical description of the system. |
+| `pressures_attempted_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team pressures attempted per 90. |
+| `passes_attempted_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team passes attempted per 90. |
+| `pass_accuracy` | `DECIMAL(5,3)` | YES | Minutes-weighted team pass accuracy ($[0.00, 1.00]$). |
+| `progressive_passes_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team progressive passes per 90. |
+| `crosses_attempted_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team crosses attempted per 90. |
+| `headers_attempted_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team headers attempted per 90. |
+| `clearances_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team clearances per 90. |
+| `blocks_per90` | `DECIMAL(5,2)` | YES | Minutes-weighted team blocks per 90. |
+| `gegenpressing_score` | `INT` | YES | Affinity index ($0\text{--}100$) for high-intensity pressing. |
+| `tiki_taka_score` | `INT` | YES | Affinity index ($0\text{--}100$) for control possession. |
+| `vertical_tiki_taka_score`| `INT` | YES | Affinity index ($0\text{--}100$) for central penetrative possession. |
+| `fluid_counter_score` | `INT` | YES | Affinity index ($0\text{--}100$) for fluid counter-attacking. |
+| `direct_counter_score`| `INT` | YES | Affinity index ($0\text{--}100$) for direct transition play. |
+| `wing_play_score` | `INT` | YES | Affinity index ($0\text{--}100$) for horizontal flank play. |
+| `route_one_score` | `INT` | YES | Affinity index ($0\text{--}100$) for aerial attrition long ball. |
+| `catenaccio_score` | `INT` | YES | Affinity index ($0\text{--}100$) for deep block penalty box defending. |
+
 ### `gold.dim_club`
 * **Grain:** One row per unique club entity.
 
@@ -118,7 +150,7 @@ The database is divided into four distinct logical schemas:
 | :--- | :--- | :--- | :--- |
 | `league_key` | `INT IDENTITY(1,1)` | **NO** (PK) | Surrogate key for the league. |
 | `league` | `NVARCHAR(35)` | NO | League name (e.g. `'SERIE A'`, `'ENGLISH PREMIER LEAGUE'`). |
-| `league_difficulty_coef` | `DECIMAL(3, 2)` | NO | Quality adjustment coefficient (e.g. `1.00` for Top 5, `0.85` for tier 2). |
+| `league_difficulty_coef` | `DECIMAL(3, 2)` | NO | Quality adjustment coefficient (Apex `1.00`, SL1 `0.90`, SL2 `0.70`, SL3 `0.60`, SL4 `0.40`, SL5 `0.20`). In webapp analytics dossiers, translation multipliers are calibrated relative to the user's managed squad standard (`target_coef / managed_coef`). |
 
 ---
 
@@ -213,8 +245,8 @@ The database is divided into four distinct logical schemas:
 | :--- | :--- | :--- | :--- |
 | `player_key` | `INT` | **NO** (FK) | Reference to `gold.dim_player_info`. |
 | `team_key` | `VARCHAR(10)` | YES | Reference to `gold.dim_team_info`. |
-| `wage_per_week_k` | `DECIMAL(10, 2)` | YES | Weekly contractual wage in thousands (€k). |
-| `transfer_value_m` | `DECIMAL(10, 2)` | YES | Estimated transfer market valuation in millions (€M). |
+| `wage_per_week_k` | `DECIMAL(10, 2)` | YES | Weekly contractual wage in thousands (£k). |
+| `transfer_value_m` | `DECIMAL(10, 2)` | YES | Estimated transfer market valuation in millions (£M). |
 | `season` | `VARCHAR(9)` | NO | Competitive season snapshot. |
 
 ---
@@ -301,42 +333,53 @@ The Gold schema exposes 24 analytical views and dimensional marts categorized in
 | `is_own_squad` | `BIT` | NO | `1` = Player in user's club; `0` = Scouted external transfer target. |
 | `contracted` | `BIT` | NO | `1` = Professional contract active; `0` = Free agent. |
 | `minutes_played` | `INT` | YES | Total competitive minutes in season snapshot. |
-| `wage_per_week_k` | `DECIMAL(10,2)` | YES | Contractual weekly wage in thousands (€k). |
-| `transfer_value_m` | `DECIMAL(10,2)` | YES | Estimated market transfer valuation in millions (€M). |
+| `wage_per_week_k` | `DECIMAL(10,2)` | YES | Contractual weekly wage in thousands (£k). |
+| `transfer_value_m` | `DECIMAL(10,2)` | YES | Estimated market transfer valuation in millions (£M). |
 | `goals_per90` | `DECIMAL(5,2)` | YES | Goals scored per 90 minutes. |
 | `assists_per90` | `DECIMAL(5,2)` | YES | Assists per 90 minutes. |
-| `xGoals_per90` | `DECIMAL(5,2)` | YES | Expected goals per 90 minutes. |
-| `non_penalty_xGoals_per90` | `DECIMAL(5,2)` | YES | Non-penalty expected goals per 90. |
-| `xAssits_per90` | `DECIMAL(5,2)` | YES | Expected assists per 90 minutes ($xA/90$). |
-| **`npxg_plus_xa_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `non_penalty_xGoals_per90 + xAssits_per90`. Direct non-penalty goal involvement threat per 90. |
-| **`assist_luck`** | `DECIMAL(5,2)` | YES | **Formula:** `assists_per90 - xAssits_per90`. Measures teammate finishing delta. Positive indicates finishing overperformance by teammates. |
-| **`finishing_overperf_shrunk`** | `DECIMAL(5,2)` | YES | **Formula:** $\text{xG\_overperf} \times \left(\frac{\text{minutes}}{\text{minutes} + 900}\right)$. Empirical Bayes shrinkage adjusting finishing runs toward zero based on sample size. |
-| **`goal_threat_share`** | `DECIMAL(5,2)` | YES | **Formula:** `npxG_per90 / NULLIF(npxG_per90 + xA_per90, 0)`. Proportion of total attacking threat coming from shooting vs passing ($[0.00, 1.00]$). |
+| `xGoals_per90` | `DECIMAL(5,2)` | YES | Expected goals per 90 minutes ($xG/90$). |
+| `non_penalty_xGoals_per90` | `DECIMAL(5,2)` | YES | Non-penalty expected goals per 90 ($npxG/90$). |
+| `xAssists_per90` | `DECIMAL(5,2)` | YES | Expected assists per 90 minutes ($xA/90$). (Also aliased as `xAssits_per90` for backward compatibility). |
+| **`npxg_plus_xa_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `non_penalty_xGoals_per90 + xAssists_per90`. Direct non-penalty goal involvement threat per 90 ($npxG+xA/90$). |
+| **`finishing_overperf_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(goals_per90 - xGoals_per90) * (minutes / (minutes + 900.0))`. Empirical Bayes shrinkage adjusting per-90 finishing run toward zero based on minute sample size. |
+| **`goals_minus_xg_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `(goals_per90 - xGoals_per90) * (minutes / (minutes + 900.0))`. Shrunk goal conversion delta above expectation. |
+| **`assist_luck`** | `DECIMAL(7,4)` | YES | **Formula:** `(assists_per90 - xAssists_per90) * (minutes / (minutes + 900.0))`. Shrunk teammate finishing delta adjusting for small sample size. |
+| **`assist_luck_shrunk`** | `DECIMAL(7,4)` | YES | Alias of `assist_luck`. |
+| **`goal_threat_share`** | `DECIMAL(7,4)` | YES | **Formula:** `npxG_per90 / NULLIF(npxG_per90 + xA_per90, 0)`. Proportion of total attacking threat coming from shooting vs passing ($[0.00, 1.00]$). |
 | `shots_per90` | `DECIMAL(5,2)` | YES | Total shots attempted per 90. |
-| **`shot_on_target_rate`** | `DECIMAL(5,2)` | YES | **Formula:** `shots_on_target_per90 / NULLIF(shots_per90, 0)`. Proportion of shot attempts on target. |
+| **`shot_on_target_rate`** | `DECIMAL(7,4)` | YES | **Formula:** `shots_on_target_per90 / NULLIF(shots_per90, 0)`. Proportion of shot attempts on target. |
 | `xGoals_per_shot` | `DECIMAL(5,2)` | YES | Average shot quality ($xG / \text{shot}$). |
-| **`shots_outside_box_ratio`** | `DECIMAL(5,2)` | YES | **Formula:** `shots_outside_box_per90 / NULLIF(shots_per90, 0)`. Proportion of shots taken from distance. |
-| **`chance_creation_per_pass_pct`** | `DECIMAL(5,2)` | YES | **Formula:** `(chances_created_per90 / NULLIF(passes_attempted_per90, 0)) * 100.0`. Chances generated per 100 attempted passes. |
-| **`xa_per_op_kp`** | `DECIMAL(5,2)` | YES | **Formula:** `xAssits_per90 / NULLIF(open_play_key_passes_per90, 0)`. Expected danger generated per open-play key pass. |
-| **`completed_crosses_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `crosses_attempted_per90 * cross_accuracy`. Accurate crosses delivered into the box per 90. |
+| **`npxg_per_shot`** | `DECIMAL(7,4)` | YES | **Formula:** `non_penalty_xGoals_per90 / NULLIF(shots_per90, 0)`. Penalty-free average shot quality. |
+| **`box_presence_proxy`** | `DECIMAL(7,4)` | YES | **Formula:** `shots_per90 * xGoals_per_shot`. Consistency proxy for penalty-box penetration. |
+| **`shots_outside_box_ratio`** | `DECIMAL(7,4)` | YES | **Formula:** `shots_outside_box_per90 / NULLIF(shots_per90, 0)`. Proportion of shots taken from distance. |
+| **`long_range_goal_share`** | `DECIMAL(7,4)` | YES | **Formula:** `goals_outside_the_box / NULLIF(goals, 0)`. Proportion of goals scored from outside the penalty area. |
+| **`chance_creation_per_pass_pct`** | `DECIMAL(7,4)` | YES | **Formula:** `(chances_created_per90 / NULLIF(passes_attempted_per90, 0)) * 100.0`. Chances generated per 100 attempted passes. |
+| **`xa_per_op_kp`** | `DECIMAL(7,4)` | YES | **Formula:** `xAssists_per90 / NULLIF(open_play_key_passes_per90, 0)`. Expected danger generated per open-play key pass. |
+| **`assists_per_op_kp`** | `DECIMAL(7,4)` | YES | **Formula:** `assists_per90 / NULLIF(open_play_key_passes_per90, 0)`. Actual assist conversion per open-play key pass. |
+| **`completed_crosses_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `crosses_attempted_per90 * cross_accuracy`. Accurate crosses delivered per 90 (all phases). |
+| **`open_play_completed_crosses_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `open_play_crosses_attempted_per90 * open_play_cross_accuracy`. Accurate open-play crosses per 90. |
+| **`crosses_share_of_creation`** | `DECIMAL(7,4)` | YES | **Formula:** `completed_crosses_per90 / NULLIF(chances_created_per90, 0)`. Proportion of chance creation driven by crossing. |
 | `open_play_cross_accuracy` | `DECIMAL(5,2)` | YES | Cross completion rate in open play ($[0.00, 1.00]$). |
 | `conversion_rate` | `DECIMAL(5,2)` | YES | Goal conversion rate from shots ($[0.00, 1.00]$). |
 | `passes_attempted_per90` | `DECIMAL(5,2)` | YES | Total passes attempted per 90. |
 | `pass_accuracy` | `DECIMAL(5,2)` | YES | Pass completion percentage ($[0.00, 1.00]$). |
+| **`completed_passes_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `passes_attempted_per90 * pass_accuracy`. Accurate passes completed per 90. |
 | `progressive_passes_per90` | `DECIMAL(5,2)` | YES | Passes moving the ball $\ge 10\text{m}$ toward goal per 90. |
-| **`prog_rate_per_pass`** | `DECIMAL(5,2)` | YES | **Formula:** `(progressive_passes_per90 / NULLIF(passes_attempted_per90, 0)) * 100.0`. Percentage of passes that are progressive. |
-| **`turnover_rate`** | `DECIMAL(5,2)` | YES | **Formula:** `possession_lost_per90 / NULLIF(passes_attempted_per90 + dribbles_made_per90, 0)`. Ball loss rate per on-ball action. |
-| **`progressive_share_of_actions`** | `DECIMAL(5,2)` | YES | **Formula:** `progressive_passes_per90 / NULLIF(passes_attempted_per90 + dribbles_made_per90, 0)`. Share of on-ball touches that advance play. |
+| **`progressive_actions_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `progressive_passes_per90 + dribbles_made_per90`. Total territory-advancing actions per 90. |
+| **`prog_rate_per_pass`** | `DECIMAL(7,4)` | YES | **Formula:** `(progressive_passes_per90 / NULLIF(passes_attempted_per90, 0)) * 100.0`. Percentage of passes that are progressive. |
+| **`turnover_rate`** | `DECIMAL(7,4)` | YES | **Formula:** `possession_lost_per90 / NULLIF(passes_attempted_per90 + dribbles_made_per90, 0)`. Ball loss rate per on-ball action. |
+| **`progressive_share_of_actions`** | `DECIMAL(7,4)` | YES | **Formula:** `progressive_passes_per90 / NULLIF(passes_attempted_per90 + dribbles_made_per90, 0)`. Share of on-ball touches that advance play. |
+| **`net_ball_security`** | `DECIMAL(7,4)` | YES | **Formula:** `completed_passes_per90 - possession_lost_per90`. Net ball retention margin per 90. |
 | `dribbles_made_per90` | `DECIMAL(5,2)` | YES | Successful dribbles/take-ons per 90. |
 | `open_play_key_passes_per90` | `DECIMAL(5,2)` | YES | Key passes executed in open play per 90. |
-| **`defensive_actions_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `(tackles_attempted * tackle_acc) + interceptions + blocks + clearances`. Total volume of successful defensive interventions per 90. |
-| **`reactive_vs_positional`** | `DECIMAL(5,2)` | YES | **Formula:** `interceptions / NULLIF(interceptions + (tackles_attempted * tackle_acc), 0)`. Ratio of positional reading to active ground tackling. |
-| **`pressure_efficiency`** | `DECIMAL(5,2)` | YES | **Formula:** `possession_won_per90 / NULLIF(pressures_attempted_per90, 0)`. Ball recoveries won per pressing attempt. |
-| **`pressure_accuracy`** | `DECIMAL(5,2)` | YES | **Formula:** `(pressures_completed_per90 / NULLIF(pressures_attempted_per90, 0)) * 100.0`. Success percentage of pressing challenges. |
-| **`discipline_index`** | `DECIMAL(5,2)` | YES | **Formula:** `fouls_made_per90 + (3.0 * yellow_cards_per90) + (8.0 * red_cards_per90)`. Composite disciplinary penalty index. |
-| **`foul_per_tackle`** | `DECIMAL(5,2)` | YES | **Formula:** `fouls_made_per90 / NULLIF(tackles_attempted_per90, 0)`. Tendency to foul when contesting tackles. |
-| **`clearance_per_aerial`** | `DECIMAL(5,2)` | YES | **Formula:** `clearances_per90 / NULLIF(headers_attempted_per90, 0)`. Ratio of clearances relative to aerial duels. |
-| **`aerial_duels_won_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `headers_attempted_per90 * heading_accuracy`. Aerial contests won cleanly per 90. |
+| **`defensive_actions_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `(tackles * tackle_acc) + interceptions + blocks + shots_blocked + clearances`. Total volume of successful defensive interventions per 90. |
+| **`non_clearance_def_actions_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `(tackles * tackle_acc) + interceptions + blocks + shots_blocked`. Defensive intervention volume excluding clearances (unbiased across CB vs Midfield). |
+| **`reactive_vs_positional`** | `DECIMAL(7,4)` | YES | **Formula:** `interceptions / NULLIF(interceptions + (tackles * tackle_acc), 0)`. Ratio of positional reading to active ground tackling. |
+| **`duels_won_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `(tackles * tackle_acc) + (headers * heading_acc)`. Total ground and aerial duels won per 90. |
+| **`foul_per_duel`** | `DECIMAL(7,4)` | YES | **Formula:** `fouls_made_per90 / NULLIF(tackles_attempted_per90 + headers_attempted_per90, 0)`. Foul frequency per contested contest. |
+| **`foul_per_tackle`** | `DECIMAL(7,4)` | YES | **Formula:** `fouls_made_per90 / NULLIF(tackles_attempted_per90, 0)`. Tendency to foul when contesting tackles. |
+| **`clearance_per_aerial`** | `DECIMAL(7,4)` | YES | **Formula:** `clearances_per90 / NULLIF(headers_attempted_per90, 0)`. Ratio of clearances relative to aerial duels. |
+| **`aerial_duels_won_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `headers_attempted_per90 * heading_accuracy`. Aerial contests won cleanly per 90. |
 | `heading_accuracy` | `DECIMAL(5,2)` | YES | Proportion of aerial duels won ($[0.00, 1.00]$). |
 | `tackles_attempted_per90` | `DECIMAL(5,2)` | YES | Tackles attempted per 90. |
 | `tackle_accuracy` | `DECIMAL(5,2)` | YES | Tackle success rate ($[0.00, 1.00]$). |
@@ -344,47 +387,85 @@ The Gold schema exposes 24 analytical views and dimensional marts categorized in
 | `interceptions_per90` | `DECIMAL(5,2)` | YES | Intercepted passes per 90. |
 | `clearances_per90` | `DECIMAL(5,2)` | YES | Clearances per 90. |
 | `blocks_per90` | `DECIMAL(5,2)` | YES | Blocked passes and crosses per 90. |
+| `shots_blocked_per90` | `DECIMAL(5,2)` | YES | Opponent shot attempts physically blocked per 90. |
+| `pressures_attempted_per90` | `DECIMAL(5,2)` | YES | Pressing actions attempted per 90. |
+| `pressures_completed_per90` | `DECIMAL(5,2)` | YES | Pressing actions resulting in a turnover or dispossession within 5 seconds. |
+| **`pressure_accuracy`** | `DECIMAL(7,4)` | YES | **Formula:** `(pressures_completed_per90 / NULLIF(pressures_attempted_per90, 0)) * 100.0`. Success percentage of pressing challenges. |
+| **`pressure_efficiency`** | `DECIMAL(7,4)` | YES | **Formula:** `pressures_completed_per90 / NULLIF(pressures_attempted_per90, 0)`. Fractional success rate ($[0.00, 1.00]$) of pressing challenges. |
 | `sprints_per90` | `DECIMAL(5,2)` | YES | High-intensity sprint actions per 90. |
 | `distance_covered_km_per90` | `DECIMAL(5,2)` | YES | Distance run in kilometers per 90 minutes. |
+| **`sprints_per_km`** | `DECIMAL(7,4)` | YES | **Formula:** `sprints_per90 / NULLIF(distance_covered_km_per90, 0)`. Running intensity index (sprints per kilometer run). |
+| **`high_press_load`** | `DECIMAL(7,4)` | YES | **Formula:** `pressures_attempted_per90 * sprints_per_km`. High-intensity pressing work-rate index. |
+| `fouls_made_per90` | `DECIMAL(5,2)` | YES | Free kicks conceded per 90. |
+| `fouls_against_per90` | `DECIMAL(5,2)` | YES | Free kicks won per 90. |
+| **`fouls_won_net`** | `DECIMAL(7,4)` | YES | **Formula:** `fouls_against_per90 - fouls_made_per90`. Net fouls drawn over conceded. Positive indicates net foul winner. |
+| **`discipline_index`** | `DECIMAL(7,4)` | YES | **Formula:** `fouls_made_per90 + (3.0 * yellow_cards_per90) + (8.0 * red_cards_per90)`. Composite disciplinary penalty index. |
+| **`cards_per_foul`** | `DECIMAL(7,4)` | YES | **Formula:** `(yellow_cards_per90 + red_cards_per90) / NULLIF(fouls_made_per90, 0)`. Disciplinary severity per committed foul. |
 | **`possession_differential`** | `DECIMAL(5,2)` | YES | **Formula:** `possession_won_per90 - possession_lost_per90`. Net ball recoveries minus dispossessions per 90. |
 | `mistakes_leading_to_goals_per90` | `DECIMAL(5,2)` | YES | Individual errors directly leading to opponent goals. |
-| **`cost_per_xgi`** | `DECIMAL(10,2)` | YES | **Formula:** `(wage_per_week_k * 52.0 + transfer_value_m * 1000.0) / NULLIF(npxg_plus_xa_per90, 0)`. Total annual cost (€k) per non-penalty expected goal contribution. |
+| **`goals_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `goals_per90 * league_difficulty_coef`. League-difficulty normalized goals per 90. |
+| **`xGoals_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `xGoals_per90 * league_difficulty_coef`. League-difficulty normalized expected goals per 90. |
+| **`non_penalty_xGoals_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `non_penalty_xGoals_per90 * league_difficulty_coef`. League-difficulty normalized non-penalty xG per 90. |
+| **`xAssists_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `xAssists_per90 * league_difficulty_coef`. League-difficulty normalized expected assists per 90. |
+| **`npxg_plus_xa_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `npxg_plus_xa_per90 * league_difficulty_coef`. League-difficulty normalized goal involvement threat per 90. |
+| **`cost_per_xgi`** | `DECIMAL(10,2)` | YES | **Formula:** `((wage * 52) + (fee / 3)) / NULLIF(npxGI * (minutes / 90.0), 0)`. Annualized financial cost (£k) per annual expected goal involvement. |
+| **`xgi_per_cost_m`** | `DECIMAL(7,4)` | YES | **Formula:** `(npxGI * (minutes / 90.0)) / NULLIF((wage * 0.052) + (fee / 3.0), 0)`. Annual expected goal contribution output per £1M annualized expenditure. |
+| **`value_gap`** | `DECIMAL(5,1)` | YES | **Formula:** `PERCENT_RANK(npxGI) - PERCENT_RANK(transfer_value_m)`. Market undervaluation index ($[-100.0, +100.0]$). High positive values indicate elite performers available at discount fees. |
 | **`on_pitch_goal_diff_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `team_goals_scored_per90 - team_goals_conceded_per90`. Net team goal difference while player was on the pitch. |
+| **`on_pitch_gd_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(team_goals_scored - team_goals_conceded) * (minutes / (minutes + 900.0))`. Sample-size shrunk on-pitch goal differential. |
 
 ---
 
 #### 7.1.2. `gold.mart_gk_scouting_summary`
 * **Grain:** One row per active goalkeeper snapshot (`p.dwh_current_validity = 1` AND `s.dwh_current_validity = 1`).
 * **Source Tables:** `gold.fact_gk_stats` (s), `gold.dim_player_info` (p), `gold.dim_team_info` (t), `gold.dim_league` (l), `gold.fact_players_value` (v).
-* **Business Purpose:** Central reporting mart for goalkeeper recruitment and performance appraisal. Focuses on shot-stopping overperformance, ball retention on saves, sweeper-keeper actions, and buildup distribution.
+* **Business Purpose:** Central reporting mart for goalkeeper recruitment and performance appraisal. Focuses on workload-normalized shot-stopping shrunk by shots faced ($k=300$), handling risk (parry rate vs hold rate over expected), proactive sweeper-keeper actions, and buildup distribution security. Ratios and deltas are rendered in high-resolution `DECIMAL(7,4)` precision.
 
 | Column Name | Data Type | Nullable | Description / Metric Formula |
 | :--- | :--- | :--- | :--- |
 | `player_key`, `player_id`, `player_name`, `age`, `position` | Various | NO/YES | Identifiers and player attributes matching outfield mart. |
 | `club_name`, `league`, `league_difficulty_coef` | Various | YES/NO | Club, league, and league coefficient. |
 | `is_own_squad`, `contracted`, `minutes_played` | Various | NO/YES | Lineup status, contract status, and season minutes. |
-| `wage_per_week_k`, `transfer_value_m` | `DECIMAL(10,2)` | YES | Financial contract wage (€k/wk) and valuation (€M). |
-| **`shot_stopping_delta`** | `DECIMAL(5,2)` | YES | **Formula:** `saves_percentage - xSave_rate`. Net save percentage above or below expected save rate based on shot difficulty. |
+| `wage_per_week_k`, `transfer_value_m` | `DECIMAL(10,2)` | YES | Financial contract wage (£k/wk) and valuation (£M). |
+| **`shots_faced_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `saves_made_per90 + goals_conceded_per90`. Total shots on target faced per 90. |
+| **`shots_faced_total`** | `DECIMAL(7,2)` | YES | **Formula:** `shots_faced_per90 * (minutes_played / 90.0)`. Cumulative sample size of shots on target faced across the season (foundation for shrinkage). |
+| **`xgot_faced_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `xGoals_prevented_per90 + goals_conceded_per90`. Post-shot expected goals faced on target per 90. |
+| **`shot_difficulty`** | `DECIMAL(7,4)` | YES | **Formula:** `xgot_faced_per90 / NULLIF(shots_faced_per90, 0)`. Average xGOT per shot faced ($[0.00, 1.00]$). Isolates defensive concession quality (higher means keeper faces harder shots). |
+| **`xgp_per_shot`** | `DECIMAL(7,4)` | YES | **Formula:** `xGoals_prevented_per90 / NULLIF(shots_faced_per90, 0)`. Primary shot-stopping efficiency metric; isolates shot-prevention rate independent of defense workload. |
+| **`xgp_per_shot_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(shots_faced_total * xgp_per_shot + 300.0 * 0.0) / (shots_faced_total + 300.0)`. Empirical Bayes shrinkage based on shots faced ($k=300$). |
+| **`goals_vs_xgot_ratio`** | `DECIMAL(7,4)` | YES | **Formula:** `goals_conceded_per90 / NULLIF(xgot_faced_per90, 0)`. Ratio of actual goals allowed to xGOT faced (< 1.0 indicates positive shot stopping). |
+| **`xgp_per_season`** | `DECIMAL(7,4)` | YES | **Formula:** `xGoals_prevented_per90 * 38.0`. Projected net goals saved above expectation over a full 38-game league campaign. |
+| **`xgp_per_season_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `sample_reliability * xGoals_prevented_per90 * 38.0`. Sample-reliability regressed seasonal goals prevented. |
+| **`shot_stopping_delta`** | `DECIMAL(7,4)` | YES | **Formula:** `saves_percentage - xSave_rate`. Net save rate over expected. |
+| **`shot_stopping_delta_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(shots_faced_total * shot_stopping_delta) / (shots_faced_total + 300.0)`. Delta shrunk heavily for sample exposure. |
 | `xGoals_prevented_per90` | `DECIMAL(5,2)` | YES | Goals saved above expectation per 90 ($\text{xGOT} - \text{Goals Conceded}$). |
-| `saves_made_per90` | `DECIMAL(5,2)` | YES | Total saves per 90 minutes. |
-| `saves_percentage` | `DECIMAL(5,2)` | YES | Actual save percentage ($[0.00, 1.00]$). |
-| `xSave_rate` | `DECIMAL(5,2)` | YES | Expected save percentage based on shot location and trajectory. |
-| `goals_conceded_per90` | `DECIMAL(5,2)` | YES | Goals allowed per 90 minutes. |
-| **`hold_rate_pct`** | `DECIMAL(5,2)` | YES | **Formula:** `(saves_held_per90 / NULLIF(saves_held + saves_parried + saves_tipped, 0)) * 100.0`. Percentage of saves caught and held cleanly without conceding rebounds. |
-| `saves_tipped_per90` | `DECIMAL(5,2)` | YES | Saves tipped around the post or over the crossbar per 90. |
-| `saves_parried_per90` | `DECIMAL(5,2)` | YES | Saves pushed back into the field of play per 90. |
-| `saves_held_per90` | `DECIMAL(5,2)` | YES | Saves caught cleanly per 90. |
-| **`sweeper_index`** | `DECIMAL(5,2)` | YES | **Formula:** `clearances_per90 + distance_covered_km_per90`. Composite mobility and sweeping intervention score outside the box. |
-| **`distribution_value`** | `DECIMAL(5,2)` | YES | **Formula:** `passes_attempted_per90 * pass_accuracy`. Volume of accurate passes completed per 90. |
-| `passes_attempted_per90` | `DECIMAL(5,2)` | YES | Total distribution passes attempted per 90. |
+| `saves_made_per90`, `saves_percentage`, `xSave_rate`, `goals_conceded_per90` | Various | YES | Volume and raw efficiency descriptors. |
+| **`parry_rate`** | `DECIMAL(7,4)` | YES | **Formula:** `saves_parried_per90 / NULLIF(saves_made_per90, 0)`. Proportion of saves parried into play (rebound vulnerability risk metric). |
+| **`tip_rate`** | `DECIMAL(7,4)` | YES | **Formula:** `saves_tipped_per90 / NULLIF(saves_made_per90, 0)`. Proportion of saves deflected over bar / around post (safe neutral outcome). |
+| **`hold_rate`** | `DECIMAL(7,4)` | YES | **Formula:** `saves_held_per90 / NULLIF(saves_made_per90, 0)`. Raw proportion of saves caught cleanly. |
+| **`hold_rate_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(saves_total * hold_rate + 150.0 * 0.30) / (saves_total + 150.0)`. Hold rate regressed toward pool mean ($k=150$). |
+| **`hold_rate_over_expected`** | `DECIMAL(7,4)` | YES | **Formula:** `hold_rate - (0.1143 + 0.5230 * shot_difficulty)`. Residual handling skill adjusted for incoming shot difficulty. |
+| `hold_rate_pct` | `DECIMAL(7,4)` | YES | Backward-compatible hold rate percentage. |
+| `saves_tipped_per90`, `saves_parried_per90`, `saves_held_per90` | `DECIMAL(5,2)` | YES | Volume breakdowns of save handling per 90. |
+| **`sweeper_actions_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `interceptions_per90 + clearances_per90`. Total proactive and reactive actions outside the goal line per 90. |
+| **`sweeper_share`** | `DECIMAL(7,4)` | YES | **Formula:** `interceptions_per90 / NULLIF(interceptions_per90 + clearances_per90, 0)`. Share of proactive claims/interceptions vs reactive clearances. |
+| `sweeper_index` | `DECIMAL(7,4)` | YES | Backward-compatible alias for `sweeper_actions_per90`. |
+| `interceptions_per90` | `DECIMAL(5,2)` | YES | In Football Manager: Through-balls, crosses, and passes intercepted outside the 6-yard box per 90. |
+| `clearances_per90` | `DECIMAL(5,2)` | YES | In Football Manager: Kicking or punching clearances under opposition contest per 90. |
+| **`completed_passes_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `passes_attempted_per90 * pass_accuracy`. Volume of accurate passes completed per 90. |
+| **`giveaways_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `passes_attempted_per90 * (1.0 - pass_accuracy)`. Incomplete passes / lost possessions per 90. |
+| `passing_involvement` | `DECIMAL(5,2)` | YES | `passes_attempted_per90`. Volume descriptor of goalkeeper involvement in buildup. |
+| `distribution_value` | `DECIMAL(7,4)` | YES | Backward-compatible alias for `completed_passes_per90`. |
 | `pass_accuracy` | `DECIMAL(5,2)` | YES | Distribution pass completion rate ($[0.00, 1.00]$). |
-| `interceptions_per90` | `DECIMAL(5,2)` | YES | Through-balls intercepted outside the 6-yard box per 90. |
-| `clearances_per90` | `DECIMAL(5,2)` | YES | Kicking clearances under pressure per 90. |
-| `penalties_faced_per90` | `DECIMAL(5,2)` | YES | Penalties faced per 90 minutes. |
-| `penalties_save_percentage` | `DECIMAL(5,2)` | YES | Penalty stop percentage ($[0.00, 1.00]$). |
-| `error_rate` | `DECIMAL(5,2)` | YES | Mistakes leading to goals per 90. |
-| `possession_differential` | `DECIMAL(5,2)` | YES | `possession_won_per90 - possession_lost_per90`. |
-| `on_pitch_goal_diff_per90` | `DECIMAL(5,2)` | YES | `team_goals_scored_per90 - team_goals_conceded_per90`. |
+| `penalties_faced_per90`, `penalties_save_percentage` | Various | YES | Raw penalty volumes and save percentage. |
+| **`pen_save_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(pens_faced * pen_save_pct + 20.0 * 0.20) / (pens_faced + 20.0)`. Heavily shrunk penalty stop rate ($k=20$, prior $0.20$). |
+| **`errors_leading_to_goal_per90`**| `DECIMAL(7,4)` | YES | Unforced mistakes resulting directly in conceded goals per 90. |
+| **`errors_leading_to_goal_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(minutes * errors_per90 + 5000.0 * 0.022) / (minutes + 5000.0)`. Regressed error rate ($k=5000$ mins). |
+| `error_rate` | `DECIMAL(7,4)` | YES | Backward-compatible alias for `errors_leading_to_goal_per90`. |
+| `possession_differential` | `DECIMAL(7,4)` | YES | `possession_won_per90 - possession_lost_per90`. |
+| **`is_eligible`** | `BIT` | NO | Flags goalkeepers with reliable sample size (`shots_faced_total >= 40.0`). |
+| **`sample_reliability`** | `DECIMAL(7,4)` | YES | **Formula:** `shots_faced_total / (shots_faced_total + 300.0)`. Bayesian confidence factor ($[0.00, 1.00]$). |
+| **`value_gap`** | `DECIMAL(5,1)` | YES | **Formula:** `PERCENT_RANK(xgp_per_shot_shrunk) - PERCENT_RANK(transfer_value_m)`. Goalkeeper Moneyball valuation efficiency index ($[-100.0, +100.0]$). |
 
 ---
 
@@ -576,8 +657,8 @@ Powered by Slowly Changing Dimensions (SCD Type 2), these views preserve all his
 | `current_season_num`, `previous_season_num` | `BIGINT` | Chronological version pair ($t$ and $t-1$). |
 | `current_age`, `previous_age` | `INT` | Age progression. |
 | `current_minutes`, `previous_minutes` | `INT` | Playing time comparison. |
-| **`delta_transfer_value_m`** | `DECIMAL(6,2)` | **Formula:** `curr.transfer_value_m - prev.transfer_value_m`. Valuation growth (€M). |
-| **`delta_wage_per_week_k`** | `DECIMAL(6,2)` | **Formula:** `curr.wage_per_week_k - prev.wage_per_week_k`. Wage progression (€k/wk). |
+| **`delta_transfer_value_m`** | `DECIMAL(6,2)` | **Formula:** `curr.transfer_value_m - prev.transfer_value_m`. Valuation growth (£M). |
+| **`delta_wage_per_week_k`** | `DECIMAL(6,2)` | **Formula:** `curr.wage_per_week_k - prev.wage_per_week_k`. Wage progression (£k/wk). |
 | **`delta_npxg_plus_xa_per90`** | `DECIMAL(5,2)` | **Formula:** `curr.npxg_plus_xa_per90 - prev.npxg_plus_xa_per90`. Direct attacking threat trajectory. |
 | **`delta_key_passes_per90`** | `DECIMAL(5,2)` | **Formula:** `curr.open_play_key_passes_per90 - prev.open_play_key_passes_per90`. Playmaking volume delta. |
 | **`delta_dribbles_per90`** | `DECIMAL(5,2)` | **Formula:** `curr.dribbles_made_per90 - prev.dribbles_made_per90`. 1v1 take-on development. |
@@ -591,7 +672,7 @@ Powered by Slowly Changing Dimensions (SCD Type 2), these views preserve all his
 * **Grain:** One row per goalkeeper season transition (`curr.snapshot_version = prev.snapshot_version + 1`).
 * **Source Tables:** Self-join on `gold.fact_gk_stats`, `gold.dim_player_info`, `gold.dim_team_info`, `gold.fact_players_value`.
 * **Key Delta Metrics:**
-  * **`delta_transfer_value_m`:** Valuation change (€M).
+  * **`delta_transfer_value_m`:** Valuation change (£M).
   * **`delta_shot_stopping`:** `curr.shot_stopping_delta - prev.shot_stopping_delta`. Save percentage overperformance trajectory.
   * **`delta_xg_prevented_per90`:** Change in expected goals prevented per 90.
   * **`delta_hold_rate_pct`:** `curr.hold_rate_pct - prev.hold_rate_pct`. Rebound prevention growth.
@@ -634,9 +715,9 @@ Powered by Slowly Changing Dimensions (SCD Type 2), these views preserve all his
 | `wage_per_week_k`, `transfer_value_m`, `minutes_played` | Various | YES | Financials and competitive sample minutes. |
 | `npxg_plus_xa_per90`, `goals_per90`, `assists_per90` | Various | YES | Attacking output per 90. |
 | `progressive_passes_per90`, `defensive_actions_per90` | Various | YES | Ball progression and defensive output. |
-| **`cost_per_xgi`** | `DECIMAL(10,2)` | YES | **Formula:** `(wage_per_week_k * 52.0 + transfer_value_m * 1000.0) / NULLIF(npxg_plus_xa_per90, 0)`. Total annual cost (€k) per non-penalty goal involvement. |
-| **`attacking_bargain_index`** | `DECIMAL(10,2)` | YES | **Formula:** `CAST((npxg_plus_xa_per90 * 100.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(10,2))`. Non-penalty attacking threat delivered per €1M of total annual amortized player cost. |
-| **`defensive_bargain_index`** | `DECIMAL(10,2)` | YES | **Formula:** `CAST((defensive_actions_per90 * 10.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(10,2))`. Defensive actions delivered per €1M of total annual amortized player cost. |
+| **`cost_per_xgi`** | `DECIMAL(10,2)` | YES | **Formula:** `(wage_per_week_k * 52.0 + transfer_value_m * 1000.0) / NULLIF(npxg_plus_xa_per90, 0)`. Total annual cost (£k) per non-penalty goal involvement. |
+| **`attacking_bargain_index`** | `DECIMAL(10,2)` | YES | **Formula:** `CAST((npxg_plus_xa_per90 * 100.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(10,2))`. Non-penalty attacking threat delivered per £1M of total annual amortized player cost. |
+| **`defensive_bargain_index`** | `DECIMAL(10,2)` | YES | **Formula:** `CAST((defensive_actions_per90 * 10.0) / NULLIF(transfer_value_m + (wage_per_week_k * 0.052), 0) AS DECIMAL(10,2))`. Defensive actions delivered per £1M of total annual amortized player cost. |
 | **`cost_efficiency_rank`** | `BIGINT` | NO | **Formula:** `DENSE_RANK() OVER (ORDER BY cost_per_xgi ASC)`. Overall Moneyball recruitment priority ranking. |
 
 #### 7.5.3. `gold.vw_tactical_archetypes`
@@ -679,4 +760,50 @@ Position: Attacking Midfielders & Wingers
   ├── xA/90 >= 0.20                               ──> 'Advanced Playmaker'
   └── Otherwise                                   ──> 'Utility Attacker'
 ```
+
+#### 7.5.4. `gold.vw_team_tactical_archetypes`
+* **Grain:** One row per club snapshot (`dwh_current_validity = 1`).
+* **Source Tables:** `gold.dim_team_tactical_archetypes`.
+* **Business Purpose:** Central reporting view for team-level tactical frameworks and affinity scores across 8 tactical archetypes.
+
+| Column Name | Data Type | Nullable | Description / Metric Formula |
+| :--- | :--- | :--- | :--- |
+| `team_key`, `club_name`, `league` | Various | NO/YES | Club and league identifiers. |
+| `active_players`, `total_minutes` | `INT` | NO | Squad sample size and cumulative playing time. |
+| `tactical_archetype` | `VARCHAR(35)` | NO | Primary tactical style (e.g. `'Gegenpressing'`, `'Tiki-Taka'`, `'Route One'`). |
+| `tactical_framework` | `VARCHAR(50)` | NO | Parent tactical framework category (1–7). |
+| `tactical_description` | `NVARCHAR(500)`| YES | Tactical identity narrative. |
+| `pressures_attempted_per90` | `DECIMAL(5,2)` | YES | Aggregated pressing load per 90. |
+| `passes_attempted_per90` | `DECIMAL(5,2)` | YES | Aggregated passing volume per 90. |
+| `pass_accuracy` | `DECIMAL(5,3)` | YES | Aggregated passing completion rate. |
+| `progressive_passes_per90` | `DECIMAL(5,2)` | YES | Aggregated forward line-breaking passes per 90. |
+| `crosses_attempted_per90` | `DECIMAL(5,2)` | YES | Aggregated flank deliveries per 90. |
+| `headers_attempted_per90` | `DECIMAL(5,2)` | YES | Aggregated aerial duel volume per 90. |
+| `clearances_per90` | `DECIMAL(5,2)` | YES | Aggregated defensive clearances per 90. |
+| `blocks_per90` | `DECIMAL(5,2)` | YES | Aggregated defensive blocks per 90. |
+| Affinity Scores ($0\text{--}100$) | `INT` | YES | `gegenpressing_score`, `tiki_taka_score`, `vertical_tiki_taka_score`, `fluid_counter_score`, `direct_counter_score`, `wing_play_score`, `route_one_score`, `catenaccio_score`. |
+
+#### 7.5.5. `gold.vw_player_system_outliers`
+* **Grain:** One row per player snapshot ($\ge 450$ minutes) joined to their club's tactical archetype.
+* **Source Tables:** `gold.mart_outfield_scouting_summary` (p), `gold.dim_team_tactical_archetypes` (ta).
+* **Business Purpose:** Flags players displaying statistically verified divergence from their team's prevailing tactical constraints, allowing recruitment teams to identify undervalued technical or physical gems operating in suboptimal tactical environments.
+
+| Column Name | Data Type | Nullable | Description / Outlier Classification Rule |
+| :--- | :--- | :--- | :--- |
+| `player_key`, `player_name`, `position`, `club_name` | Various | NO/YES | Player attributes and club entity. |
+| `team_tactical_archetype` | `VARCHAR(35)` | NO | Club's prevailing tactical archetype. |
+| `team_tactical_framework` | `VARCHAR(50)` | NO | Club's parent tactical framework. |
+| **`outlier_tag`** | `VARCHAR(50)` | YES | Categorical outlier anomaly label: |
+| | | | • **`High-Precision Striker in Direct System`**: Striker with `pass_accuracy >= 0.84` and `passes >= 12.0/90` in Route One or Direct Counter. |
+| | | | • **`High-Clearance Defender in Tiki-Taka`**: Defender with `clearances_per90 >= 1.45` in Tiki-Taka or Vertical Tiki-Taka. |
+| | | | • **`Attacking Talisman in Deep Block`**: Attacker/Midfielder with `npxg_plus_xa_per90 >= 0.35` in Catenaccio. |
+| | | | • **`Lone Pressing Engine`**: Forward/CAM with `pressures >= 13.0/90` in a team with team pressures $\le 7.2/90$. |
+| | | | • **`Dynamic Ball Carrier in Direct System`**: Player with `dribbles_made_per90 >= 1.80` in Route One or Direct Counter. |
+| | | | • **`Central Incision Playmaker in Flank System`**: CAM/CM with `OP-KP/90 >= 1.30` and crossing share $\le 25\%$ in Wing Play. |
+| | | | • **`Ball-Playing Quarterback in Direct System`**: Central Defender with `prog_passes >= 4.50` and `pass_acc >= 0.86` in Route One. |
+| | | | • **`Ball Retention Hub in Gegenpress`**: Midfielder with `pass_acc >= 0.89` and `turnover_rate <= 0.14` in Gegenpressing. |
+| **`outlier_rationale`** | `NVARCHAR(500)`| YES | Narrative analytical explanation of the tactical anomaly. |
+| Player Output Metrics | Various | YES | `player_pass_accuracy`, `player_clearances_per90`, `player_npxg_plus_xa_per90`, `player_dribbles_made_per90`, etc. |
+| Team Benchmark Metrics | Various | YES | `team_pass_accuracy`, `team_clearances_per90`, `team_pressures_attempted_per90`, `team_headers_attempted_per90`, etc. |
+
 

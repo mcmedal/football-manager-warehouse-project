@@ -96,8 +96,14 @@ EXEC dbo.usp_run_warehouse_pipeline
 
 ### 3.3. Loading Subsequent Seasons (Multi-Season SCD2)
 When transitioning to a new in-game season (e.g. at the conclusion of 2023/24):
-1. Export fresh CSV files from FM24 for the new season.
-2. Execute the master orchestrator passing the new season string:
+1. Export fresh HTML or CSV files from FM24 for the new season.
+2. Run [`prepare_data.sh`](file:///prepare_data.sh) to automatically convert HTML exports to CSV, normalize goalkeeper/outfield schemas, and synchronize files to the database container:
+
+```bash
+./prepare_data.sh
+```
+
+3. Execute the master orchestrator passing the new season string:
 
 ```sql
 EXEC dbo.usp_run_warehouse_pipeline 
@@ -105,12 +111,14 @@ EXEC dbo.usp_run_warehouse_pipeline
     @RunTests = 1;
 ```
 
+*(Or do both steps in one command via `./prepare_data.sh --season 2024/25`)*
+
 * `gold.load_gold` will automatically expire old records (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`) and insert the new snapshot without deleting past history.
 
 ### 3.4. Midseason & Winter Transfer Ingestion (Intra-Season SCD2)
 The warehouse natively supports midseason data exports (e.g. at the January transfer window or during a midseason tactical review) without affecting or distorting subsequent end-of-season loads:
 
-1. **Intra-Season Execution:** Export current form and squad data from FM24 midseason and run the pipeline specifying the current season:
+1. **Intra-Season Execution:** Export current form and squad data from FM24 midseason, sync via `./prepare_data.sh`, and run the pipeline specifying the current season:
    ```sql
    EXEC dbo.usp_run_warehouse_pipeline 
        @Season = '2023/24', 

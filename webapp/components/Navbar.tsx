@@ -261,11 +261,11 @@ export default function Navbar() {
                   No players found for &quot;{searchTerm}&quot; {onlyCurrentSeason ? 'in current season' : ''}
                 </div>
               ) : (
-                results.map((p) => {
+                results.map((p, idx) => {
                   const isCurrent = p.is_current_season === 1;
                   return (
                     <div
-                      key={p.player_key}
+                      key={`${p.player_key}-${idx}`}
                       className="search-result-item"
                       onClick={() => handleSelectPlayer(p.player_key)}
                       style={{ cursor: 'pointer', padding: '0.65rem 0.85rem' }}

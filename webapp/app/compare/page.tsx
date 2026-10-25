@@ -496,11 +496,11 @@ function CompareContent() {
           />
           {p1Results.length > 0 && (
             <div className="search-results-popover">
-              {p1Results.map((p) => {
+              {p1Results.map((p, idx) => {
                 const isCurrent = p.is_current_season === 1;
                 return (
                   <div
-                    key={p.player_key}
+                    key={`${p.player_key}-${idx}`}
                     className="search-result-item"
                     onClick={() => selectP1(p.player_key)}
                     style={{ cursor: 'pointer', padding: '0.65rem 0.85rem' }}
@@ -567,11 +567,11 @@ function CompareContent() {
           />
           {p2Results.length > 0 && (
             <div className="search-results-popover">
-              {p2Results.map((p) => {
+              {p2Results.map((p, idx) => {
                 const isCurrent = p.is_current_season === 1;
                 return (
                   <div
-                    key={p.player_key}
+                    key={`${p.player_key}-${idx}`}
                     className="search-result-item"
                     onClick={() => selectP2(p.player_key)}
                     style={{ cursor: 'pointer', padding: '0.65rem 0.85rem' }}

@@ -47,7 +47,12 @@ export async function GET(request: NextRequest) {
         FROM gold.dim_player_info p
         INNER JOIN gold.dim_team_info t ON p.team_key = t.team_key
         LEFT JOIN gold.dim_league l ON t.league = l.league
-        LEFT JOIN gold.fact_players_value v ON p.player_key = v.player_key
+        OUTER APPLY (
+          SELECT TOP 1 transfer_value_m, wage_per_week_k
+          FROM gold.fact_players_value v
+          WHERE v.player_key = p.player_key
+          ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+        ) v
         WHERE p.player_key = @playerKey
         `,
         { playerKey }
@@ -143,7 +148,12 @@ export async function GET(request: NextRequest) {
             INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
             INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
             LEFT JOIN gold.dim_league l ON t.league = l.league
-            LEFT JOIN gold.fact_players_value v ON s.player_key = v.player_key
+            OUTER APPLY (
+              SELECT TOP 1 transfer_value_m, wage_per_week_k
+              FROM gold.fact_players_value v
+              WHERE v.player_key = s.player_key
+              ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+            ) v
             WHERE s.player_key = @playerKey
             `,
             { playerKey }
@@ -272,7 +282,12 @@ export async function GET(request: NextRequest) {
             INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
             INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
             LEFT JOIN gold.dim_league l ON t.league = l.league
-            LEFT JOIN gold.fact_players_value v ON s.player_key = v.player_key
+            OUTER APPLY (
+              SELECT TOP 1 transfer_value_m, wage_per_week_k
+              FROM gold.fact_players_value v
+              WHERE v.player_key = s.player_key
+              ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+            ) v
             WHERE s.player_key = @playerKey
             `,
             { playerKey }

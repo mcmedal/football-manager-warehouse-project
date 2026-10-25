@@ -49,7 +49,12 @@ export async function GET(
       FROM gold.dim_player_info p
       INNER JOIN gold.dim_team_info t ON p.team_key = t.team_key
       LEFT JOIN gold.dim_league l ON t.league = l.league
-      LEFT JOIN gold.fact_players_value v ON p.player_key = v.player_key
+      OUTER APPLY (
+        SELECT TOP 1 transfer_value_m, wage_per_week_k
+        FROM gold.fact_players_value v
+        WHERE v.player_key = p.player_key
+        ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+      ) v
       WHERE p.player_key = @playerKey
       `,
       { playerKey }
@@ -156,7 +161,12 @@ export async function GET(
           INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
           INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
           LEFT JOIN gold.dim_league l ON t.league = l.league
-          LEFT JOIN gold.fact_players_value v ON s.player_key = v.player_key
+          OUTER APPLY (
+            SELECT TOP 1 transfer_value_m, wage_per_week_k
+            FROM gold.fact_players_value v
+            WHERE v.player_key = s.player_key
+            ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+          ) v
           WHERE s.player_key = @playerKey
           `,
           { playerKey }
@@ -301,7 +311,12 @@ export async function GET(
           INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
           INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
           LEFT JOIN gold.dim_league l ON t.league = l.league
-          LEFT JOIN gold.fact_players_value v ON s.player_key = v.player_key
+          OUTER APPLY (
+            SELECT TOP 1 transfer_value_m, wage_per_week_k
+            FROM gold.fact_players_value v
+            WHERE v.player_key = s.player_key
+            ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+          ) v
           WHERE s.player_key = @playerKey
           `,
           { playerKey }
@@ -364,7 +379,12 @@ export async function GET(
         s.xAssits_per90
       FROM gold.dim_player_info p
       INNER JOIN gold.dim_team_info t ON p.team_key = t.team_key
-      LEFT JOIN gold.fact_players_value v ON p.player_key = v.player_key
+      OUTER APPLY (
+        SELECT TOP 1 transfer_value_m, wage_per_week_k
+        FROM gold.fact_players_value v
+        WHERE v.player_key = p.player_key
+        ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
+      ) v
       LEFT JOIN gold.fact_outfield_player_stats s ON p.player_key = s.player_key
       LEFT JOIN gold.fact_gk_stats g ON p.player_key = g.player_key
       WHERE p.player_id = @playerId

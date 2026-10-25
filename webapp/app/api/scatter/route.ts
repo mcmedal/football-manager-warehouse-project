@@ -111,7 +111,8 @@ export async function GET(request: NextRequest) {
     const maxPrice = rawMaxPrice ? parseFloat(rawMaxPrice) : null;
     const maxWage = searchParams.get('maxWage') ? parseFloat(searchParams.get('maxWage')!) : null;
     const minCoef = searchParams.get('minCoef') ? parseFloat(searchParams.get('minCoef')!) : null;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '400', 10), 600);
+    const searchParam = (searchParams.get('search') || '').trim();
+    const limit = Math.min(parseInt(searchParams.get('limit') || '500', 10), 1000);
 
     const conditions: string[] = ['s.minutes_played >= @minMinutes'];
     const params: Record<string, unknown> = { minMinutes };
@@ -126,11 +127,11 @@ export async function GET(request: NextRequest) {
     // Position filters for outfield
     if (!isGk && posGroup !== 'ALL') {
       if (posGroup === 'DEF') {
-        conditions.push("(s.position LIKE '%CB%' OR s.position LIKE '%D (%' OR s.position LIKE '%WB%')");
+        conditions.push("(s.position LIKE '%Defender%' OR s.position LIKE '%Wingback%' OR s.position LIKE '%Wing Back%')");
       } else if (posGroup === 'MID') {
-        conditions.push("(s.position LIKE '%DM%' OR s.position LIKE '%M (%' OR s.position LIKE '%MC%' OR s.position LIKE '%AM (%')");
+        conditions.push("(s.position LIKE '%Midfielder%' AND s.position NOT LIKE '%Attacking Midfielder%')");
       } else if (posGroup === 'ATT') {
-        conditions.push("(s.position LIKE '%ST%' OR s.position LIKE '%CF%' OR s.position LIKE '%AML%' OR s.position LIKE '%AMR%')");
+        conditions.push("(s.position LIKE '%Striker%' OR s.position LIKE '%Attacking Midfielder%')");
       }
     }
 
@@ -161,6 +162,12 @@ export async function GET(request: NextRequest) {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+    const countQuery = `
+      SELECT COUNT(*) AS total_count
+      FROM ${table} s
+      ${whereClause}
+    `;
+
     const query = `
       SELECT TOP (@limit)
         s.player_key,
@@ -181,10 +188,15 @@ export async function GET(request: NextRequest) {
       ${whereClause}
       ORDER BY 
         s.is_own_squad DESC,
-        s.minutes_played DESC
+        ${searchParam ? `CASE WHEN s.player_name LIKE @searchParam THEN 0 ELSE 1 END,` : ''}
+        ABS(CHECKSUM(s.player_key)) % 1000,
+        s.player_key
     `;
 
     params.limit = limit;
+    if (searchParam) {
+      params.searchParam = `%${searchParam}%`;
+    }
 
     interface ScatterRow {
       player_key: number;
@@ -203,13 +215,19 @@ export async function GET(request: NextRequest) {
       y: number;
     }
 
-    const rows = await executeQuery<ScatterRow>(query, params);
+    const [rows, countRows] = await Promise.all([
+      executeQuery<ScatterRow>(query, params),
+      executeQuery<{ total_count: number }>(countQuery, params)
+    ]);
+
+    const totalCohortSize = countRows[0]?.total_count ?? rows.length;
 
     if (rows.length === 0) {
       return NextResponse.json({
         xField,
         yField,
         cohortSize: 0,
+        sampleSize: 0,
         xMedian: 0,
         yMedian: 0,
         xMean: 0,
@@ -243,7 +261,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       xField,
       yField,
-      cohortSize: rows.length,
+      cohortSize: totalCohortSize,
+      sampleSize: rows.length,
       xMedian,
       yMedian,
       xMean,

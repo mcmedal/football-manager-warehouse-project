@@ -44,6 +44,7 @@ interface ScatterData {
   xField: string;
   yField: string;
   cohortSize: number;
+  sampleSize?: number;
   xMedian: number;
   yMedian: number;
   xMean: number;
@@ -170,6 +171,7 @@ export default function ScatterPage() {
   const [yMetric, setYMetric] = useState('goals_per90');
   const [posGroup, setPosGroup] = useState('ALL');
   const [minMinutes, setMinMinutes] = useState(450);
+  const [debouncedMinMinutes, setDebouncedMinMinutes] = useState(450);
   const [maxAge, setMaxAge] = useState<number | ''>('');
   const [minCoef, setMinCoef] = useState<string>('ALL');
   const [maxPrice, setMaxPrice] = useState<string>('ALL');
@@ -183,6 +185,14 @@ export default function ScatterPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<ScatterPlayer | null>(null);
 
   const { shortlist, toggle: toggleShortlist, isShortlisted } = useShortlist();
+
+  // Debounce minMinutes so range slider interaction feels instant and doesn't overwhelm the backend
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMinMinutes(minMinutes);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [minMinutes]);
 
   const hasActiveFilters = 
     minCoef !== 'ALL' || 
@@ -233,8 +243,8 @@ export default function ScatterPage() {
       x: xMetric,
       y: yMetric,
       posGroup,
-      minMinutes: minMinutes.toString(),
-      limit: '450',
+      minMinutes: debouncedMinMinutes.toString(),
+      limit: '500',
     });
 
     if (maxAge !== '') {
@@ -248,6 +258,9 @@ export default function ScatterPage() {
     }
     if (maxWage !== 'ALL') {
       params.append('maxWage', maxWage);
+    }
+    if (searchPlayer.trim().length >= 2) {
+      params.append('search', searchPlayer.trim());
     }
 
     fetch(`/api/scatter?${params.toString()}`)
@@ -266,7 +279,7 @@ export default function ScatterPage() {
     return () => {
       isMounted = false;
     };
-  }, [mode, xMetric, yMetric, posGroup, minMinutes, maxAge, minCoef, maxPrice, maxWage]);
+  }, [mode, xMetric, yMetric, posGroup, debouncedMinMinutes, maxAge, minCoef, maxPrice, maxWage, searchPlayer]);
 
   // Label lookups
   const metricOptions = mode === 'gk' ? GK_METRIC_OPTIONS : OUTFIELD_METRIC_OPTIONS;
@@ -542,7 +555,7 @@ export default function ScatterPage() {
             <input
               type="range"
               min="180"
-              max="2000"
+              max="3000"
               step="90"
               value={minMinutes}
               onChange={(e) => setMinMinutes(parseInt(e.target.value, 10))}
@@ -750,7 +763,7 @@ export default function ScatterPage() {
           </div>
 
           <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-            Showing <strong style={{ color: '#fff' }}>{scatterData?.cohortSize || 0}</strong> qualified players
+            Showing <strong style={{ color: '#fff' }}>{scatterData?.players.length || 0}</strong> of <strong style={{ color: '#38bdf8' }}>{scatterData?.cohortSize ? scatterData.cohortSize.toLocaleString() : 0}</strong> qualified players (≥ {debouncedMinMinutes} mins)
           </div>
         </div>
       </div>

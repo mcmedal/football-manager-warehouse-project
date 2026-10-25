@@ -47,6 +47,7 @@ const OUTFIELD_METRICS: Record<string, string> = {
   value_gap: 's.value_gap',
   transfer_value_m: 's.transfer_value_m',
   wage_per_week_k: 's.wage_per_week_k',
+  league_difficulty_coef: 's.league_difficulty_coef',
   minutes_played: 's.minutes_played',
   age: 's.age',
 };
@@ -78,6 +79,7 @@ const GK_METRICS: Record<string, string> = {
   value_gap: 's.value_gap',
   transfer_value_m: 's.transfer_value_m',
   wage_per_week_k: 's.wage_per_week_k',
+  league_difficulty_coef: 's.league_difficulty_coef',
   minutes_played: 's.minutes_played',
   age: 's.age',
 };
@@ -105,7 +107,10 @@ export async function GET(request: NextRequest) {
     const league = searchParams.get('league') || '';
     const minMinutes = parseInt(searchParams.get('minMinutes') || '450', 10);
     const maxAge = searchParams.get('maxAge') ? parseInt(searchParams.get('maxAge')!, 10) : null;
-    const maxVal = searchParams.get('maxVal') ? parseFloat(searchParams.get('maxVal')!) : null;
+    const rawMaxPrice = searchParams.get('maxPrice') || searchParams.get('maxVal');
+    const maxPrice = rawMaxPrice ? parseFloat(rawMaxPrice) : null;
+    const maxWage = searchParams.get('maxWage') ? parseFloat(searchParams.get('maxWage')!) : null;
+    const minCoef = searchParams.get('minCoef') ? parseFloat(searchParams.get('minCoef')!) : null;
     const limit = Math.min(parseInt(searchParams.get('limit') || '400', 10), 600);
 
     const conditions: string[] = ['s.minutes_played >= @minMinutes'];
@@ -139,9 +144,19 @@ export async function GET(request: NextRequest) {
       params.maxAge = maxAge;
     }
 
-    if (maxVal !== null && !isNaN(maxVal)) {
-      conditions.push('s.transfer_value_m <= @maxVal');
-      params.maxVal = maxVal;
+    if (maxPrice !== null && !isNaN(maxPrice)) {
+      conditions.push('s.transfer_value_m <= @maxPrice');
+      params.maxPrice = maxPrice;
+    }
+
+    if (maxWage !== null && !isNaN(maxWage)) {
+      conditions.push('s.wage_per_week_k <= @maxWage');
+      params.maxWage = maxWage;
+    }
+
+    if (minCoef !== null && !isNaN(minCoef)) {
+      conditions.push('s.league_difficulty_coef >= @minCoef');
+      params.minCoef = minCoef;
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -153,6 +168,7 @@ export async function GET(request: NextRequest) {
         s.position,
         s.club_name,
         s.league,
+        s.league_difficulty_coef,
         s.age,
         s.minutes_played,
         s.transfer_value_m,
@@ -176,6 +192,7 @@ export async function GET(request: NextRequest) {
       position: string;
       club_name: string;
       league: string;
+      league_difficulty_coef: number;
       age: number;
       minutes_played: number;
       transfer_value_m: number | null;

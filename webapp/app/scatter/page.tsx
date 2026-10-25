@@ -15,7 +15,11 @@ import {
   TrendingUp,
   Layers,
   Shield,
-  Award
+  Award,
+  RotateCcw,
+  Globe,
+  Coins,
+  DollarSign
 } from 'lucide-react';
 import { useShortlist } from '@/lib/shortlist';
 
@@ -25,6 +29,7 @@ interface ScatterPlayer {
   position: string;
   club_name: string;
   league: string;
+  league_difficulty_coef?: number;
   age: number;
   minutes_played: number;
   transfer_value_m: number | null;
@@ -97,6 +102,7 @@ const OUTFIELD_METRIC_OPTIONS = [
     { value: 'value_gap', label: 'Value Gap (Output %ile - Value %ile)' },
     { value: 'transfer_value_m', label: 'Transfer Value (£M)' },
     { value: 'wage_per_week_k', label: 'Wage (£k/wk)' },
+    { value: 'league_difficulty_coef', label: 'League Difficulty Coef (x)' },
     { value: 'minutes_played', label: 'Minutes Played' },
     { value: 'age', label: 'Age' },
   ]}
@@ -128,6 +134,7 @@ const GK_METRIC_OPTIONS = [
     { value: 'value_gap', label: 'Value Gap (Output %ile - Value %ile)' },
     { value: 'transfer_value_m', label: 'Transfer Value (£M)' },
     { value: 'wage_per_week_k', label: 'Wage (£k/wk)' },
+    { value: 'league_difficulty_coef', label: 'League Difficulty Coef (x)' },
     { value: 'minutes_played', label: 'Minutes Played' },
     { value: 'age', label: 'Age' },
   ]}
@@ -147,11 +154,14 @@ const PRESETS: Preset[] = [
   { name: 'Progression vs Security', x: 'progressive_actions_per90', y: 'net_ball_security', desc: 'High ball carriers who protect possession', mode: 'outfield' },
   { name: 'Defensive Work vs Efficiency', x: 'tackles_attempted_per90', y: 'tackle_accuracy', desc: 'High volume ball-winners who win duels cleanly', mode: 'outfield' },
   { name: 'Moneyball Value Gap', x: 'transfer_value_m', y: 'value_gap', desc: 'Top output players available at bargain valuations', mode: 'outfield' },
+  { name: 'Wage vs Threat', x: 'wage_per_week_k', y: 'npxg_plus_xa_per90', desc: 'Attacking production relative to weekly wage burden', mode: 'outfield' },
+  { name: 'League Level vs Output', x: 'league_difficulty_coef', y: 'npxg_plus_xa_per90', desc: 'Performance normalized across league difficulty levels', mode: 'outfield' },
   // GK Presets
   { name: 'GK: Shot Stopping Mastery', x: 'psxg_net_per90', y: 'save_pct', desc: 'Goals prevented vs raw save percentage', mode: 'gk' },
   { name: 'GK: Sweeper-Keeper Index', x: 'sweeper_actions_per90', y: 'psxg_net_per90', desc: 'High sweeping presence combined with reliable shot stopping', mode: 'gk' },
   { name: 'GK: Handling & Catch Security', x: 'hold_rate_pct', y: 'psxg_net_per90', desc: 'Handling security vs shot-stopping impact', mode: 'gk' },
   { name: 'GK: Moneyball Value Gap', x: 'transfer_value_m', y: 'value_gap', desc: 'Goalkeepers with positive goals prevented at low valuations', mode: 'gk' },
+  { name: 'GK: Wage vs Prevention', x: 'wage_per_week_k', y: 'psxg_net_per90', desc: 'Goals prevented relative to salary cost', mode: 'gk' },
 ];
 
 export default function ScatterPage() {
@@ -161,6 +171,9 @@ export default function ScatterPage() {
   const [posGroup, setPosGroup] = useState('ALL');
   const [minMinutes, setMinMinutes] = useState(450);
   const [maxAge, setMaxAge] = useState<number | ''>('');
+  const [minCoef, setMinCoef] = useState<string>('ALL');
+  const [maxPrice, setMaxPrice] = useState<string>('ALL');
+  const [maxWage, setMaxWage] = useState<string>('ALL');
   const [highlightOwnSquad, setHighlightOwnSquad] = useState(true);
   const [searchPlayer, setSearchPlayer] = useState('');
 
@@ -170,6 +183,25 @@ export default function ScatterPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<ScatterPlayer | null>(null);
 
   const { shortlist, toggle: toggleShortlist, isShortlisted } = useShortlist();
+
+  const hasActiveFilters = 
+    minCoef !== 'ALL' || 
+    maxPrice !== 'ALL' || 
+    maxWage !== 'ALL' || 
+    maxAge !== '' || 
+    posGroup !== 'ALL' || 
+    minMinutes !== 450 || 
+    searchPlayer !== '';
+
+  const resetFilters = () => {
+    setMinCoef('ALL');
+    setMaxPrice('ALL');
+    setMaxWage('ALL');
+    setMaxAge('');
+    setPosGroup('ALL');
+    setMinMinutes(450);
+    setSearchPlayer('');
+  };
 
   // Reset metrics when switching modes
   const handleModeChange = (newMode: 'outfield' | 'gk') => {
@@ -208,6 +240,15 @@ export default function ScatterPage() {
     if (maxAge !== '') {
       params.append('maxAge', maxAge.toString());
     }
+    if (minCoef !== 'ALL') {
+      params.append('minCoef', minCoef);
+    }
+    if (maxPrice !== 'ALL') {
+      params.append('maxPrice', maxPrice);
+    }
+    if (maxWage !== 'ALL') {
+      params.append('maxWage', maxWage);
+    }
 
     fetch(`/api/scatter?${params.toString()}`)
       .then((res) => res.json())
@@ -225,7 +266,7 @@ export default function ScatterPage() {
     return () => {
       isMounted = false;
     };
-  }, [mode, xMetric, yMetric, posGroup, minMinutes, maxAge]);
+  }, [mode, xMetric, yMetric, posGroup, minMinutes, maxAge, minCoef, maxPrice, maxWage]);
 
   // Label lookups
   const metricOptions = mode === 'gk' ? GK_METRIC_OPTIONS : OUTFIELD_METRIC_OPTIONS;
@@ -535,6 +576,162 @@ export default function ScatterPage() {
           </div>
         </div>
 
+        {/* Secondary Filter Row: Financial & Competition Filters */}
+        <div style={{ 
+          marginTop: '1rem', 
+          paddingTop: '1rem', 
+          borderTop: '1px solid rgba(255,255,255,0.06)', 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+          gap: '1rem', 
+          alignItems: 'flex-end' 
+        }}>
+          {/* League Coefficient Filter */}
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: minCoef !== 'ALL' ? '#38bdf8' : 'var(--text-dim)', fontWeight: 600, marginBottom: '0.35rem' }}>
+              <Globe size={13} style={{ color: '#38bdf8' }} />
+              MIN LEAGUE COEF
+            </label>
+            <select
+              value={minCoef}
+              onChange={(e) => setMinCoef(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.55rem 0.75rem',
+                borderRadius: '8px',
+                background: minCoef !== 'ALL' ? 'rgba(56, 189, 248, 0.12)' : 'rgba(0,0,0,0.4)',
+                border: minCoef !== 'ALL' ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                color: minCoef !== 'ALL' ? '#38bdf8' : '#fff',
+                fontSize: '0.85rem',
+                fontWeight: minCoef !== 'ALL' ? 600 : 400,
+              }}
+            >
+              <option value="ALL">All Leagues (Any Coef)</option>
+              <option value="0.90">Tier 1 Elite (≥ 0.90x)</option>
+              <option value="0.70">Top Flight &amp; Above (≥ 0.70x)</option>
+              <option value="0.60">Competitive Tier (≥ 0.60x)</option>
+              <option value="0.40">Developing Tier (≥ 0.40x)</option>
+            </select>
+          </div>
+
+          {/* Max Price / Transfer Value */}
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: maxPrice !== 'ALL' ? '#34d399' : 'var(--text-dim)', fontWeight: 600, marginBottom: '0.35rem' }}>
+              <Coins size={13} style={{ color: '#10b981' }} />
+              MAX PRICE / VALUE
+            </label>
+            <select
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.55rem 0.75rem',
+                borderRadius: '8px',
+                background: maxPrice !== 'ALL' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(0,0,0,0.4)',
+                border: maxPrice !== 'ALL' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                color: maxPrice !== 'ALL' ? '#34d399' : '#fff',
+                fontSize: '0.85rem',
+                fontWeight: maxPrice !== 'ALL' ? 600 : 400,
+              }}
+            >
+              <option value="ALL">Any Transfer Value</option>
+              <option value="1">≤ £1.0M (Bargain)</option>
+              <option value="3">≤ £3.0M (Low Cost)</option>
+              <option value="5">≤ £5.0M (Mid-Tier)</option>
+              <option value="10">≤ £10.0M (First Team)</option>
+              <option value="15">≤ £15.0M (Quality Target)</option>
+              <option value="25">≤ £25.0M (Premium)</option>
+              <option value="50">≤ £50.0M (Marquee)</option>
+            </select>
+          </div>
+
+          {/* Max Wage Filter */}
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: maxWage !== 'ALL' ? '#fbbf24' : 'var(--text-dim)', fontWeight: 600, marginBottom: '0.35rem' }}>
+              <DollarSign size={13} style={{ color: '#f59e0b' }} />
+              MAX WAGE / WEEK
+            </label>
+            <select
+              value={maxWage}
+              onChange={(e) => setMaxWage(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.55rem 0.75rem',
+                borderRadius: '8px',
+                background: maxWage !== 'ALL' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(0,0,0,0.4)',
+                border: maxWage !== 'ALL' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                color: maxWage !== 'ALL' ? '#fbbf24' : '#fff',
+                fontSize: '0.85rem',
+                fontWeight: maxWage !== 'ALL' ? 600 : 400,
+              }}
+            >
+              <option value="ALL">Any Wage</option>
+              <option value="5">≤ £5k / wk (Squad Fringe)</option>
+              <option value="10">≤ £10k / wk (Rotational)</option>
+              <option value="20">≤ £20k / wk (Starter)</option>
+              <option value="35">≤ £35k / wk (Key Player)</option>
+              <option value="50">≤ £50k / wk (Star Player)</option>
+              <option value="100">≤ £100k / wk (High Earner)</option>
+            </select>
+          </div>
+
+          {/* Max Age Filter */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: maxAge !== '' ? '#c084fc' : 'var(--text-dim)', fontWeight: 600, marginBottom: '0.35rem' }}>
+              MAX AGE
+            </label>
+            <select
+              value={maxAge === '' ? 'ALL' : maxAge.toString()}
+              onChange={(e) => setMaxAge(e.target.value === 'ALL' ? '' : parseInt(e.target.value, 10))}
+              style={{
+                width: '100%',
+                padding: '0.55rem 0.75rem',
+                borderRadius: '8px',
+                background: maxAge !== '' ? 'rgba(168, 85, 247, 0.12)' : 'rgba(0,0,0,0.4)',
+                border: maxAge !== '' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
+                color: maxAge !== '' ? '#c084fc' : '#fff',
+                fontSize: '0.85rem',
+                fontWeight: maxAge !== '' ? 600 : 400,
+              }}
+            >
+              <option value="ALL">Any Age</option>
+              <option value="21">U21 (≤ 21 yrs - Wonderkid)</option>
+              <option value="23">U23 (≤ 23 yrs - High Upside)</option>
+              <option value="25">U25 (≤ 25 yrs - Prime Upside)</option>
+              <option value="28">≤ 28 yrs (Peak Performance)</option>
+              <option value="30">≤ 30 yrs (Experienced)</option>
+            </select>
+          </div>
+
+          {/* Reset Filters / Clear Button */}
+          {hasActiveFilters && (
+            <div>
+              <button
+                onClick={resetFilters}
+                style={{
+                  width: '100%',
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#f87171',
+                  fontSize: '0.825rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <RotateCcw size={14} />
+                Reset Filters
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Legend / Toggles */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
@@ -828,11 +1025,11 @@ export default function ScatterPage() {
                 position: 'absolute',
                 top: '1.5rem',
                 right: '1.5rem',
-                background: 'rgba(15, 23, 42, 0.92)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
+                background: 'rgba(15, 23, 42, 0.94)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
                 borderRadius: '10px',
                 padding: '0.85rem 1rem',
-                maxWidth: '260px',
+                maxWidth: '280px',
                 boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
                 backdropFilter: 'blur(8px)',
                 zIndex: 20,
@@ -849,8 +1046,23 @@ export default function ScatterPage() {
                   </span>
                 ) : null}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.6rem' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.45rem' }}>
                 {hoveredPlayer.club_name} • {hoveredPlayer.position} • {hoveredPlayer.age} yrs
+              </div>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.6rem', fontSize: '0.7rem' }}>
+                <span style={{ background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                  {hoveredPlayer.transfer_value_m ? `£${hoveredPlayer.transfer_value_m}M` : 'Free'}
+                </span>
+                {hoveredPlayer.wage_per_week_k !== null && hoveredPlayer.wage_per_week_k !== undefined && (
+                  <span style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                    £{hoveredPlayer.wage_per_week_k}k/wk
+                  </span>
+                )}
+                {hoveredPlayer.league_difficulty_coef !== null && hoveredPlayer.league_difficulty_coef !== undefined && (
+                  <span style={{ background: hoveredPlayer.league_difficulty_coef >= 0.9 ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.08)', color: hoveredPlayer.league_difficulty_coef >= 0.9 ? '#34d399' : '#94a3b8', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                    {hoveredPlayer.league_difficulty_coef}x Coef
+                  </span>
+                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem' }}>
                 <div>
@@ -894,7 +1106,7 @@ export default function ScatterPage() {
               ) : null}
 
               {/* Bio Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.25rem', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1.25rem', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px' }}>
                 <div>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Position</span>
                   <strong style={{ fontSize: '0.85rem', color: '#fff' }}>{selectedPlayer.position}</strong>
@@ -908,9 +1120,21 @@ export default function ScatterPage() {
                   <strong style={{ fontSize: '0.85rem', color: '#fff' }}>{selectedPlayer.minutes_played}</strong>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Value</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Price</span>
                   <strong style={{ fontSize: '0.85rem', color: '#38bdf8' }}>
                     {selectedPlayer.transfer_value_m ? `£${selectedPlayer.transfer_value_m}M` : 'Free / Nil'}
+                  </strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Wage</span>
+                  <strong style={{ fontSize: '0.85rem', color: '#fbbf24' }}>
+                    {selectedPlayer.wage_per_week_k !== null && selectedPlayer.wage_per_week_k !== undefined ? `£${selectedPlayer.wage_per_week_k}k/wk` : 'N/A'}
+                  </strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>League Coef</span>
+                  <strong style={{ fontSize: '0.85rem', color: '#34d399' }}>
+                    {selectedPlayer.league_difficulty_coef !== null && selectedPlayer.league_difficulty_coef !== undefined ? `${selectedPlayer.league_difficulty_coef}x` : '1.00x'}
                   </strong>
                 </div>
               </div>
@@ -1044,8 +1268,12 @@ export default function ScatterPage() {
                   <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600 }}>
                     X: {p.x.toFixed(2)} | Y: {p.y.toFixed(2)}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    {p.transfer_value_m ? `£${p.transfer_value_m}M` : 'Free'}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', marginTop: '2px' }}>
+                    <span>{p.transfer_value_m ? `£${p.transfer_value_m}M` : 'Free'}</span>
+                    {p.wage_per_week_k !== null && p.wage_per_week_k !== undefined && <span>• £{p.wage_per_week_k}k/wk</span>}
+                    {p.league_difficulty_coef !== null && p.league_difficulty_coef !== undefined && (
+                      <span style={{ color: p.league_difficulty_coef >= 0.9 ? '#34d399' : '#94a3b8' }}>({p.league_difficulty_coef}x)</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1090,8 +1318,12 @@ export default function ScatterPage() {
                   <div style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 700 }}>
                     +{p.value_gap?.toFixed(1)} Gap
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#38bdf8' }}>
-                    Val: {p.transfer_value_m ? `£${p.transfer_value_m}M` : 'Free'}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', marginTop: '2px' }}>
+                    <span style={{ color: '#38bdf8' }}>{p.transfer_value_m ? `£${p.transfer_value_m}M` : 'Free'}</span>
+                    {p.wage_per_week_k !== null && p.wage_per_week_k !== undefined && <span>• £{p.wage_per_week_k}k/wk</span>}
+                    {p.league_difficulty_coef !== null && p.league_difficulty_coef !== undefined && (
+                      <span style={{ color: p.league_difficulty_coef >= 0.9 ? '#34d399' : '#94a3b8' }}>({p.league_difficulty_coef}x)</span>
+                    )}
                   </div>
                 </div>
               </div>

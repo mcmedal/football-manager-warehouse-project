@@ -344,9 +344,9 @@ BEGIN
 					open_play_cross_accuracy,
 					crosses_attempted_per90,
 					cross_accuracy,
-					CAST(CASE WHEN tackles_attempted = 0 THEN 0
+					CAST(CASE WHEN minutes_played = 0 OR tackles_attempted = 0 THEN 0
 						ELSE (tackles_attempted/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS tackles_attempted_per90,
+					END AS DECIMAL(5,2)) AS tackles_attempted_per90,
 					tackle_accuracy,
 					pressures_attempted_per90,
 					pressures_completed_per90,
@@ -362,21 +362,21 @@ BEGIN
 					key_headers_per90,
 					sprints_per90,
 					distance_covered_km_per90,
-					CAST(CASE WHEN mistakes_leading_to_goals = 0 THEN 0
+					CAST(CASE WHEN minutes_played = 0 OR mistakes_leading_to_goals = 0 THEN 0
 						ELSE (mistakes_leading_to_goals/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS mistakes_leading_to_goals_per90,
-					CAST(CASE WHEN fouls_made = 0 THEN 0
+					END AS DECIMAL(5,2)) AS mistakes_leading_to_goals_per90,
+					CAST(CASE WHEN minutes_played = 0 OR fouls_made = 0 THEN 0
 						ELSE (fouls_made/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS fouls_made_per90,
-					CAST(CASE WHEN fouls_against = 0 THEN 0
+					END AS DECIMAL(5,2)) AS fouls_made_per90,
+					CAST(CASE WHEN minutes_played = 0 OR fouls_against = 0 THEN 0
 						ELSE (fouls_against/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS fouls_against_per90,
-					CAST(CASE WHEN yellow_cards = 0 THEN 0
+					END AS DECIMAL(5,2)) AS fouls_against_per90,
+					CAST(CASE WHEN minutes_played = 0 OR yellow_cards = 0 THEN 0
 						ELSE (yellow_cards/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS yellow_cards_per90,
-					CAST(CASE WHEN red_cards = 0 THEN 0
+					END AS DECIMAL(5,2)) AS yellow_cards_per90,
+					CAST(CASE WHEN minutes_played = 0 OR red_cards = 0 THEN 0
 						ELSE (red_cards/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS red_cards_per90,
+					END AS DECIMAL(5,2)) AS red_cards_per90,
 					wage_per_week_k,
 					transfer_value_m,
 					dwh_create_date,
@@ -734,9 +734,9 @@ BEGIN
 					open_play_cross_accuracy,
 					crosses_attempted_per90,
 					cross_accuracy,
-					CAST(CASE WHEN tackles_attempted = 0 THEN 0
+					CAST(CASE WHEN minutes_played = 0 OR tackles_attempted = 0 THEN 0
 						ELSE (tackles_attempted/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS tackles_attempted_per90,
+					END AS DECIMAL(5,2)) AS tackles_attempted_per90,
 					tackle_accuracy,
 					pressures_attempted_per90,
 					pressures_completed_per90,
@@ -752,21 +752,21 @@ BEGIN
 					key_headers_per90,
 					sprints_per90,
 					distance_covered_km_per90,
-					CAST(CASE WHEN mistakes_leading_to_goals = 0 THEN 0
+					CAST(CASE WHEN minutes_played = 0 OR mistakes_leading_to_goals = 0 THEN 0
 						ELSE (mistakes_leading_to_goals/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS mistakes_leading_to_goals_per90,
-					CAST(CASE WHEN fouls_made = 0 THEN 0
+					END AS DECIMAL(5,2)) AS mistakes_leading_to_goals_per90,
+					CAST(CASE WHEN minutes_played = 0 OR fouls_made = 0 THEN 0
 						ELSE (fouls_made/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS fouls_made_per90,
-					CAST(CASE WHEN fouls_against = 0 THEN 0
+					END AS DECIMAL(5,2)) AS fouls_made_per90,
+					CAST(CASE WHEN minutes_played = 0 OR fouls_against = 0 THEN 0
 						ELSE (fouls_against/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS fouls_against_per90,
-					CAST(CASE WHEN yellow_cards = 0 THEN 0
+					END AS DECIMAL(5,2)) AS fouls_against_per90,
+					CAST(CASE WHEN minutes_played = 0 OR yellow_cards = 0 THEN 0
 						ELSE (yellow_cards/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS yellow_cards_per90,
-					CAST(CASE WHEN red_cards = 0 THEN 0
+					END AS DECIMAL(5,2)) AS yellow_cards_per90,
+					CAST(CASE WHEN minutes_played = 0 OR red_cards = 0 THEN 0
 						ELSE (red_cards/minutes_played * 90) 
-					END AS DECIMAL(3,2)) AS red_cards_per90,
+					END AS DECIMAL(5,2)) AS red_cards_per90,
 					wage_per_week_k,
 					transfer_value_m,
 					dwh_create_date,
@@ -870,7 +870,7 @@ BEGIN
 				SELECT 1
 				FROM silver.fmdata_team_players AS N
 				WHERE N.player_id = S.player_id
-					AND S.dwh_current_validity = 1
+					AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();
@@ -1408,7 +1408,7 @@ BEGIN
 				SELECT 1
 				FROM silver.fmdata_team_gks AS N
 				WHERE N.player_id = S.player_id
-					AND S.dwh_current_validity = 1
+					AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();
@@ -2259,7 +2259,7 @@ BEGIN
 				SELECT 1
 				FROM silver.fmdata_interested_out_players AS N
 				WHERE N.player_id = S.player_id
-					AND S.dwh_current_validity = 1
+					AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();
@@ -2774,7 +2774,7 @@ BEGIN
 					SELECT 1
 					FROM silver.fmdata_interested_gks AS N
 					WHERE N.player_id = S.player_id
-						AND S.dwh_current_validity = 1
+						AND N.dwh_current_validity = 1
 			);
 
 		SET @end_time = GETDATE();
@@ -2790,10 +2790,11 @@ BEGIN
 	END TRY
 	BEGIN CATCH
 		PRINT '=================================';
-		PRINT 'ERROR DURING LOADING BRONZE LAYER';
+		PRINT 'ERROR DURING LOADING SILVER LAYER';
 		PRINT 'Error Message:' + ERROR_MESSAGE();
 		PRINT 'Error Message:' + CAST(ERROR_NUMBER() AS NVARCHAR);
 		PRINT 'Error Message:' + CAST(ERROR_STATE() AS NVARCHAR);
 		PRINT '=================================';
+		THROW;
 	END CATCH
 END

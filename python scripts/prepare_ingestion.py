@@ -342,6 +342,14 @@ def normalize_outfield_partitions(src_dir, dest_dir):
     total_written = 0
     partitions_processed = 0
 
+    # Clean up any preexisting partition files in dest_dir to prevent stale partition leakage
+    if os.path.abspath(src_dir) != os.path.abspath(dest_dir):
+        for old_part in glob.glob(os.path.join(dest_dir, "interested_out_players*.csv")):
+            try:
+                os.remove(old_part)
+            except OSError:
+                pass
+
     for p_file in partition_files:
         base_name = os.path.basename(p_file)
         dest_file = os.path.join(dest_dir, base_name)

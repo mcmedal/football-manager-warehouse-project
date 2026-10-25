@@ -72,11 +72,21 @@ python3 "python scripts/prepare_ingestion.py" --target-dir documents/
 # 2. Check Docker Container Status & Sync Files
 if docker info >/dev/null 2>&1; then
     if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        echo -e "${BLUE}>>> Syncing documents/ to '${CONTAINER_NAME}:/data/'...${NC}"
-        docker exec -u 0 "${CONTAINER_NAME}" mkdir -p /data >/dev/null 2>&1 || true
+        echo -e "${BLUE}>>> Syncing documents/ and sql scripts/ to container '${CONTAINER_NAME}'...${NC}"
+        docker exec -u 0 "${CONTAINER_NAME}" mkdir -p /data /scripts >/dev/null 2>&1 || true
+        # Remove stale partition files from container to match current export exactly
+        docker exec -u 0 "${CONTAINER_NAME}" bash -c "rm -f /data/interested_out_players*.csv" >/dev/null 2>&1 || true
         docker cp documents/. "${CONTAINER_NAME}:/data/" >/dev/null 2>&1
-        docker exec -u 0 "${CONTAINER_NAME}" chown -R mssql:mssql /data >/dev/null 2>&1 || true
-        echo -e "${GREEN}[OK] Files synchronized to /data/ inside container '${CONTAINER_NAME}'.${NC}"
+        docker cp "sql scripts/." "${CONTAINER_NAME}:/scripts/" >/dev/null 2>&1
+        docker exec -u 0 "${CONTAINER_NAME}" chown -R mssql:mssql /data /scripts >/dev/null 2>&1 || true
+        echo -e "${GREEN}[OK] Files synchronized to /data/ and /scripts/ inside container '${CONTAINER_NAME}'.${NC}"
+
+        # Ensure latest stored procedures (with CREATE OR ALTER) are compiled non-destructively
+        echo -e "${BLUE}>>> Refreshing stored procedures non-destructively (CREATE OR ALTER)...${NC}"
+        for sp_script in "/scripts/silver/proc-silver.sql" "/scripts/gold/proc-gold.sql" "/scripts/gold/views-gold.sql" "/scripts/orchestration/run_pipeline.sql"; do
+            docker exec "${CONTAINER_NAME}" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD}" -C -d DW -i "${sp_script}" >/dev/null 2>&1 || true
+        done
+        echo -e "${GREEN}[OK] Stored procedures compiled.${NC}"
     else
         echo -e "${YELLOW}[WARNING] Container '${CONTAINER_NAME}' is not currently running.${NC}"
         echo -e "${YELLOW}          Files are ready in documents/ on host. Start container and re-run to sync.${NC}"

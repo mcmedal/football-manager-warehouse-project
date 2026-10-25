@@ -373,10 +373,46 @@ export async function GET(
         v.wage_per_week_k,
         v.transfer_value_m,
         COALESCE(s.minutes_played, g.minutes_played, 0) AS minutes_played,
+        -- Attacking & Goal threat
         s.goals,
+        s.goals_per90,
         s.assists,
+        s.assists_per90,
         s.xGoals_per90,
-        s.xAssits_per90
+        s.non_penalty_xGoals_per90,
+        s.xAssits_per90,
+        CAST(s.non_penalty_xGoals_per90 + s.xAssits_per90 AS DECIMAL(5,2)) AS npxg_plus_xa_per90,
+        s.shots_per90,
+        s.shot_accuracy,
+        s.conversion_rate,
+        -- Passing & Progression
+        s.passes_attempted_per90,
+        s.pass_accuracy,
+        s.progressive_passes_per90,
+        s.open_play_key_passes_per90,
+        s.chances_created_per90,
+        s.dribbles_made_per90,
+        s.cross_accuracy,
+        -- Defending & Physical
+        s.tackles_attempted_per90,
+        s.tackle_accuracy,
+        s.interceptions_per90,
+        s.clearances_per90,
+        s.blocks_per90,
+        CAST(((s.tackles_attempted_per90 * s.tackle_accuracy) + s.interceptions_per90 + s.blocks_per90 + s.clearances_per90) AS DECIMAL(7,2)) AS defensive_actions_per90,
+        s.headers_attempted_per90,
+        s.heading_accuracy,
+        s.possession_won_per90,
+        s.possession_lost_per90,
+        CAST(s.possession_won_per90 - s.possession_lost_per90 AS DECIMAL(7,2)) AS possession_differential,
+        -- Goalkeeper Metrics
+        g.saves_percentage,
+        g.xGoals_prevented_per90,
+        g.goals_conceded_per90,
+        g.saves_made_per90,
+        CAST(g.saves_held_per90 / NULLIF(g.saves_made_per90, 0) AS DECIMAL(5,2)) AS hold_rate,
+        g.pass_accuracy AS gk_pass_accuracy,
+        CAST(g.interceptions_per90 + g.clearances_per90 AS DECIMAL(7,2)) AS sweeper_actions_per90
       FROM gold.dim_player_info p
       INNER JOIN gold.dim_team_info t ON p.team_key = t.team_key
       OUTER APPLY (
@@ -385,10 +421,20 @@ export async function GET(
         WHERE v.player_key = p.player_key
         ORDER BY v.dwh_current_validity DESC, v.dwh_create_date DESC
       ) v
-      LEFT JOIN gold.fact_outfield_player_stats s ON p.player_key = s.player_key
-      LEFT JOIN gold.fact_gk_stats g ON p.player_key = g.player_key
+      OUTER APPLY (
+        SELECT TOP 1 *
+        FROM gold.fact_outfield_player_stats s
+        WHERE s.player_key = p.player_key
+        ORDER BY s.dwh_current_validity DESC, s.dwh_create_date DESC
+      ) s
+      OUTER APPLY (
+        SELECT TOP 1 *
+        FROM gold.fact_gk_stats g
+        WHERE g.player_key = p.player_key
+        ORDER BY g.dwh_current_validity DESC, g.dwh_create_date DESC
+      ) g
       WHERE p.player_id = @playerId
-      ORDER BY p.dwh_create_date ASC
+      ORDER BY p.dwh_create_date ASC, p.season ASC
       `,
       { playerId: player.player_id }
     );

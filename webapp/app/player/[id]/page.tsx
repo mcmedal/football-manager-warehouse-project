@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import {
   Shield,
   TrendingUp,
+  TrendingDown,
   Coins,
   Clock,
   Award,
@@ -18,10 +19,564 @@ import {
   Zap,
   Printer,
   Sliders,
+  Activity,
 } from 'lucide-react';
 import PizzaRadarChart, { RadarSlice } from '@/components/PizzaRadarChart';
 import PercentileTable from '@/components/PercentileTable';
 import SimilarPlayersWidget, { SimilarPlayer } from '@/components/SimilarPlayersWidget';
+
+export interface PlayerHistoryRecord {
+  season: string;
+  age: number;
+  club_name: string;
+  league: string;
+  wage_per_week_k?: number;
+  transfer_value_m?: number;
+  minutes_played?: number;
+  // Core Attacking
+  goals?: number;
+  goals_per90?: number;
+  assists?: number;
+  assists_per90?: number;
+  xGoals_per90?: number;
+  non_penalty_xGoals_per90?: number;
+  xAssits_per90?: number;
+  npxg_plus_xa_per90?: number;
+  shots_per90?: number;
+  shot_accuracy?: number;
+  conversion_rate?: number;
+  // Passing & Progression
+  passes_attempted_per90?: number;
+  pass_accuracy?: number;
+  progressive_passes_per90?: number;
+  open_play_key_passes_per90?: number;
+  chances_created_per90?: number;
+  dribbles_made_per90?: number;
+  cross_accuracy?: number;
+  // Defending & Physical
+  tackles_attempted_per90?: number;
+  tackle_accuracy?: number;
+  interceptions_per90?: number;
+  clearances_per90?: number;
+  blocks_per90?: number;
+  defensive_actions_per90?: number;
+  headers_attempted_per90?: number;
+  heading_accuracy?: number;
+  possession_won_per90?: number;
+  possession_lost_per90?: number;
+  possession_differential?: number;
+  // Goalkeeper
+  saves_percentage?: number;
+  xGoals_prevented_per90?: number;
+  goals_conceded_per90?: number;
+  saves_made_per90?: number;
+  hold_rate?: number;
+  gk_pass_accuracy?: number;
+  sweeper_actions_per90?: number;
+}
+
+export type PositionCluster =
+  | 'striker'
+  | 'winger_am'
+  | 'midfielder'
+  | 'center_back'
+  | 'fullback'
+  | 'goalkeeper';
+
+export interface PositionalMetricConfig {
+  key: string;
+  header: string;
+  subHeader: string;
+  tooltip: string;
+  getRawValue: (h: PlayerHistoryRecord) => number | null;
+  formatValue: (h: PlayerHistoryRecord) => string;
+  higherIsBetter?: boolean;
+  isPercentage?: boolean;
+}
+
+export interface PositionalClusterConfig {
+  cluster: PositionCluster;
+  roleBadge: string;
+  roleTitle: string;
+  focusDescription: string;
+  metrics: PositionalMetricConfig[];
+}
+
+export function getPositionCluster(position: string): PositionCluster {
+  const pos = (position || '').trim();
+  if (pos.toLowerCase().includes('goalkeeper')) return 'goalkeeper';
+  if (pos === 'Striker') return 'striker';
+  if (
+    pos === 'Central Attacking Midfielder' ||
+    pos === 'Left Attacking Midfielder' ||
+    pos === 'Right Attacking Midfielder' ||
+    pos === 'Left Midfielder' ||
+    pos === 'Right Midfielder'
+  ) {
+    return 'winger_am';
+  }
+  if (pos === 'Central Midfielder' || pos === 'Defensive Midfielder') {
+    return 'midfielder';
+  }
+  if (pos === 'Central Defender') {
+    return 'center_back';
+  }
+  if (
+    pos === 'Left Defender' ||
+    pos === 'Right Defender' ||
+    pos === 'Left Wingback' ||
+    pos === 'Right Wingback'
+  ) {
+    return 'fullback';
+  }
+  return 'midfielder';
+}
+
+export function getPositionalConfig(cluster: PositionCluster): PositionalClusterConfig {
+  switch (cluster) {
+    case 'striker':
+      return {
+        cluster: 'striker',
+        roleBadge: '⚡ Striker Development',
+        roleTitle: 'Finisher & Target Man Metrics',
+        focusDescription:
+          'Tracking goal conversion, threat volume (npxG+xA), finishing accuracy, and aerial dominance across seasons.',
+        metrics: [
+          {
+            key: 'goals_xg',
+            header: 'Goals (xG/90)',
+            subHeader: 'Season Output',
+            tooltip: 'Total goals scored and Expected Goals per 90',
+            getRawValue: (h) => h.goals_per90 ?? null,
+            formatValue: (h) =>
+              h.goals != null ? `${h.goals} (${(h.xGoals_per90 || 0).toFixed(2)})` : '-',
+          },
+          {
+            key: 'npxg_xa',
+            header: 'npxG+xA',
+            subHeader: '/90 Threat',
+            tooltip: 'Non-penalty expected goals + expected assists per 90',
+            getRawValue: (h) => h.npxg_plus_xa_per90 ?? null,
+            formatValue: (h) =>
+              h.npxg_plus_xa_per90 != null ? h.npxg_plus_xa_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'shot_acc',
+            header: 'Shot Acc',
+            subHeader: 'SoT %',
+            tooltip: 'Proportion of shots that hit the target',
+            isPercentage: true,
+            getRawValue: (h) => (h.shot_accuracy != null ? h.shot_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.shot_accuracy != null ? `${Math.round(h.shot_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'aerial_win',
+            header: 'Aerial Win',
+            subHeader: 'Headers %',
+            tooltip: 'Aerial duel win rate percentage',
+            isPercentage: true,
+            getRawValue: (h) => (h.heading_accuracy != null ? h.heading_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.heading_accuracy != null ? `${Math.round(h.heading_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'dribbles',
+            header: 'Dribbles',
+            subHeader: '/90',
+            tooltip: 'Completed dribbles and take-ons per 90',
+            getRawValue: (h) => h.dribbles_made_per90 ?? null,
+            formatValue: (h) =>
+              h.dribbles_made_per90 != null ? h.dribbles_made_per90.toFixed(2) : '-',
+          },
+        ],
+      };
+
+    case 'winger_am':
+      return {
+        cluster: 'winger_am',
+        roleBadge: '⚡ Winger & AM Development',
+        roleTitle: 'Creator & Wide Attacker Metrics',
+        focusDescription:
+          'Tracking direct goal contributions, creative threat (npxG+xA), open-play chance creation, and vertical progression.',
+        metrics: [
+          {
+            key: 'ga_totals',
+            header: 'G / A',
+            subHeader: 'Contributions',
+            tooltip: 'Total season Goals and Assists',
+            getRawValue: (h) => (h.goals || 0) + (h.assists || 0),
+            formatValue: (h) => `${h.goals ?? 0}G / ${h.assists ?? 0}A`,
+          },
+          {
+            key: 'npxg_xa',
+            header: 'npxG+xA',
+            subHeader: '/90 Threat',
+            tooltip: 'Non-penalty expected goals + expected assists per 90',
+            getRawValue: (h) => h.npxg_plus_xa_per90 ?? null,
+            formatValue: (h) =>
+              h.npxg_plus_xa_per90 != null ? h.npxg_plus_xa_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'key_passes',
+            header: 'Key Passes',
+            subHeader: 'Open Play /90',
+            tooltip: 'Key passes executed in open play per 90',
+            getRawValue: (h) => h.open_play_key_passes_per90 ?? null,
+            formatValue: (h) =>
+              h.open_play_key_passes_per90 != null ? h.open_play_key_passes_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'prog_passes',
+            header: 'Prog Passes',
+            subHeader: '/90',
+            tooltip: 'Progressive passes advancing play >= 10m towards goal',
+            getRawValue: (h) => h.progressive_passes_per90 ?? null,
+            formatValue: (h) =>
+              h.progressive_passes_per90 != null ? h.progressive_passes_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'dribbles',
+            header: 'Dribbles',
+            subHeader: '/90',
+            tooltip: 'Completed take-ons and dribbles per 90',
+            getRawValue: (h) => h.dribbles_made_per90 ?? null,
+            formatValue: (h) =>
+              h.dribbles_made_per90 != null ? h.dribbles_made_per90.toFixed(2) : '-',
+          },
+        ],
+      };
+
+    case 'midfielder':
+      return {
+        cluster: 'midfielder',
+        roleBadge: '⚡ Midfielder Development',
+        roleTitle: 'Controller & Engine Metrics',
+        focusDescription:
+          'Tracking ball retention accuracy, playmaking progression, creative threat, defensive interventions, and net possession.',
+        metrics: [
+          {
+            key: 'pass_acc',
+            header: 'Pass Acc',
+            subHeader: '% Completed',
+            tooltip: 'Pass completion accuracy percentage',
+            isPercentage: true,
+            getRawValue: (h) => (h.pass_accuracy != null ? h.pass_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.pass_accuracy != null ? `${Math.round(h.pass_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'prog_passes',
+            header: 'Prog Passes',
+            subHeader: '/90',
+            tooltip: 'Progressive passes advancing play per 90',
+            getRawValue: (h) => h.progressive_passes_per90 ?? null,
+            formatValue: (h) =>
+              h.progressive_passes_per90 != null ? h.progressive_passes_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'npxg_xa',
+            header: 'npxG+xA',
+            subHeader: '/90 Threat',
+            tooltip: 'Combined non-penalty goal and assist threat per 90',
+            getRawValue: (h) => h.npxg_plus_xa_per90 ?? null,
+            formatValue: (h) =>
+              h.npxg_plus_xa_per90 != null ? h.npxg_plus_xa_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'def_actions',
+            header: 'Def Actions',
+            subHeader: '/90',
+            tooltip: 'Tackles won + interceptions + blocks + clearances per 90',
+            getRawValue: (h) => h.defensive_actions_per90 ?? null,
+            formatValue: (h) =>
+              h.defensive_actions_per90 != null ? h.defensive_actions_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'poss_diff',
+            header: 'Poss Diff',
+            subHeader: 'Net Won /90',
+            tooltip: 'Net possession: Ball recoveries won minus turnovers per 90',
+            getRawValue: (h) => h.possession_differential ?? null,
+            formatValue: (h) =>
+              h.possession_differential != null
+                ? h.possession_differential > 0
+                  ? `+${h.possession_differential.toFixed(1)}`
+                  : h.possession_differential.toFixed(1)
+                : '-',
+          },
+        ],
+      };
+
+    case 'center_back':
+      return {
+        cluster: 'center_back',
+        roleBadge: '⚡ Center Back Development',
+        roleTitle: 'Defensive Anchor & Aerial Metrics',
+        focusDescription:
+          'Tracking total defensive interventions, tackle win rate, aerial dominance, and buildup passing safety.',
+        metrics: [
+          {
+            key: 'def_actions',
+            header: 'Def Actions',
+            subHeader: 'Total /90',
+            tooltip: 'Combined tackles won + interceptions + blocks + clearances per 90',
+            getRawValue: (h) => h.defensive_actions_per90 ?? null,
+            formatValue: (h) =>
+              h.defensive_actions_per90 != null ? h.defensive_actions_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'tackle_win',
+            header: 'Tackle Win',
+            subHeader: 'Success %',
+            tooltip: 'Ground tackle success percentage',
+            isPercentage: true,
+            getRawValue: (h) => (h.tackle_accuracy != null ? h.tackle_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.tackle_accuracy != null ? `${Math.round(h.tackle_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'aerial_win',
+            header: 'Aerial Win',
+            subHeader: 'Headers %',
+            tooltip: 'Aerial duel win rate percentage',
+            isPercentage: true,
+            getRawValue: (h) => (h.heading_accuracy != null ? h.heading_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.heading_accuracy != null ? `${Math.round(h.heading_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'pass_acc',
+            header: 'Pass Acc',
+            subHeader: 'Buildup %',
+            tooltip: 'Pass completion percentage from defensive third',
+            isPercentage: true,
+            getRawValue: (h) => (h.pass_accuracy != null ? h.pass_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.pass_accuracy != null ? `${Math.round(h.pass_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'prog_passes',
+            header: 'Prog Passes',
+            subHeader: '/90',
+            tooltip: 'Vertical progressive passes into midfield per 90',
+            getRawValue: (h) => h.progressive_passes_per90 ?? null,
+            formatValue: (h) =>
+              h.progressive_passes_per90 != null ? h.progressive_passes_per90.toFixed(2) : '-',
+          },
+        ],
+      };
+
+    case 'fullback':
+      return {
+        cluster: 'fullback',
+        roleBadge: '⚡ Fullback / Wingback Development',
+        roleTitle: 'Flank Defender & Progression Metrics',
+        focusDescription:
+          'Tracking 1v1 ground defense, flank delivery accuracy, progressive ball movement, and turnover security.',
+        metrics: [
+          {
+            key: 'def_actions',
+            header: 'Def Actions',
+            subHeader: '/90',
+            tooltip: 'Total defensive actions per 90',
+            getRawValue: (h) => h.defensive_actions_per90 ?? null,
+            formatValue: (h) =>
+              h.defensive_actions_per90 != null ? h.defensive_actions_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'tackle_win',
+            header: 'Tackle Win',
+            subHeader: '1v1 %',
+            tooltip: '1v1 tackle win percentage on the flank',
+            isPercentage: true,
+            getRawValue: (h) => (h.tackle_accuracy != null ? h.tackle_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.tackle_accuracy != null ? `${Math.round(h.tackle_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'cross_acc',
+            header: 'Cross Acc',
+            subHeader: '% Completed',
+            tooltip: 'Crossing delivery completion percentage',
+            isPercentage: true,
+            getRawValue: (h) => (h.cross_accuracy != null ? h.cross_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.cross_accuracy != null ? `${Math.round(h.cross_accuracy * 100)}%` : '-',
+          },
+          {
+            key: 'prog_passes',
+            header: 'Prog Passes',
+            subHeader: '/90',
+            tooltip: 'Progressive passes carrying play down the flank per 90',
+            getRawValue: (h) => h.progressive_passes_per90 ?? null,
+            formatValue: (h) =>
+              h.progressive_passes_per90 != null ? h.progressive_passes_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'poss_diff',
+            header: 'Poss Diff',
+            subHeader: 'Net /90',
+            tooltip: 'Recoveries won minus dispossessions per 90',
+            getRawValue: (h) => h.possession_differential ?? null,
+            formatValue: (h) =>
+              h.possession_differential != null
+                ? h.possession_differential > 0
+                  ? `+${h.possession_differential.toFixed(1)}`
+                  : h.possession_differential.toFixed(1)
+                : '-',
+          },
+        ],
+      };
+
+    case 'goalkeeper':
+      return {
+        cluster: 'goalkeeper',
+        roleBadge: '⚡ Goalkeeper Development',
+        roleTitle: 'Shot Stopping & Sweeping Metrics',
+        focusDescription:
+          'Tracking save percentage, goals prevented above expectation, concession control, and sweeper keeper interventions.',
+        metrics: [
+          {
+            key: 'save_pct',
+            header: 'Save %',
+            subHeader: 'Stops',
+            tooltip: 'Overall shots saved percentage',
+            isPercentage: true,
+            getRawValue: (h) => (h.saves_percentage != null ? h.saves_percentage * 100 : null),
+            formatValue: (h) =>
+              h.saves_percentage != null ? `${Math.round(h.saves_percentage * 100)}%` : '-',
+          },
+          {
+            key: 'xg_prevented',
+            header: 'xG Prevented',
+            subHeader: '/90',
+            tooltip: 'Goals prevented relative to post-shot xG faced per 90',
+            getRawValue: (h) => h.xGoals_prevented_per90 ?? null,
+            formatValue: (h) =>
+              h.xGoals_prevented_per90 != null
+                ? h.xGoals_prevented_per90 > 0
+                  ? `+${h.xGoals_prevented_per90.toFixed(2)}`
+                  : h.xGoals_prevented_per90.toFixed(2)
+                : '-',
+          },
+          {
+            key: 'ga_per90',
+            header: 'Goals Conceded',
+            subHeader: 'GA/90',
+            tooltip: 'Goals allowed per 90 minutes (lower is better)',
+            higherIsBetter: false,
+            getRawValue: (h) => h.goals_conceded_per90 ?? null,
+            formatValue: (h) =>
+              h.goals_conceded_per90 != null ? h.goals_conceded_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'sweeper_actions',
+            header: 'Sweeper Act',
+            subHeader: 'Int+Clr /90',
+            tooltip: 'Proactive sweeping actions outside the 6-yard box per 90',
+            getRawValue: (h) => h.sweeper_actions_per90 ?? null,
+            formatValue: (h) =>
+              h.sweeper_actions_per90 != null ? h.sweeper_actions_per90.toFixed(2) : '-',
+          },
+          {
+            key: 'pass_acc',
+            header: 'Pass Acc',
+            subHeader: 'Buildup %',
+            tooltip: 'Goalkeeper distribution pass completion rate',
+            isPercentage: true,
+            getRawValue: (h) => (h.gk_pass_accuracy != null ? h.gk_pass_accuracy * 100 : null),
+            formatValue: (h) =>
+              h.gk_pass_accuracy != null ? `${Math.round(h.gk_pass_accuracy * 100)}%` : '-',
+          },
+        ],
+      };
+  }
+}
+
+export function computeDelta(
+  currentVal: number | null,
+  prevVal: number | null,
+  isPercentage = false,
+  higherIsBetter = true
+): { diff: number; formatted: string; isPositive: boolean } | null {
+  if (currentVal == null || prevVal == null) return null;
+  const diff = currentVal - prevVal;
+  if (Math.abs(diff) < 0.005) return null;
+
+  const isPositive = higherIsBetter ? diff > 0 : diff < 0;
+  let formatted = '';
+  if (isPercentage) {
+    formatted = `${diff > 0 ? '+' : ''}${Math.round(diff)}%`;
+  } else if (Math.abs(diff) >= 1) {
+    formatted = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}`;
+  } else {
+    formatted = `${diff > 0 ? '+' : ''}${diff.toFixed(2)}`;
+  }
+
+  return { diff, formatted, isPositive };
+}
+
+export function computeValuationDelta(curr: number | null | undefined, prev: number | null | undefined) {
+  if (curr == null || prev == null) return null;
+  const diff = curr - prev;
+  if (Math.abs(diff) < 0.05) return null;
+  const isPositive = diff > 0;
+  const formatted = `${diff > 0 ? '+' : ''}£${Math.abs(diff) >= 1 ? diff.toFixed(1) : diff.toFixed(2)}M`;
+  return { diff, formatted, isPositive };
+}
+
+export function getCareerTrajectorySummary(history: PlayerHistoryRecord[], cluster: PositionCluster) {
+  if (!history || history.length < 2) return null;
+  const first = history[0];
+  const latest = history[history.length - 1];
+
+  let positiveFactors = 0;
+  let negativeFactors = 0;
+  const highlights: string[] = [];
+
+  const cfg = getPositionalConfig(cluster);
+  cfg.metrics.forEach((m) => {
+    const rawFirst = m.getRawValue(first);
+    const rawLatest = m.getRawValue(latest);
+    if (rawFirst != null && rawLatest != null) {
+      const delta = computeDelta(rawLatest, rawFirst, m.isPercentage, m.higherIsBetter ?? true);
+      if (delta) {
+        if (delta.isPositive) {
+          positiveFactors++;
+          highlights.push(`${m.header} (${delta.formatted})`);
+        } else {
+          negativeFactors++;
+        }
+      }
+    }
+  });
+
+  if (latest.transfer_value_m && first.transfer_value_m) {
+    const vDiff = latest.transfer_value_m - first.transfer_value_m;
+    if (vDiff > 0.4) {
+      positiveFactors++;
+      highlights.push(`Valuation (+£${vDiff.toFixed(1)}M)`);
+    } else if (vDiff < -0.4) {
+      negativeFactors++;
+    }
+  }
+
+  let status: 'growing' | 'stable' | 'regressing' = 'stable';
+  if (positiveFactors > negativeFactors && positiveFactors >= 2) {
+    status = 'growing';
+  } else if (negativeFactors > positiveFactors && negativeFactors >= 2) {
+    status = 'regressing';
+  }
+
+  return {
+    status,
+    firstSeason: first.season,
+    latestSeason: latest.season,
+    highlights: highlights.slice(0, 3),
+    seasonsCount: history.length,
+  };
+}
 
 interface PlayerDetailResponse {
   player: {
@@ -41,19 +596,7 @@ interface PlayerDetailResponse {
   };
   stats: Record<string, number> | null;
   percentiles: Record<string, number>;
-  history: Array<{
-    season: string;
-    age: number;
-    club_name: string;
-    league: string;
-    wage_per_week_k: number;
-    transfer_value_m: number;
-    minutes_played: number;
-    goals: number;
-    assists: number;
-    xGoals_per90: number;
-    xAssits_per90: number;
-  }>;
+  history: PlayerHistoryRecord[];
   tacticalContext?: {
     tactical_archetype: string;
     tactical_framework: string;
@@ -219,6 +762,9 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
   const { player, stats, percentiles, history, tacticalContext, managedClub } = data;
   const isGK = player.position?.toLowerCase().includes('goalkeeper');
+  const positionCluster = getPositionCluster(player.position);
+  const positionalConfig = getPositionalConfig(positionCluster);
+  const trajectory = getCareerTrajectorySummary(history || [], positionCluster);
 
   // Build Radar Slices mapping raw values and computed percentiles
   const slices: RadarSlice[] = !isGK
@@ -874,7 +1420,7 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
 
       {/* Bottom Section: Similar Players & Career History */}
       {/* Bottom Grid: Similar Players & Career History */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.75rem' }} className="no-print">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: '1.75rem' }} className="no-print">
         {/* Similar Players */}
         <SimilarPlayersWidget
           currentPlayerKey={player.player_key}
@@ -882,13 +1428,100 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
         />
 
         {/* Career Growth & SCD Type 2 Snapshots */}
-        <div className="glass-card" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-            <TrendingUp size={18} color="#10b981" />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
-              Historical Seasons & Development (SCD Type 2)
-            </h3>
+        <div className="glass-card" style={{ padding: '1.5rem', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.45rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <TrendingUp size={18} color="#10b981" />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>
+                Historical Seasons & Development
+              </h3>
+            </div>
+            <span
+              style={{
+                fontSize: '0.72rem',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: 'rgba(56, 189, 248, 0.15)',
+                color: '#38bdf8',
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+              }}
+            >
+              {positionalConfig.roleBadge}
+            </span>
           </div>
+
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '0.95rem', lineHeight: '1.4' }}>
+            {positionalConfig.focusDescription}
+          </p>
+
+          {/* Career Trajectory Summary Pill */}
+          {trajectory && (
+            <div
+              style={{
+                marginBottom: '1.15rem',
+                padding: '0.65rem 0.85rem',
+                borderRadius: '8px',
+                background:
+                  trajectory.status === 'growing'
+                    ? 'rgba(16, 185, 129, 0.08)'
+                    : trajectory.status === 'regressing'
+                    ? 'rgba(244, 63, 94, 0.08)'
+                    : 'rgba(56, 189, 248, 0.08)',
+                border:
+                  trajectory.status === 'growing'
+                    ? '1px solid rgba(16, 185, 129, 0.25)'
+                    : trajectory.status === 'regressing'
+                    ? '1px solid rgba(244, 63, 94, 0.25)'
+                    : '1px solid rgba(56, 189, 248, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    background:
+                      trajectory.status === 'growing'
+                        ? 'rgba(16, 185, 129, 0.2)'
+                        : trajectory.status === 'regressing'
+                        ? 'rgba(244, 63, 94, 0.2)'
+                        : 'rgba(56, 189, 248, 0.2)',
+                    color:
+                      trajectory.status === 'growing'
+                        ? '#34d399'
+                        : trajectory.status === 'regressing'
+                        ? '#fb7185'
+                        : '#38bdf8',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {trajectory.status === 'growing'
+                    ? '📈 Upward Trajectory (Developing)'
+                    : trajectory.status === 'regressing'
+                    ? '📉 Output Dip (Regressing)'
+                    : '🔄 Consistent Trajectory (Stable)'}
+                </span>
+                <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
+                  {trajectory.firstSeason} → {trajectory.latestSeason} ({trajectory.seasonsCount} seasons recorded)
+                </span>
+              </div>
+              {trajectory.highlights.length > 0 && (
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
+                  Key Gains: <strong style={{ color: '#fff' }}>{trajectory.highlights.join(' • ')}</strong>
+                </div>
+              )}
+            </div>
+          )}
 
           {history && history.length > 0 ? (
             <div className="fbref-table-container">
@@ -899,33 +1532,117 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
                     <th>Club</th>
                     <th style={{ textAlign: 'right' }}>Age</th>
                     <th style={{ textAlign: 'right' }}>Mins</th>
-                    <th style={{ textAlign: 'right' }}>Goals</th>
-                    <th style={{ textAlign: 'right' }}>xG/90</th>
+                    {positionalConfig.metrics.map((m) => (
+                      <th key={m.key} style={{ textAlign: 'right' }} title={m.tooltip}>
+                        <div>{m.header}</div>
+                        <div style={{ fontSize: '0.66rem', color: 'var(--text-dim)', fontWeight: 500 }}>
+                          {m.subHeader}
+                        </div>
+                      </th>
+                    ))}
                     <th style={{ textAlign: 'right' }}>Valuation</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((h, idx) => (
-                    <tr key={idx}>
-                      <td style={{ fontWeight: 600, color: '#38bdf8' }}>{h.season || 'Current'}</td>
-                      <td>{h.club_name}</td>
-                      <td style={{ textAlign: 'right' }} className="mono-number">
-                        {h.age}
-                      </td>
-                      <td style={{ textAlign: 'right' }} className="mono-number">
-                        {h.minutes_played?.toLocaleString() || 0}
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700 }} className="mono-number">
-                        {h.goals ?? '-'}
-                      </td>
-                      <td style={{ textAlign: 'right' }} className="mono-number">
-                        {h.xGoals_per90 ? h.xGoals_per90.toFixed(2) : '-'}
-                      </td>
-                      <td style={{ textAlign: 'right', color: '#fbbf24' }} className="mono-number">
-                        {h.transfer_value_m ? `£${h.transfer_value_m}M` : '-'}
-                      </td>
-                    </tr>
-                  ))}
+                  {history.map((h, idx) => {
+                    const prev = idx > 0 ? history[idx - 1] : null;
+                    const valDelta = computeValuationDelta(h.transfer_value_m, prev?.transfer_value_m);
+                    const isCurrent =
+                      h.season === player.season ||
+                      (player.is_current_season === 1 && idx === history.length - 1);
+
+                    return (
+                      <tr key={`${h.season}-${idx}`}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontWeight: 700, color: isCurrent ? '#38bdf8' : '#94a3b8' }}>
+                              {h.season || 'Current'}
+                            </span>
+                            {isCurrent && (
+                              <span
+                                style={{
+                                  fontSize: '0.58rem',
+                                  padding: '1px 4px',
+                                  borderRadius: '3px',
+                                  background: 'rgba(16, 185, 129, 0.2)',
+                                  color: '#34d399',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                Active
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ color: '#cbd5e1', fontSize: '0.82rem', fontWeight: 500 }}>
+                            {h.club_name}
+                          </div>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>{h.league}</div>
+                        </td>
+                        <td style={{ textAlign: 'right' }} className="mono-number">
+                          {h.age}
+                        </td>
+                        <td style={{ textAlign: 'right' }} className="mono-number">
+                          {h.minutes_played?.toLocaleString() || 0}
+                        </td>
+
+                        {/* Positional Metrics with Season-over-Season Delta */}
+                        {positionalConfig.metrics.map((m) => {
+                          const currRaw = m.getRawValue(h);
+                          const prevRaw = prev ? m.getRawValue(prev) : null;
+                          const delta = prev
+                            ? computeDelta(currRaw, prevRaw, m.isPercentage, m.higherIsBetter ?? true)
+                            : null;
+
+                          return (
+                            <td key={m.key} style={{ textAlign: 'right' }} className="mono-number">
+                              <div style={{ fontWeight: 600 }}>{m.formatValue(h)}</div>
+                              {delta && (
+                                <div
+                                  style={{
+                                    fontSize: '0.66rem',
+                                    fontWeight: 700,
+                                    color: delta.isPositive ? '#34d399' : '#fb7185',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '2px',
+                                    marginTop: '1px',
+                                  }}
+                                  title={`${delta.isPositive ? 'Improved' : 'Declined'} from previous season`}
+                                >
+                                  {delta.isPositive ? '▲' : '▼'} {delta.formatted}
+                                </div>
+                              )}
+                            </td>
+                          );
+                        })}
+
+                        {/* Valuation with Delta */}
+                        <td style={{ textAlign: 'right', color: '#fbbf24' }} className="mono-number">
+                          <div style={{ fontWeight: 700 }}>
+                            {h.transfer_value_m ? `£${h.transfer_value_m}M` : '-'}
+                          </div>
+                          {valDelta && (
+                            <div
+                              style={{
+                                fontSize: '0.66rem',
+                                fontWeight: 700,
+                                color: valDelta.isPositive ? '#34d399' : '#fb7185',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '2px',
+                                marginTop: '1px',
+                              }}
+                              title={`${valDelta.isPositive ? 'Valuation increase' : 'Valuation decline'} from previous season`}
+                            >
+                              {valDelta.isPositive ? '▲' : '▼'} {valDelta.formatted}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

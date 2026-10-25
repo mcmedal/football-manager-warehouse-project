@@ -37,6 +37,7 @@ interface PlayerDetailResponse {
     wage_per_week_k: number;
     transfer_value_m: number;
     season: string;
+    is_current_season?: number;
   };
   stats: Record<string, number> | null;
   percentiles: Record<string, number>;
@@ -510,15 +511,30 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
                 <span className="badge badge-position">{player.position}</span>
                 {player.is_own_squad === 1 ? (
                   <span className="badge badge-own-squad">CURRENT SQUAD STARTER</span>
                 ) : (
                   <span className="badge badge-target">SCOUTING TRANSFER TARGET</span>
                 )}
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                  Season {player.season}
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.02em',
+                    background: player.is_current_season === 1 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(245, 158, 11, 0.15)',
+                    color: player.is_current_season === 1 ? '#34d399' : '#fbbf24',
+                    border: player.is_current_season === 1 ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(245, 158, 11, 0.3)',
+                  }}
+                >
+                  {player.is_current_season === 1 && <span style={{ fontSize: '0.55rem' }}>●</span>}
+                  {player.season} {player.is_current_season === 1 ? 'Current Season' : 'Previous Season Archive'}
                 </span>
               </div>
 

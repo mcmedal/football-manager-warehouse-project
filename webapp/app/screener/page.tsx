@@ -140,6 +140,7 @@ interface PlayerRow {
 
 // Outfield Metric Catalog
 const OUTFIELD_CATALOG = [
+  { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
   { field: 'age', label: 'Age', category: 'General', defaultOp: '<=', defaultVal: 23, unit: 'yrs' },
   { field: 'minutes_played', label: 'Minutes Played', category: 'General', defaultOp: '>=', defaultVal: 900, unit: 'mins' },
   { field: 'transfer_value_m', label: 'Transfer Value', category: 'Financials', defaultOp: '<=', defaultVal: 15, unit: '£M' },
@@ -181,6 +182,7 @@ const OUTFIELD_CATALOG = [
 
 // Goalkeeper Metric Catalog
 const GK_CATALOG = [
+  { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
   { field: 'age', label: 'Age', category: 'General', defaultOp: '<=', defaultVal: 28, unit: 'yrs' },
   { field: 'minutes_played', label: 'Minutes Played', category: 'General', defaultOp: '>=', defaultVal: 900, unit: 'mins' },
   { field: 'transfer_value_m', label: 'Transfer Value', category: 'Financials', defaultOp: '<=', defaultVal: 10, unit: '£M' },
@@ -206,6 +208,7 @@ const GK_CATALOG = [
   { field: 'sample_reliability', label: 'Sample Reliability Factor', category: 'General', defaultOp: '>=', defaultVal: 0.25, unit: '' },
   { field: 'value_gap', label: 'Value Gap Index (Moneyball Gap)', category: 'Financials', defaultOp: '>=', defaultVal: 40.0, unit: '' },
 ];
+
 
 // Presets
 const OUTFIELD_PRESETS: Record<string, { label: string; filters: ScreenerFilter[]; defaultSort: string }> = {
@@ -245,11 +248,11 @@ const OUTFIELD_PRESETS: Record<string, { label: string; filters: ScreenerFilter[
   playmakers: {
     label: '🎯 Elite Playmakers (xA ≥ 0.20, PrPass ≥ 3.5)',
     filters: [
-      { field: 'xAssits_per90', operator: '>=', value: 0.20 },
+      { field: 'xAssists_per90', operator: '>=', value: 0.20 },
       { field: 'progressive_passes_per90', operator: '>=', value: 3.5 },
       { field: 'minutes_played', operator: '>=', value: 900 },
     ],
-    defaultSort: 'xAssits_per90',
+    defaultSort: 'xAssists_per90',
   },
   pressing: {
     label: '⚔️ High-Press Outfielders (Press Acc ≥ 25%, DefAct ≥ 3.5)',
@@ -295,6 +298,14 @@ const OUTFIELD_PRESETS: Record<string, { label: string; filters: ScreenerFilter[
       { field: 'minutes_played', operator: '>=', value: 450 },
     ],
     defaultSort: 'progressive_actions_per90',
+  },
+  elite_competition: {
+    label: '🏆 Tier 1 Elite Leagues (League Coef ≥ 0.90x)',
+    filters: [
+      { field: 'league_difficulty_coef', operator: '>=', value: 0.90 },
+      { field: 'minutes_played', operator: '>=', value: 450 },
+    ],
+    defaultSort: 'npxg_plus_xa_per90',
   },
 };
 
@@ -348,6 +359,14 @@ const GK_PRESETS: Record<string, { label: string; filters: ScreenerFilter[]; def
     ],
     defaultSort: 'pen_save_shrunk',
   },
+  gk_elite_competition: {
+    label: '🏆 Tier 1 Elite Leagues (League Coef ≥ 0.90x)',
+    filters: [
+      { field: 'league_difficulty_coef', operator: '>=', value: 0.90 },
+      { field: 'minutes_played', operator: '>=', value: 450 },
+    ],
+    defaultSort: 'xgp_per_shot_shrunk',
+  },
 };
 
 const OUTFIELD_TABS = ['Overview', 'Attacking', 'Creation', 'Defending', 'Physical', 'Valuation'];
@@ -392,6 +411,7 @@ function ScreenerContent() {
   const [selectedPosition, setSelectedPosition] = useState<string>(
     posParam || (initialIsGK ? 'Goalkeeper' : 'ALL')
   );
+  const [selectedCoef, setSelectedCoef] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>(tabParam || 'Overview');
   const [sortBy, setSortBy] = useState<string>(() => {
@@ -484,6 +504,14 @@ function ScreenerContent() {
         }
       }
 
+      if (selectedCoef !== 'ALL') {
+        effectiveFilters.push({
+          field: 'league_difficulty_coef',
+          operator: '>=',
+          value: parseFloat(selectedCoef),
+        });
+      }
+
       const res = await fetch('/api/screener', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -516,7 +544,7 @@ function ScreenerContent() {
       fetchScreenedPlayers();
     }, 200);
     return () => clearTimeout(timer);
-  }, [targetType, activeFilters, selectedPosition, search, sortBy, sortOrder, page, pageSize]);
+  }, [targetType, activeFilters, selectedPosition, selectedCoef, search, sortBy, sortOrder, page, pageSize]);
 
   // Handle Target Type Switch (Outfield vs Goalkeeper)
   const handleSwitchTargetType = (type: 'outfield' | 'goalkeeper') => {
@@ -531,6 +559,7 @@ function ScreenerContent() {
     setSortOrder('DESC');
     setActiveTab('Overview');
     setSelectedPosition(newIsGK ? 'Goalkeeper' : 'ALL');
+    setSelectedCoef('ALL');
     setPage(1);
   };
 
@@ -815,6 +844,7 @@ function ScreenerContent() {
             onClick={() => {
               setDiagnosisContext(null);
               setSelectedPosition(isGK ? 'Goalkeeper' : 'ALL');
+              setSelectedCoef('ALL');
               handleSelectPreset(isGK ? 'gk_default' : 'default');
             }}
             className="btn-secondary"
@@ -901,6 +931,7 @@ function ScreenerContent() {
               onClick={() => {
                 setDiagnosisContext(null);
                 setSelectedPosition(isGK ? 'Goalkeeper' : 'ALL');
+                setSelectedCoef('ALL');
                 handleSelectPreset(isGK ? 'gk_default' : 'default');
               }}
               className="btn-secondary"
@@ -996,6 +1027,36 @@ function ScreenerContent() {
             <ChevronDown size={12} style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-dim)' }} />
           </div>
         )}
+
+        {/* League Difficulty Coef Dropdown Chip */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedCoef}
+            onChange={(e) => {
+              setSelectedCoef(e.target.value);
+              setPage(1);
+            }}
+            style={{
+              background: selectedCoef !== 'ALL' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              border: selectedCoef !== 'ALL' ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '9999px',
+              padding: '0.35rem 1.75rem 0.35rem 0.85rem',
+              color: selectedCoef !== 'ALL' ? '#34d399' : 'var(--text-muted)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              appearance: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <option value="ALL" style={{ background: '#131722', color: '#fff' }}>League Coef: All Levels</option>
+            <option value="0.9" style={{ background: '#131722', color: '#34d399', fontWeight: 700 }}>🏆 Tier 1 Elite (≥ 0.90x)</option>
+            <option value="0.7" style={{ background: '#131722', color: '#fff' }}>🥈 Tier 2 &amp; Above (≥ 0.70x)</option>
+            <option value="0.6" style={{ background: '#131722', color: '#fff' }}>🥉 Tier 3 &amp; Above (≥ 0.60x)</option>
+            <option value="0.4" style={{ background: '#131722', color: '#fff' }}>⚽ Semi-Pro &amp; Above (≥ 0.40x)</option>
+          </select>
+          <ChevronDown size={12} style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-dim)' }} />
+        </div>
 
         {/* ACTIVE FILTER PILLS */}
         {activeFilters.map((f, idx) => (
@@ -1475,7 +1536,24 @@ function ScreenerContent() {
                   </td>
                   <td>
                     <div style={{ color: '#cbd5e1', fontSize: '0.82rem' }}>{p.club_name}</div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>{p.league}</div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '2px' }}>
+                      <span>{p.league}</span>
+                      {p.league_difficulty_coef !== undefined && p.league_difficulty_coef !== null && (
+                        <span
+                          title={`League Difficulty Coefficient: ${p.league_difficulty_coef}x`}
+                          style={{
+                            fontSize: '0.62rem',
+                            padding: '0 4px',
+                            borderRadius: '3px',
+                            background: p.league_difficulty_coef >= 0.9 ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.08)',
+                            color: p.league_difficulty_coef >= 0.9 ? '#34d399' : '#94a3b8',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {p.league_difficulty_coef}x
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={getTdSortStyle('age')} className="mono-number">{p.age}</td>
                   <td style={getTdSortStyle('minutes_played')} className="mono-number">{p.minutes_played?.toLocaleString()}</td>

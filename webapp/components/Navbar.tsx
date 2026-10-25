@@ -24,6 +24,8 @@ interface SearchResult {
   league: string;
   transfer_value_m: number;
   is_own_squad: number;
+  season?: string;
+  is_current_season?: number;
 }
 
 export default function Navbar() {
@@ -34,6 +36,7 @@ export default function Navbar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [onlyCurrentSeason, setOnlyCurrentSeason] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,7 +59,8 @@ export default function Navbar() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm.trim())}`);
+        const seasonParam = onlyCurrentSeason ? '&season=current' : '';
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm.trim())}${seasonParam}`);
         const data = await res.json();
         setResults(data.results || []);
         setIsOpen(true);
@@ -68,7 +72,8 @@ export default function Navbar() {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, onlyCurrentSeason]);
+
 
   const handleSelectPlayer = (key: number) => {
     setIsOpen(false);
@@ -193,42 +198,120 @@ export default function Navbar() {
 
           {isOpen && (
             <div className="search-results-popover" id="search-results-dropdown">
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.5rem 0.85rem',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  fontSize: '0.72rem',
+                }}
+              >
+                <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>SEARCH RESULTS</span>
+                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOnlyCurrentSeason(false);
+                    }}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      background: !onlyCurrentSeason ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                      color: !onlyCurrentSeason ? '#38bdf8' : 'var(--text-dim)',
+                    }}
+                  >
+                    All Iterations
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOnlyCurrentSeason(true);
+                    }}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      background: onlyCurrentSeason ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                      color: onlyCurrentSeason ? '#34d399' : 'var(--text-dim)',
+                    }}
+                  >
+                    Current Only
+                  </button>
+                </div>
+              </div>
+
               {loading ? (
                 <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
                   Scanning warehouse...
                 </div>
               ) : results.length === 0 ? (
                 <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
-                  No players found for &quot;{searchTerm}&quot;
+                  No players found for &quot;{searchTerm}&quot; {onlyCurrentSeason ? 'in current season' : ''}
                 </div>
               ) : (
-                results.map((p) => (
-                  <div
-                    key={p.player_key}
-                    className="search-result-item"
-                    onClick={() => handleSelectPlayer(p.player_key)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>
-                        {p.player_name}
+                results.map((p) => {
+                  const isCurrent = p.is_current_season === 1;
+                  return (
+                    <div
+                      key={p.player_key}
+                      className="search-result-item"
+                      onClick={() => handleSelectPlayer(p.player_key)}
+                      style={{ cursor: 'pointer', padding: '0.65rem 0.85rem' }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>
+                            {p.player_name}
+                          </span>
+                          {/* Season Badge */}
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              fontSize: '0.66rem',
+                              fontWeight: 700,
+                              letterSpacing: '0.02em',
+                              background: isCurrent ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                              color: isCurrent ? '#34d399' : '#94a3b8',
+                              border: isCurrent ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.2)',
+                            }}
+                          >
+                            {isCurrent && <span style={{ fontSize: '0.55rem' }}>●</span>}
+                            {p.season ? `${p.season} ` : ''}{isCurrent ? 'Current' : 'Previous'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
+                          {p.club_name} • {p.position} • {p.league}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
-                        {p.club_name} • {p.position}
+                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.75rem' }}>
+                        <div className="mono-number" style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 600 }}>
+                          {p.transfer_value_m ? `£${p.transfer_value_m}M` : '-'}
+                        </div>
+                        {p.is_own_squad === 1 && (
+                          <span style={{ fontSize: '0.65rem', color: '#34d399', fontWeight: 700 }}>
+                            OWN SQUAD
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div className="mono-number" style={{ fontSize: '0.85rem', color: '#38bdf8' }}>
-                        {p.transfer_value_m ? `£${p.transfer_value_m}M` : '-'}
-                      </div>
-                      {p.is_own_squad === 1 && (
-                        <span style={{ fontSize: '0.65rem', color: '#34d399', fontWeight: 600 }}>
-                          OWN SQUAD
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}

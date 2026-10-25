@@ -9,6 +9,7 @@ import PizzaRadarChart, { RadarSlice } from '@/components/PizzaRadarChart';
 interface PlayerComparePayload {
   player: {
     player_key: number;
+    player_id?: number;
     player_name: string;
     age: number;
     position: string;
@@ -18,6 +19,8 @@ interface PlayerComparePayload {
     wage_per_week_k: number;
     transfer_value_m: number;
     is_own_squad: number;
+    season?: string;
+    is_current_season?: number;
   };
   stats: Record<string, number> | null;
   percentiles: Record<string, number>;
@@ -105,8 +108,15 @@ function CompareContent() {
   const p1Param = searchParams.get('p1');
   const p2Param = searchParams.get('p2');
 
-  const [p1Key, setP1Key] = useState<string>(p1Param || '1');
-  const [p2Key, setP2Key] = useState<string>(p2Param || '6830');
+  // Default to active 2024/25 stars: Alejandro Corozo (63591, Macará own squad) vs Louis Matip (55006, Como)
+  const [p1Key, setP1Key] = useState<string>(p1Param || '63591');
+  const [p2Key, setP2Key] = useState<string>(p2Param || '55006');
+
+  // Synchronize when URL searchParams change
+  useEffect(() => {
+    if (p1Param && p1Param !== p1Key) setP1Key(p1Param);
+    if (p2Param && p2Param !== p2Key) setP2Key(p2Param);
+  }, [p1Param, p2Param]);
 
   const [data, setData] = useState<{
     player1: PlayerComparePayload;
@@ -135,11 +145,14 @@ function CompareContent() {
       setError(null);
       try {
         const res = await fetch(`/api/compare?p1=${p1Key}&p2=${p2Key}`);
-        if (!res.ok) throw new Error('Failed to load player comparison');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to load player comparison data');
+        }
         const json = await res.json();
         setData(json);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Comparison error');
+        setError(err instanceof Error ? err.message : 'Comparison computation error');
       } finally {
         setLoading(false);
       }
@@ -190,10 +203,69 @@ function CompareContent() {
     router.push(`/compare?p1=${p1Key}&p2=${key}`);
   };
 
-  // Build Slices for Player 1 & Player 2
+  // Build Slices for Player 1 & Player 2 (Aware of Outfield vs Goalkeeper)
   const buildSlices = (pPayload: PlayerComparePayload): RadarSlice[] => {
-    const s = pPayload.stats;
-    const p = pPayload.percentiles;
+    const s = pPayload.stats as any;
+    const p = pPayload.percentiles as any;
+    const isGK = pPayload.player.position?.toLowerCase().includes('goalkeeper');
+
+    if (isGK) {
+      return [
+        {
+          label: 'Save Percentage',
+          category: 'attacking',
+          value: Number(((s?.saves_percentage || 0) * 100).toFixed(1)),
+          unit: '%',
+          percentile: p.pct_save_pct || 0,
+        },
+        {
+          label: 'xG Prevented / 90',
+          category: 'attacking',
+          value: Number((s?.xGoals_prevented_per90 || 0).toFixed(2)),
+          percentile: p.pct_xg_prevented || 0,
+        },
+        {
+          label: 'Hold Rate OE',
+          category: 'possession',
+          value: Number((s?.hold_rate_over_expected || 0).toFixed(3)),
+          percentile: p.pct_hold_rate_oe || 50,
+        },
+        {
+          label: 'Parry Rebound Risk',
+          category: 'possession',
+          value: Number(((s?.parry_rate || 0) * 100).toFixed(1)),
+          unit: '%',
+          percentile: p.pct_parry_rate_inv || 50,
+        },
+        {
+          label: 'Sweeper Actions / 90',
+          category: 'defending',
+          value: Number((s?.sweeper_actions_per90 || 0).toFixed(2)),
+          percentile: p.pct_sweeper_actions || 0,
+        },
+        {
+          label: 'Completed Passes / 90',
+          category: 'passing',
+          value: Number((s?.completed_passes_per90 || 0).toFixed(1)),
+          percentile: p.pct_completed_passes || 0,
+        },
+        {
+          label: 'Pass Accuracy %',
+          category: 'passing',
+          value: Number(((s?.pass_accuracy || 0) * 100).toFixed(1)),
+          unit: '%',
+          percentile: p.pct_pass_acc || 0,
+        },
+        {
+          label: 'Penalty Save %',
+          category: 'defending',
+          value: Number(((s?.pen_save_shrunk || s?.penalties_save_percentage || 0) * 100).toFixed(1)),
+          unit: '%',
+          percentile: p.pct_pen_save || 0,
+        },
+      ];
+    }
+
     return [
       {
         label: 'Non-Penalty xG',
@@ -270,6 +342,7 @@ function CompareContent() {
       },
     ];
   };
+
 
   const p1RawSlices = data ? buildSlices(data.player1) : [];
   const p2RawSlices = data ? buildSlices(data.player2) : [];
@@ -423,19 +496,51 @@ function CompareContent() {
           />
           {p1Results.length > 0 && (
             <div className="search-results-popover">
-              {p1Results.map((p) => (
-                <div
-                  key={p.player_key}
-                  className="search-result-item"
-                  onClick={() => selectP1(p.player_key)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div style={{ fontWeight: 600, color: '#fff' }}>{p.player_name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    {p.club_name} • {p.position}
+              {p1Results.map((p) => {
+                const isCurrent = p.is_current_season === 1;
+                return (
+                  <div
+                    key={p.player_key}
+                    className="search-result-item"
+                    onClick={() => selectP1(p.player_key)}
+                    style={{ cursor: 'pointer', padding: '0.65rem 0.85rem' }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 600, color: '#fff', fontSize: '0.88rem' }}>{p.player_name}</span>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            background: isCurrent ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                            color: isCurrent ? '#34d399' : '#94a3b8',
+                            border: isCurrent ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.2)',
+                          }}
+                        >
+                          {isCurrent && <span style={{ fontSize: '0.55rem' }}>●</span>}
+                          {p.season ? `${p.season} ` : ''}{isCurrent ? 'Current' : 'Previous'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                        {p.club_name} • {p.position} • {p.league}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.75rem' }}>
+                      <div className="mono-number" style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: 600 }}>
+                        {p.transfer_value_m ? `£${p.transfer_value_m}M` : '-'}
+                      </div>
+                      {p.is_own_squad === 1 && (
+                        <span style={{ fontSize: '0.65rem', color: '#34d399', fontWeight: 700 }}>OWN SQUAD</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -462,28 +567,90 @@ function CompareContent() {
           />
           {p2Results.length > 0 && (
             <div className="search-results-popover">
-              {p2Results.map((p) => (
-                <div
-                  key={p.player_key}
-                  className="search-result-item"
-                  onClick={() => selectP2(p.player_key)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div style={{ fontWeight: 600, color: '#fff' }}>{p.player_name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    {p.club_name} • {p.position}
+              {p2Results.map((p) => {
+                const isCurrent = p.is_current_season === 1;
+                return (
+                  <div
+                    key={p.player_key}
+                    className="search-result-item"
+                    onClick={() => selectP2(p.player_key)}
+                    style={{ cursor: 'pointer', padding: '0.65rem 0.85rem' }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 600, color: '#fff', fontSize: '0.88rem' }}>{p.player_name}</span>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            background: isCurrent ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                            color: isCurrent ? '#34d399' : '#94a3b8',
+                            border: isCurrent ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.2)',
+                          }}
+                        >
+                          {isCurrent && <span style={{ fontSize: '0.55rem' }}>●</span>}
+                          {p.season ? `${p.season} ` : ''}{isCurrent ? 'Current' : 'Previous'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                        {p.club_name} • {p.position} • {p.league}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.75rem' }}>
+                      <div className="mono-number" style={{ fontSize: '0.85rem', color: '#f43f5e', fontWeight: 600 }}>
+                        {p.transfer_value_m ? `£${p.transfer_value_m}M` : '-'}
+                      </div>
+                      {p.is_own_squad === 1 && (
+                        <span style={{ fontSize: '0.65rem', color: '#34d399', fontWeight: 700 }}>OWN SQUAD</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
       {/* Comparison Presentation */}
-      {loading ? (
+      {error ? (
+        <div
+          className="glass-card"
+          style={{
+            padding: '2.5rem',
+            textAlign: 'center',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            background: 'rgba(239, 68, 68, 0.05)',
+            borderRadius: '12px',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚠️</div>
+          <h3 style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+            Comparison Data Unavailable
+          </h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem', maxWidth: '500px', margin: '0 auto 1.25rem' }}>
+            {error}
+          </p>
+          <button
+            onClick={() => {
+              setP1Key('63591');
+              setP2Key('55006');
+              router.push('/compare?p1=63591&p2=55006');
+            }}
+            className="btn-primary"
+            style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem' }}
+          >
+            Reset to Recommended Comparison (Corozo vs Matip)
+          </button>
+        </div>
+      ) : loading ? (
         <div style={{ textAlign: 'center', padding: '5rem 0', color: 'var(--text-dim)' }}>
-          Computing head-to-head metrics from database...
+          Computing head-to-head metrics from warehouse...
         </div>
       ) : data ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -498,8 +665,27 @@ function CompareContent() {
                 padding: '1.5rem',
               }}
             >
-              <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase' }}>
-                Player 1 • {data.player1.player.position}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Player 1 • {data.player1.player.position}
+                </span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    background: data.player1.player.is_current_season === 1 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                    color: data.player1.player.is_current_season === 1 ? '#34d399' : '#94a3b8',
+                    border: data.player1.player.is_current_season === 1 ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.25)',
+                  }}
+                >
+                  {data.player1.player.is_current_season === 1 && <span style={{ fontSize: '0.55rem' }}>●</span>}
+                  {data.player1.player.season || '2024/25'} {data.player1.player.is_current_season === 1 ? 'Current' : 'Previous'}
+                </span>
               </div>
               <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginTop: '0.2rem' }}>
                 <Link href={`/player/${data.player1.player.player_key}`}>{data.player1.player.player_name}</Link>
@@ -554,8 +740,27 @@ function CompareContent() {
                 textAlign: 'right',
               }}
             >
-              <div style={{ fontSize: '0.75rem', color: '#f43f5e', fontWeight: 700, textTransform: 'uppercase' }}>
-                Player 2 • {data.player2.player.position}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    background: data.player2.player.is_current_season === 1 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                    color: data.player2.player.is_current_season === 1 ? '#34d399' : '#94a3b8',
+                    border: data.player2.player.is_current_season === 1 ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(148, 163, 184, 0.25)',
+                  }}
+                >
+                  {data.player2.player.is_current_season === 1 && <span style={{ fontSize: '0.55rem' }}>●</span>}
+                  {data.player2.player.season || '2024/25'} {data.player2.player.is_current_season === 1 ? 'Current' : 'Previous'}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#f43f5e', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Player 2 • {data.player2.player.position}
+                </span>
               </div>
               <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginTop: '0.2rem' }}>
                 <Link href={`/player/${data.player2.player.player_key}`}>{data.player2.player.player_name}</Link>
@@ -629,6 +834,7 @@ function CompareContent() {
                   <tbody>
                     {p1Slices.map((s1, idx) => {
                       const s2 = p2Slices[idx];
+                      if (!s2) return null;
                       const leader = s1.value > s2.value ? 1 : s2.value > s1.value ? 2 : 0;
 
                       return (

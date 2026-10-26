@@ -7,12 +7,12 @@ import {
   Search, 
   BarChart3, 
   Users, 
-  Crosshair, 
   SlidersHorizontal, 
   ScatterChart, 
   UserPlus, 
   Activity, 
-  Star 
+  Star,
+  BookOpen
 } from 'lucide-react';
 import { useShortlist } from '@/lib/shortlist';
 
@@ -177,6 +177,14 @@ export default function Navbar() {
                   {shortlist.length}
                 </span>
               )}
+            </Link>
+            <Link
+              href="/metrics"
+              className={`nav-link ${pathname.startsWith('/metrics') ? 'active' : ''}`}
+              id="nav-metrics-guide"
+            >
+              <BookOpen size={15} />
+              <span>Metrics</span>
             </Link>
           </div>
         </div>

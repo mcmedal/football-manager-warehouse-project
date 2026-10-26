@@ -30,6 +30,8 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 if ! command -v node >/dev/null 2>&1; then
     echo ">>> [ERROR] Node.js is not found in PATH."
+    echo ">>> Please install Node.js (LTS version) from https://nodejs.org/"
+    echo ">>> Once installed, close and reopen your Terminal, then run ./run_webapp.sh again."
     exit 1
 fi
 

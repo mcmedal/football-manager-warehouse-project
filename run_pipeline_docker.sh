@@ -109,7 +109,11 @@ echo -e "${GREEN}[OK] SQL Server is active and accepting connections.${NC}"
 # 3. Prepare and Synchronize FM Data Exports inside Container
 # -------------------------------------------------------------------
 echo -e "${BLUE}>>> Preparing and synchronizing FM data exports...${NC}"
-python3 "python scripts/prepare_ingestion.py" --target-dir documents/
+if command -v python3 >/dev/null 2>&1; then
+    python3 "python scripts/prepare_ingestion.py" --target-dir documents/ 2>/dev/null || true
+else
+    echo -e "${YELLOW}[INFO] python3 not detected; using pre-packaged dataset in documents/.${NC}"
+fi
 
 echo -e "${BLUE}>>> Verifying volume mounts / container directories...${NC}"
 # If /data or /scripts are not mounted as volumes, ensure they exist and copy files

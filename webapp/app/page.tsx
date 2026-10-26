@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
 } from 'lucide-react';
 
 interface PlayerRow {
@@ -232,6 +233,26 @@ export default function ScoutingHub() {
             <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginTop: '0.35rem', maxWidth: '640px' }}>
               Discover transfer bargains, evaluate tactical output, and inspect FBref-style percentiles & Opta pizza charts powered by your live data warehouse.
             </p>
+            <div style={{ marginTop: '0.75rem' }}>
+              <Link
+                href="/metrics"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: '#38bdf8',
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '20px',
+                }}
+              >
+                <BookOpen size={13} />
+                <span>New to the stats? Explore the Metrics & Graphs Guide &rarr;</span>
+              </Link>
+            </div>
           </div>
 
           {/* Quick Metrics */}

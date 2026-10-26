@@ -18,12 +18,13 @@ Comprehensive technical, analytical, and operational documentation is available 
 
 | Guide | Description |
 | :--- | :--- |
+| **[🔰 Zero-Coding Setup Guide](docs/BEGINNER_SETUP_GUIDE.md)** | Step-by-step setup guide for non-coders across **Windows**, **macOS**, and **Linux** with 1-click startup scripts. |
 | **[🎯 The Scouting Playbook](docs/SCOUTING_PLAYBOOK.md)** | Step-by-step recruitment workflows, query recipes for 5 common transfer scenarios, and decision matrices. |
 | **[🏗️ System Architecture & Design](docs/ARCHITECTURE.md)** | Medallion architecture (Bronze/Silver/Gold), Star Schema design, SCD Type 2 time-travel, audit logging, and design decisions. |
 | **[📖 Data Dictionary & Catalog](docs/DATA_DICTIONARY.md)** | Full schema catalog covering all tables, views, columns, data types, business definitions, keys, and nullability constraints. |
 | **[📐 Metrics & Similarity Mathematics](docs/METRICS_AND_SIMILARITY.md)** | Mathematical formulation of scale-weighted Euclidean distance, finishing shrinkage, tactical archetypes, and per-90 metrics. |
 | **[🚀 Pipeline Runbook & Operations](docs/PIPELINE_RUNBOOK.md)** | Step-by-step setup, database creation, execution orchestration, ad-hoc scouting procedures, automated testing, and troubleshooting. |
-| **[🎮 FM24 Data Export Guide](docs/FM_EXPORT_GUIDE.md)** | Practical walkthrough on setting up custom views in FM24, exporting CSV/HTML data, file placements, and configuring for any club/save. |
+| **[🎮 FM24 Data Export Guide](docs/FM_EXPORT_GUIDE.md)** | Practical walkthrough on importing pre-configured `.fmf` views in FM24, exporting CSV/HTML data, and zero-effort setup for any club. |
 | **[🐍 Python Analytics & Dashboard](docs/PYTHON_ANALYTICS.md)** | CLI documentation for `scouting_dashboard.py`, generating radar charts, Moneyball scatter plots, and CSV recruitment shortlists. |
 | **[🌐 Web Analytics Application](webapp/README.md)** | Full Next.js webapp documentation: Opta pizza charts, FBref scouting reports, TradingView quant screener, and 1-click startup. |
 
@@ -136,21 +137,56 @@ With Slowly Changing Dimensions (SCD Type 2), historical seasons are never overw
 
 ## ⚡ Quickstart & Pipeline Execution
 
-### Option A: Linux & Docker Quickstart (Recommended for Linux)
-Run the entire end-to-end pipeline (spin up container, initialize UTF-8 database, run Bronze/Silver/Gold ETL, and execute test suites) in a single command:
-```bash
-# 1. (Optional) Customize SA password or port in .env
-cp .env.example .env
+> [!TIP]
+> **🔰 Never coded before?** Follow the comprehensive **[Beginner's Zero-Coding Setup Guide](docs/BEGINNER_SETUP_GUIDE.md)** with step-by-step instructions, download links, and troubleshooting for Windows, macOS, and Linux.
 
-# 2. Run the automated Docker pipeline runner
-./run_pipeline_docker.sh
-```
-Or start SQL Server via Docker Compose manually:
-```bash
-docker compose up -d
-```
+The project comes pre-loaded with **over 11,350 scouted players** and a complete sample squad in `documents/`, so you can launch and explore immediately!
 
-### Option B: Native SQL Execution (Windows / SSMS / Azure Data Studio)
+### 🪟 Microsoft Windows (1-Click with Docker Desktop)
+1. Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/) and start it.
+2. In the project folder, open **PowerShell** and run:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\run_pipeline_docker.ps1
+   ```
+3. To start the browser scouting web app, run:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\run_webapp.ps1
+   ```
+   Open **[http://localhost:3000](http://localhost:3000)** in your browser!
+
+---
+
+### 🍏 Apple macOS (Apple Silicon M1/M2/M3/M4 & Intel)
+1. Install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) and start it.
+2. Open **Terminal**, `cd` into the project directory, and run:
+   ```bash
+   ./run_pipeline_docker.sh
+   ```
+3. To start the browser scouting web app, run:
+   ```bash
+   ./run_webapp.sh
+   ```
+   Open **[http://localhost:3000](http://localhost:3000)** in Safari or Chrome!
+
+---
+
+### 🐧 Linux (Ubuntu, Debian, Fedora, Arch)
+1. Ensure Docker is running (`sudo systemctl start docker` or `sudo usermod -aG docker $USER`).
+2. Run the automated Docker pipeline runner:
+   ```bash
+   chmod +x run_pipeline_docker.sh run_webapp.sh
+   ./run_pipeline_docker.sh
+   ```
+3. Launch the web app:
+   ```bash
+   ./run_webapp.sh
+   ```
+   Open **[http://localhost:3000](http://localhost:3000)** in your browser!
+
+---
+
+### 🛠️ Native SQL Execution (Windows without Docker / SSMS)
+If you are running native Microsoft SQL Server and SSMS:
 ```sql
 USE DW;
 GO
@@ -257,6 +293,7 @@ npm run dev        # Starts Next.js development server
   * **Career Progression (SCD Type 2):** Longitudinal tracking of output and market valuation across historical snapshots.
 * **[Head-to-Head Comparison](http://localhost:3000/compare) (`/compare`):** Side-by-side player search, overlaid dual radar chart, and statistical differential matrix.
 * **[Tactical Archetypes](http://localhost:3000/archetypes) (`/archetypes`):** Browse players grouped by 22 distinct tactical profiles from `gold.vw_tactical_archetypes`.
+* **[Metrics & Visual Guide](http://localhost:3000/metrics) (`/metrics`):** Dedicated reference hub defining all 30+ performance metrics, mathematical formulas, benchmarks, and interactive explanations of all charts (Pizza Radars, FBref bars, Scatter explorer).
 
 For in-depth web application documentation, see [`webapp/README.md`](file:///home/mcmedal/Documents/Github/football-manager-warehouse-project/webapp/README.md).
 
@@ -266,10 +303,12 @@ For in-depth web application documentation, see [`webapp/README.md`](file:///hom
 
 ```text
 football-manager-warehouse-project/
-├── docker-compose.yml                  # Docker Compose configuration for SQL Server 2022
+├── docker-compose.yml                  # Docker Compose configuration for SQL Server 2022 (Linux/Mac/Windows)
 ├── .env.example                        # Environment variable template for Docker
-├── run_pipeline_docker.sh              # 1-click Linux/Docker ETL orchestrator & test runner
-├── run_webapp.sh                       # 1-click launcher for Next.js scouting web application
+├── run_pipeline_docker.sh              # 1-click Linux/Mac/Docker ETL orchestrator & test runner
+├── run_webapp.sh                       # 1-click Linux/Mac launcher for Next.js scouting web application
+├── run_pipeline_docker.ps1             # 1-click Windows PowerShell ETL orchestrator & test runner
+├── run_webapp.ps1                      # 1-click Windows PowerShell launcher for Next.js scouting web application
 ├── webapp/                             # Full-stack Next.js FBref/Opta scouting web application
 │   ├── app/                            # App router pages (Scouting Hub, Screener, Player Dossier, Compare, Archetypes)
 │   ├── components/                     # PizzaRadarChart, PercentileTable, SimilarPlayers, Navbar
@@ -277,6 +316,7 @@ football-manager-warehouse-project/
 │   └── README.md                       # Detailed webapp architecture & API reference
 ├── docs/                               # Comprehensive project documentation
 │   ├── README.md                       # Documentation navigation hub
+│   ├── BEGINNER_SETUP_GUIDE.md         # Zero-coding setup guide for Windows, Mac & Linux
 │   ├── SCOUTING_PLAYBOOK.md            # Step-by-step practical recruitment workflows
 │   ├── ARCHITECTURE.md                 # Medallion design, SCD2, Star Schema, ADRs
 │   ├── DATA_DICTIONARY.md              # Complete catalog of tables, views & columns
@@ -284,6 +324,11 @@ football-manager-warehouse-project/
 │   ├── PIPELINE_RUNBOOK.md             # Deployment, execution & troubleshooting
 │   ├── FM_EXPORT_GUIDE.md              # In-game FM24 view setup & export guide
 │   └── PYTHON_ANALYTICS.md             # Python CLI, radar charts & scatter plots
+├── fm24 views/                         # Pre-configured in-game FM24 view files (.fmf) for 1-click import
+│   ├── GK View.fmf                     # Scouting Goalkeeper view
+│   ├── O.Player View.fmf               # Scouting Outfield Player view
+│   ├── Team GK View.fmf                # Squad Goalkeeper view
+│   └── Team O.Player View.fmf          # Squad Outfield Player view
 ├── documents/                          # Raw FM24 CSV exports (teams and targets)
 ├── python scripts/
 │   ├── prepare_ingestion.py            # Steam Proton / Wine automated pre-processor & deduplicator

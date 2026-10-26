@@ -1,16 +1,21 @@
 # 🚀 Pipeline Runbook & Operations Guide
 
-This runbook provides step-by-step instructions for deploying, orchestrating, testing, and troubleshooting the `DW` data warehouse.
+This runbook provides step-by-step technical instructions for deploying, orchestrating, testing, and troubleshooting the `DW` data warehouse.
+
+> [!TIP]
+> **🔰 Little to no coding experience?**  
+> If you are an FM player looking for a simple, non-technical walkthrough with download links and 1-click startup on Windows, Mac, or Linux, start with the **[Zero-Coding Beginner Setup Guide](BEGINNER_SETUP_GUIDE.md)**!
 
 ---
 
 ## 1. Prerequisites & Environment Setup
 
 ### Required Software
-* **Database Engine:** Microsoft SQL Server (2017, 2019, 2022, or Azure SQL Managed Instance).
-* **Database Tools:** SQL Server Management Studio (SSMS), Azure Data Studio, or `sqlcmd`.
+* **Database Engine:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recommended for Windows / macOS / Linux) OR native [Microsoft SQL Server 2022](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (2017, 2019, 2022, or Azure SQL Managed Instance).
+* **Web App Runtime:** [Node.js](https://nodejs.org/) (v18+ LTS) to run the Next.js interactive scouting engine.
+* **Database Management Tools (Optional):** [SQL Server Management Studio (SSMS)](https://aka.ms/ssmsfullsetup) (Windows only), [Azure Data Studio](https://azure.microsoft.com/en-us/products/data-studio/) (cross-platform), or `sqlcmd`.
 * **Database Permissions:** User must possess `CREATE DATABASE`, `ALTER ANY SCHEMA`, and `ADMINISTER BULK OPERATIONS` (or `db_owner` / `sysadmin`).
-* **Python Runtime (Optional for Visualizations):** Python 3.9+ with optional packages `pandas` and `matplotlib`.
+* **Python Runtime (Optional for Visualizations):** [Python 3.9+](https://www.python.org/downloads/) with optional packages `pandas` and `matplotlib` for CLI radar charts and scatter plots.
 
 ---
 
@@ -58,16 +63,20 @@ Execute [`sql scripts/orchestration/run_pipeline.sql`](sql%20scripts/orchestrati
 
 ## 3. Running the Pipeline
 
-### 3.1. Linux / Docker Automated Execution (Recommended)
-On a Linux host with Docker, the repository provides a 1-click execution script that starts or attaches to SQL Server, verifies connectivity, deploys all DDL/procedures, ingests CSV partitions, and runs the test suites:
+### 3.1. Linux & macOS Automated Docker Execution (Recommended)
+On Linux and macOS (both Apple Silicon M1/M2/M3/M4 and Intel), the repository provides a 1-click execution script that starts or attaches to SQL Server, verifies connectivity, deploys all DDL/procedures, ingests CSV partitions, and runs the test suites:
 
 ```bash
 # 1. (Optional) Customize environment variables (e.g. set FM_DATA_DIR to your custom FM export directory)
 cp .env.example .env
 
 # 2. Run the orchestrator
+chmod +x run_pipeline_docker.sh run_webapp.sh
 ./run_pipeline_docker.sh
 ```
+
+> [!TIP]
+> **Apple Silicon Macs:** The SQL Server container runs with `platform: linux/amd64` using Docker Desktop's native Rosetta 2 emulation. No extra setup is required.
 
 > [!TIP]
 > **Customizing Data Directories:** To point to a custom export path outside Steam Proton or adjust Docker volume mounts, see [Section 1.2 of the FM Export Guide](file:///docs/FM_EXPORT_GUIDE.md#12-changing-export--ingestion-directories).
@@ -81,8 +90,20 @@ docker exec -it sql_server /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '
     -Q "EXEC dbo.usp_run_warehouse_pipeline @Season = '2023/24', @RunTests = 1;"
 ```
 
-### 3.2. Native SQL Execution (Windows / SSMS / Azure Data Studio)
-To run Bronze ingestion, Silver cleansing, Gold dimensional loading, and integrity sanity checks in a single automated transaction with audit logging:
+### 3.2. Windows Automated Docker Execution (PowerShell)
+On Windows with Docker Desktop installed, execute the automated PowerShell runner directly from the project directory:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_pipeline_docker.ps1
+```
+
+To run for a specific season:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_pipeline_docker.ps1 -Season "2024/25"
+```
+
+### 3.3. Native SQL Execution (Windows / SSMS / Azure Data Studio without Docker)
+To run Bronze ingestion, Silver cleansing, Gold dimensional loading, and integrity sanity checks in a single automated transaction with audit logging on native SQL Server:
 
 ```sql
 USE DW;
@@ -94,7 +115,7 @@ EXEC dbo.usp_run_warehouse_pipeline
     @RunTests = 1;
 ```
 
-### 3.3. Loading Subsequent Seasons (Multi-Season SCD2)
+### 3.4. Loading Subsequent Seasons (Multi-Season SCD2)
 When transitioning to a new in-game season (e.g. at the conclusion of 2023/24):
 1. Export fresh HTML or CSV files from FM24 for the new season.
 2. Run [`prepare_data.sh`](file:///prepare_data.sh) to automatically convert HTML exports to CSV, normalize goalkeeper/outfield schemas, and synchronize files to the database container:
@@ -115,7 +136,7 @@ EXEC dbo.usp_run_warehouse_pipeline
 
 * `gold.load_gold` will automatically expire old records (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`) and insert the new snapshot without deleting past history.
 
-### 3.4. Midseason & Winter Transfer Ingestion (Intra-Season SCD2)
+### 3.5. Midseason & Winter Transfer Ingestion (Intra-Season SCD2)
 The warehouse natively supports midseason data exports (e.g. at the January transfer window or during a midseason tactical review) without affecting or distorting subsequent end-of-season loads:
 
 1. **Intra-Season Execution:** Export current form and squad data from FM24 midseason, sync via `./prepare_data.sh`, and run the pipeline specifying the current season:

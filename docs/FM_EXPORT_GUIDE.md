@@ -82,11 +82,36 @@ The Python analytics engine ([`python scripts/scouting_dashboard.py`](file:///py
 
 ---
 
-## 2. In-Game View Setup & Required Columns
+## 2. In-Game View Setup & Pre-Configured Files (`fm24 views/`)
 
-To ensure full compatibility with the Bronze landing tables, your custom views in Football Manager must include the exact columns listed below.
+### ⚡ 2.0. Fast Setup: 1-Click View Import (Recommended)
 
-### 2.1. Outfield Players View (`team_players.csv` & `interested_out_players*.csv`)
+To eliminate the need to manually search and order 30+ statistics in Football Manager, this repository includes pre-configured view files (`.fmf`) in the [`fm24 views/`](file:///fm24%20views/) directory:
+
+| View File (`fm24 views/`) | In-Game Screen | Target Export File | Description |
+| :--- | :--- | :--- | :--- |
+| **`Team O.Player View.fmf`** | **Squad** | `team_players.html` | Outfield performance and demographics for your first-team squad. |
+| **`Team GK View.fmf`** | **Squad** (Filter: GK) | `team_gks.html` | Shot stopping, sweeping, and distribution for your squad's goalkeepers. |
+| **`O.Player View.fmf`** | **Scouting $\to$ Players** | `interested_out_players*.html` | Global outfield scouting pool with transfer values and wage demands. |
+| **`GK View.fmf`** | **Scouting $\to$ Players** (GK) | `interested_gks.html` | Scouted goalkeepers with post-shot xG and save metrics. |
+
+#### How to Import the Views into Football Manager 2024:
+1. **Option A (Copy to FM Views folder):** Copy all files from `fm24 views/` to your Football Manager views directory:
+   - **Windows:** `Documents\Sports Interactive\Football Manager 2024\views\`
+   - **macOS:** `~/Library/Application Support/Sports Interactive/Football Manager 2024/views/`
+   - **Linux (Steam Proton):** `~/.local/share/Steam/steamapps/compatdata/2252570/pfx/drive_c/users/steamuser/Documents/Sports Interactive/Football Manager 2024/views/`
+2. **Option B (Direct Import in FM):**
+   - In FM24, open the relevant screen (e.g. **Squad** or **Scouting $\to$ Players**).
+   - Click the **Views** dropdown menu (top-left of the player table).
+   - Select **Custom** $\to$ **Import View...**
+   - Navigate to the `fm24 views/` folder in this repository and select the matching `.fmf` file.
+   - Click **Load**. All columns are instantly configured in the exact required order!
+
+---
+
+### 2.1. Outfield Players View Column Reference (`team_players.csv` & `interested_out_players*.csv`)
+
+If you prefer to configure or inspect the custom views manually:
 
 In the **Squad** or **Scouting $\to$ Players** screen, create a custom view with the following fields:
 

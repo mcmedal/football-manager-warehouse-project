@@ -1804,6 +1804,19 @@ BEGIN
 					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
 
+		PRINT '>>> Retiring Departed Records in silver.fmdata_interested_out_players';
+			UPDATE S
+			SET 
+				dwh_cd_valid_till = GETDATE(),
+				dwh_current_validity = 0
+			FROM silver.fmdata_interested_out_players AS S
+			WHERE S.dwh_current_validity = 1
+			  AND S.player_id NOT IN (
+					SELECT TRY_CAST(player_id AS INT) 
+					FROM bronze.fmdata_interested_out_players 
+					WHERE player_id IS NOT NULL AND TRY_CAST(player_id AS INT) IS NOT NULL
+			  );
+
 		PRINT '>>> Inserting New Records in silver.fmdata_interested_out_players';
 			WITH cleaned AS (
 				SELECT 
@@ -2504,6 +2517,19 @@ BEGIN
 					OR S.possession_lost_per90 != N.possession_lost_per90
 					OR ISNULL(S.transfer_value_m, -1) != ISNULL(N.transfer_value_m, -1)
 				);
+
+		PRINT '>>> Retiring Departed Records in silver.fmdata_interested_gks';
+			UPDATE S
+			SET 
+				dwh_cd_valid_till = GETDATE(),
+				dwh_current_validity = 0
+			FROM silver.fmdata_interested_gks AS S
+			WHERE S.dwh_current_validity = 1
+			  AND S.player_id NOT IN (
+					SELECT TRY_CAST(player_id AS INT) 
+					FROM bronze.fmdata_interested_gks 
+					WHERE player_id IS NOT NULL AND TRY_CAST(player_id AS INT) IS NOT NULL
+			  );
 
 		PRINT '>>> Inserting New Records in silver.fmdata_interested_gks';
 			WITH cleaned AS (

@@ -65,18 +65,6 @@ export default function MetricsPage() {
   const [selectedGraphSlice, setSelectedGraphSlice] = useState<number>(0);
   const [pizzaMode, setPizzaMode] = useState<'pizza' | 'radar'>('pizza');
 
-  // Category Configuration
-  const categories = [
-    { id: 'all', label: 'All Knowledge', icon: Layers, count: 32 },
-    { id: 'graphs', label: 'Visual Graphs & Charts', icon: BarChart3, count: 6 },
-    { id: 'attacking', label: 'Attacking & Shooting', icon: Target, count: 7 },
-    { id: 'passing', label: 'Passing & Creation', icon: Zap, count: 7 },
-    { id: 'defending', label: 'Defending & Duels', icon: Shield, count: 6 },
-    { id: 'goalkeeper', label: 'Goalkeeping', icon: Activity, count: 5 },
-    { id: 'valuation', label: 'Moneyball & Valuation', icon: Coins, count: 4 },
-    { id: 'math', label: 'Similarity & Modeling', icon: Calculator, count: 3 },
-  ];
-
   // Visual Graph Definitions
   const graphs: GraphDefinition[] = [
     {
@@ -85,15 +73,15 @@ export default function MetricsPage() {
       subtitle: 'Multi-metric radial percentile evaluation',
       usedIn: ['Player Dossier (/player/[id])', 'Head-to-Head Compare (/compare)'],
       description:
-        'A radial visualization displaying up to 14 tactical metrics grouped into 4 distinct quadrants. Each slice represents a specific statistical category, and its radial length (distance from the center) represents the player’s percentile rank (0 to 99) against positional peers.',
+        'A radial visualization displaying tactical metrics grouped into 4 distinct quadrants. Each slice represents a specific statistical category, and its radial length (distance from the center) represents the player’s percentile rank (0 to 99) against positional peers.',
       keyFeatures: [
         '4 Positional Quadrants: Attacking (Amber), Passing (Cyan), Possession (Purple), and Defending (Rose).',
         'Goalkeeper Mode: Shot Stopping, Handling/Rebounds, Sweeping/Aerial, and Distribution.',
-        'Percentile Standard: Evaluated against players within the exact same positional cluster (e.g., Striker vs Strikers) with >= 900 minutes.',
+        'Percentile Standard: Evaluated against players within the exact same positional cluster with >= 900 minutes.',
         'Dual View Mode: Toggle between individual Pizza Slices (independent attributes) and Classic Radar Polygon (overall tactical silhouette).',
       ],
       howToInterpret:
-        'A full slice reaching the outer perimeter means the player is in the 99th percentile (top 1% globally for that position). A shriveled slice near the center indicates a below-average metric. Look for wide, balanced coverage for all-arounders or sharp, focused spikes for specialist roles (e.g. Fox in the Box vs Playmaking Winger).',
+        'A full slice reaching the outer perimeter means the player is in the 99th percentile (top 1% globally for that position). A shriveled slice near the center indicates a below-average metric. Look for wide, balanced coverage for all-arounders or sharp, focused spikes for specialist roles.',
       proTip:
         'Hover over any slice in the Player Dossier to reveal the exact raw per-90 count alongside the computed percentile.',
     },
@@ -105,7 +93,7 @@ export default function MetricsPage() {
       description:
         'Inspired by FBref / StatsBomb scouting reports, this table displays raw per-90 values side-by-side with horizontal percentile progress bars, segmented into Attacking, Passing, Defending, and Physical categories.',
       keyFeatures: [
-        'Color-Coded Tiers: Elite 90+ (Emerald Green), Above Average 75–89 (Cyan), Average 50–74 (Amber), Below Average <50 (Slate).',
+        'Color-Coded Tiers: Elite 80+ (Emerald Green), Above Average 60–79 (Cyan), Good 40–59 (Blue), Average 20–39 (Amber), Below Average <20 (Rose).',
         'Direct Per-90 Display: Compare actual game output (e.g. 0.54 NPxG/90) against relative ranking (e.g. 96th percentile).',
         'Positional Baseline: Eliminates apples-to-oranges comparisons by conditioning ranks on positional clusters.',
       ],
@@ -182,11 +170,64 @@ export default function MetricsPage() {
       proTip:
         'Examine historical seasons to see if a player performed well in a stronger league before transferring.',
     },
+    {
+      id: 'tactical-framework-matrix',
+      title: 'Team Tactical Framework & Archetype Matrix',
+      subtitle: 'Minutes-weighted style classification across 7 tactical systems',
+      usedIn: ['Tactical Archetype Classifier (/archetypes)'],
+      description:
+        'Evaluates club tactical systems across 7 dominant modern tactical philosophies (Gegenpressing, Tiki-Taka, Vertical Tiki-Taka, Fluid Counter, Direct Counter, Wing Play, Route One, Catenaccio) based on minutes-weighted passing, pressing, crossing, and defensive block events.',
+      keyFeatures: [
+        'Minutes-Weighted Aggregation: Squad members with higher on-pitch minutes exert proportionally greater weighting on team identity.',
+        'Archetype Affinity Scores (0-100): Quantifies each club’s adherence to high-press recovery vs deep-block containment.',
+        'Squad Archetype Distribution: Breakdown of players classified into 21 distinct FM tactical archetypes.',
+      ],
+      howToInterpret:
+        'High Gegenpressing scores (>75) indicate relentless high-line counterpressing teams. High Catenaccio scores (>70) indicate deep-block low-risk containment teams.',
+      proTip:
+        'Scout transfer targets whose tactical archetype matches your team’s dominant tactical framework to minimize tactical adaptation lag.',
+    },
+    {
+      id: 'squad-succession-matrix',
+      title: 'Squad Succession Planning & Replacement Matrix',
+      subtitle: 'Automated U23 succession candidate mapping for aging starters',
+      usedIn: ['Squad Succession Planning (/succession)'],
+      description:
+        'Proactively identifies upcoming squad vacancies by pairing incumbent starters aged 28+ with top-performing U23 external targets who match their positional profile and tactical responsibilities.',
+      keyFeatures: [
+        'Succession Risk Scoring: Combines starter age, contract duration, and minute burden to prioritize urgent transfer needs.',
+        'Top 3 Candidate Ranking: Surfaces the best young replacement options ranked by Euclidean similarity and performance.',
+        'Financial Feasibility: Compares target market valuation and wage demands against your club’s transfer budget.',
+      ],
+      howToInterpret:
+        'Red alerts denote starters aged 31+ with no clear understudy. Green pairings show pre-identified wonderkids ready to step in when the veteran is sold.',
+      proTip:
+        'Monitor candidates over two consecutive transfer windows using SCD2 progression tracking before triggering their buyout clauses.',
+    },
+    {
+      id: 'squad-diagnosis-dashboard',
+      title: 'Departmental Squad Health & Age Profile Matrix',
+      subtitle: 'Club-wide positional depth, wage distribution, and tactical risk diagnosis',
+      usedIn: ['Squad Diagnosis (/squad-diagnosis)'],
+      description:
+        'Holistic squad audit breaking down your roster into Goalkeeping, Central Defense, Fullbacks, Midfield, and Attack departments with automated health ratings and recruitment alerts.',
+      keyFeatures: [
+        'Positional Age Curves: Highlights departments trending above peak athletic age (>28.5 yrs).',
+        'Starter vs Depth Delta: Measures performance drop-off when regular starters are rotated or injured.',
+        'One-Click Recruitment Shortcut: Jumps directly from a diagnosed squad weakness into pre-filtered screener queries.',
+      ],
+      howToInterpret:
+        'Departments flagged with "Critical" require immediate transfer intervention during the next window to avoid performance cliffs.',
+      proTip:
+        'Balance high-wage veterans with high-output U21 prospects to optimize your wage-to-points efficiency ratio.',
+    },
   ];
 
-  // Comprehensive Metric Definitions
+  // Comprehensive Metric Definitions (Categorized into 6 core domains)
   const metrics: MetricDefinition[] = [
-    // --- ATTACKING ---
+    // =========================================================================
+    // 1. ATTACKING & SHOOTING
+    // =========================================================================
     {
       id: 'npxg-per90',
       name: 'Non-Penalty Expected Goals per 90',
@@ -205,14 +246,54 @@ export default function MetricsPage() {
         poor: '< 0.15 (Low direct goal threat)',
       },
       fmSource: 'xG (with penalties subtracted) and Mins from team_players.csv / interested_out_players.csv',
-      tags: ['xG', 'Scoring', 'Striker', 'Winger', 'Finishing'],
+      tags: ['xG', 'Scoring', 'Striker', 'Winger', 'Finishing', 'Attacking'],
+    },
+    {
+      id: 'xg-per90',
+      name: 'Expected Goals per 90',
+      code: 'xG/90',
+      category: 'attacking',
+      formula: '\\text{xG/90} = \\frac{\\text{Total Expected Goals}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Total cumulative expected goal probability generated per 90 minutes across all shots including penalties.',
+      tacticalMeaning:
+        'Reflects total goal expectancy based on historical shot trajectory, distance, angle, and defensive pressure at the exact moment of execution.',
+      moneyballSignificance:
+        'Establishes baseline finishing volume; comparing xG/90 against actual Goals/90 uncovers variance, hot streaks, or finishing slumps.',
+      benchmarks: {
+        elite: '>= 0.60 (Elite focal striker / penalty taker)',
+        good: '0.40 - 0.59 (Consistent goal threat)',
+        average: '0.22 - 0.39 (Standard offensive contributor)',
+        poor: '< 0.15 (Minimal goal output)',
+      },
+      fmSource: 'xG and Mins from FM24 export',
+      tags: ['xG', 'Goals', 'Striker', 'Attacking'],
+    },
+    {
+      id: 'goals-per90',
+      name: 'Goals Scored per 90',
+      code: 'Goals/90',
+      category: 'attacking',
+      formula: '\\text{Goals/90} = \\frac{\\text{Total Goals Scored}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The actual volume of goals scored per 90 minutes of competitive play.',
+      tacticalMeaning:
+        'The definitive bottom-line production metric for forwards. When paired with NPxG, it reveals whether high goal tallies are repeatable or luck-driven.',
+      moneyballSignificance:
+        'Traditional clubs buy on raw Goals/90. Moneyball clubs exploit the market by selling players whose Goals/90 unsustainably exceeds their xG/90.',
+      benchmarks: {
+        elite: '>= 0.65 (Prolific match-winner / Golden Boot contender)',
+        good: '0.45 - 0.64 (High-caliber top-flight forward)',
+        average: '0.25 - 0.44 (Standard wide attacker / second striker)',
+        poor: '< 0.18 (Low scoring rate)',
+      },
+      fmSource: 'Gls and Mins from FM24 export',
+      tags: ['Goals', 'Finishing', 'Production', 'Attacking'],
     },
     {
       id: 'xg-per-shot',
       name: 'Shot Quality & Selection Index',
       code: 'xG / Shot',
       category: 'attacking',
-      formula: '\\text{Shot Quality} = \\frac{\\text{Total } xG}{\\text{Shots Attempted}}',
+      formula: '\\text{Shot Quality} = \\frac{\\text{Total } xG}{\\text{Total Shots Attempted}}',
       shortDefinition: 'The average expected goals probability of each shot taken by the player.',
       tacticalMeaning:
         'Indicates shot discipline and decision-making. High xG/shot players take high-percentage shots from inside the 6-yard box or central penalty area; low xG/shot players take low-probability speculative long shots.',
@@ -225,7 +306,87 @@ export default function MetricsPage() {
         poor: '< 0.07 (Wasteful speculative long-range shooter)',
       },
       fmSource: 'xG / shot column from FM24 export',
-      tags: ['Shooting', 'Decision Making', 'Efficiency', 'Striker'],
+      tags: ['Shooting', 'Decision Making', 'Efficiency', 'Striker', 'Attacking'],
+    },
+    {
+      id: 'npxg-per-shot',
+      name: 'Non-Penalty xG per Shot',
+      code: 'NP-xG / Shot',
+      category: 'attacking',
+      formula: '\\text{NP-xG / Shot} = \\frac{\\text{Non-Penalty } xG}{\\text{Total Shots Attempted}}',
+      shortDefinition: 'Average expected goal quality per shot attempt with all penalty kicks removed.',
+      tacticalMeaning:
+        'Prevents penalty kick conversion (0.76 xG per attempt) from artificially inflating an attacker’s perceived shot selection efficiency.',
+      moneyballSignificance:
+        'Identifies penalty-box poachers who consistently work the ball into prime scoring positions before releasing shots.',
+      benchmarks: {
+        elite: '>= 0.16 (Elite close-range chance converter)',
+        good: '0.12 - 0.15 (Above-average shot selection)',
+        average: '0.08 - 0.11 (Standard outfield average)',
+        poor: '< 0.07 (Takes speculative long-range shots)',
+      },
+      fmSource: 'Derived from NP-xG and Shots from FM24 export',
+      tags: ['xG', 'Shot Selection', 'Efficiency', 'Attacking'],
+    },
+    {
+      id: 'shots-per90',
+      name: 'Total Shots Attempted per 90',
+      code: 'Shots/90',
+      category: 'attacking',
+      formula: '\\text{Shots/90} = \\frac{\\text{Total Shots Attempted}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The total volume of shooting attempts taken per 90 minutes.',
+      tacticalMeaning:
+        'Measures offensive assertiveness and shooting gravity. High shot volume forces opposition centerbacks to step out and commit blocks.',
+      moneyballSignificance:
+        'A forward with elite xG/shot but only 1.0 shot per 90 cannot generate enough volume to carry a team. Elite goalscorers combine >=3.0 shots/90 with good xG/shot.',
+      benchmarks: {
+        elite: '>= 3.8 (High-volume offensive focal point)',
+        good: '2.6 - 3.7 (Active primary forward)',
+        average: '1.5 - 2.5 (Standard winger / attacking midfielder)',
+        poor: '< 1.2 (Passive attacker)',
+      },
+      fmSource: 'Shots/90 column from FM24 export',
+      tags: ['Shots', 'Volume', 'Attacking', 'Striker'],
+    },
+    {
+      id: 'shot-on-target-rate',
+      name: 'Shot on Target Accuracy %',
+      code: 'SoT %',
+      category: 'attacking',
+      formula: '\\text{SoT \\%} = \\frac{\\text{Shots on Target}}{\\text{Total Shots Attempted}} \\times 100',
+      shortDefinition: 'The percentage of all shot attempts that hit the target (requiring a goalkeeper save or resulting in a goal).',
+      tacticalMeaning:
+        'Evaluates shooting technique and composure under defensive pressure. Elite finishers consistently work the goalkeeper rather than spraying shots off-target.',
+      moneyballSignificance:
+        'High SoT % generates secondary scoring chances (rebounds, corners, deflections) even when the initial shot does not go in.',
+      benchmarks: {
+        elite: '>= 48.0% (Precise, accurate ball striker)',
+        good: '40.0% - 47.9% (Reliable targeting)',
+        average: '32.0% - 39.9% (Standard shooting accuracy)',
+        poor: '< 30.0% (Erratic shooting)',
+      },
+      fmSource: 'SoT % from FM24 export',
+      tags: ['Accuracy', 'Technique', 'Shooting', 'Attacking'],
+    },
+    {
+      id: 'shot-conv',
+      name: 'Shot Conversion Rate %',
+      code: 'Conv %',
+      category: 'attacking',
+      formula: '\\text{Conversion Rate \\%} = \\frac{\\text{Total Goals}}{\\text{Total Shots Attempted}} \\times 100',
+      shortDefinition: 'The percentage of all shots taken that result in a goal.',
+      tacticalMeaning:
+        'Measures pure execution efficiency. While volume is important, a high conversion rate indicates composure in front of goal.',
+      moneyballSignificance:
+        'Identifies attackers who do not need 10 chances to score, proving crucial for defensive counter-attacking tactics where chances are scarce.',
+      benchmarks: {
+        elite: '>= 22.0% (Elite clinical execution)',
+        good: '16.0% - 21.9% (Reliable forward)',
+        average: '10.0% - 15.9% (Average conversion)',
+        poor: '< 9.0% (Wasteful in front of goal)',
+      },
+      fmSource: 'Shot Conv % from FM24 export',
+      tags: ['Goals', 'Finishing', 'Striker', 'Attacking'],
     },
     {
       id: 'shrunk-finishing',
@@ -245,49 +406,129 @@ export default function MetricsPage() {
         poor: '< -0.10 (Severe finishing underperformance / confidence crisis)',
       },
       fmSource: 'Derived in SQL warehouse from Goals, xG, and Minutes Played',
-      tags: ['Finishing', 'Bayesian', 'Regression', 'Moneyball'],
+      tags: ['Finishing', 'Bayesian', 'Regression', 'Moneyball', 'Attacking'],
     },
     {
-      id: 'shot-conv',
-      name: 'Shot Conversion Rate',
-      code: 'Conv %',
+      id: 'box-presence-proxy',
+      name: 'Penalty Box Presence Proxy',
+      code: 'Box Presence',
       category: 'attacking',
-      formula: '\\text{Conversion Rate} = \\frac{\\text{Total Goals}}{\\text{Total Shots Attempted}} \\times 100',
-      shortDefinition: 'The percentage of all shots taken that result in a goal.',
+      formula: '\\text{Box Presence Proxy} = \\text{Shots/90} \\times \\text{xG/Shot}',
+      shortDefinition: 'Composite index measuring how consistently and deeply an attacker penetrates the dangerous central penalty area.',
       tacticalMeaning:
-        'Measures pure execution efficiency. While volume is important, a high conversion rate indicates composure in front of goal.',
+        'Separates perimeter attackers who float on the wings from true target men and inside forwards who regularly take high-value shots from inside the 6-yard and 18-yard boxes.',
       moneyballSignificance:
-        'Identifies attackers who do not need 10 chances to score, proving crucial for defensive counter-attacking tactics where chances are scarce.',
+        'High box presence correlates strongly with multi-season scoring sustainability across different tactical systems.',
       benchmarks: {
-        elite: '>= 22.0% (Elite clinical execution)',
-        good: '16.0% - 21.9% (Reliable forward)',
-        average: '10.0% - 15.9% (Average conversion)',
-        poor: '< 9.0% (Wasteful in front of goal)',
+        elite: '>= 0.45 (Dominant penalty-box predator)',
+        good: '0.30 - 0.44 (Consistent box arrival)',
+        average: '0.15 - 0.29 (Peripheral attacker)',
+        poor: '< 0.12 (Rarely penetrates penalty area)',
       },
-      fmSource: 'Shot Conv % from FM24 export',
-      tags: ['Goals', 'Finishing', 'Striker'],
+      fmSource: 'Derived in gold mart from Shots/90 and xG/shot',
+      tags: ['Box Presence', 'Positioning', 'Striker', 'Attacking'],
+    },
+    {
+      id: 'long-range-goal-share',
+      name: 'Long-Range Goal Share %',
+      code: 'Long Goal %',
+      category: 'attacking',
+      formula: '\\text{Long Goal \\%} = \\frac{\\text{Goals Outside Penalty Box}}{\\text{Total Goals Scored}} \\times 100',
+      shortDefinition: 'The proportion of a player’s goals scored from outside the 18-yard penalty box.',
+      tacticalMeaning:
+        'Evaluates long-range shooting capability vs reliance on tap-ins. Useful for identifying midfield long-shot specialists who can unlock low defensive blocks.',
+      moneyballSignificance:
+        'Beware of attackers with >40% long-range goal share: long shots have low repeatable conversion rates and typically regress sharply the following season.',
+      benchmarks: {
+        elite: '>= 25.0% (Specialist long-range ball striker)',
+        good: '15.0% - 24.9% (Balanced scoring range)',
+        average: '5.0% - 14.9% (Standard forward profile)',
+        poor: '< 5.0% (Pure inside-the-box finisher)',
+      },
+      fmSource: 'Derived from Goals Outside Box and Total Goals in FM24 export',
+      tags: ['Long Shots', 'Shooting', 'Attacking'],
+    },
+    {
+      id: 'shots-outside-box-ratio',
+      name: 'Shots Outside Penalty Box Ratio %',
+      code: 'Outside Box %',
+      category: 'attacking',
+      formula: '\\text{Outside Box \\%} = \\frac{\\text{Shots Outside Box/90}}{\\text{Total Shots/90}} \\times 100',
+      shortDefinition: 'The percentage of all shot attempts taken from outside the 18-yard penalty box.',
+      tacticalMeaning:
+        'Measures shooting discipline. Attackers with high ratios (>60%) often squander promising counter-attacks with speculative, low-probability shots.',
+      moneyballSignificance:
+        'Recruitment screening flag: high outside-box shooting ratios indicate poor tactical discipline unless coached out of the habit.',
+      benchmarks: {
+        elite: '<= 25.0% (Disciplined, works high-quality inside-the-box chances)',
+        good: '26.0% - 40.0% (Acceptable balance)',
+        average: '41.0% - 55.0% (Moderate long-range tendency)',
+        poor: '> 60.0% (Wasteful speculative shooter)',
+      },
+      fmSource: 'Derived from Shots Outside Box/90 and Shots/90',
+      tags: ['Decision Making', 'Shooting', 'Discipline', 'Attacking'],
     },
     {
       id: 'goal-threat-share',
       name: 'Goal Threat Share %',
-      code: 'Threat Share',
+      code: 'Threat Share %',
       category: 'attacking',
-      formula: '\\text{Threat Share} = \\frac{\\text{Player } NPxG}{\\text{Estimated Team Total } NPxG} \\times 100',
-      shortDefinition: 'The proportion of a club’s total open-play attacking threat concentrated in this single player.',
+      formula: '\\text{Threat Share \\%} = \\frac{\\text{Player NPxG/90}}{\\text{NPxG/90} + \\text{xA/90}} \\times 100',
+      shortDefinition: 'The proportion of a player’s personal expected goal involvement driven by direct goalscoring vs creative passing.',
       tacticalMeaning:
-        'Measures tactical focalization. A striker with 35% Goal Threat Share is the undisputed focal point of their team’s entire attacking system.',
+        'Classifies attacker role balance: >75% indicates a pure finishing poacher; 40–60% indicates a balanced dual-threat creator-scorer; <30% indicates a primary playmaker.',
       moneyballSignificance:
-        'Helps assess whether a player will maintain their output if transferred to a team with other high-usage stars.',
+        'Ensures tactical squad balance: do not pair two 85% goal threat attackers together without a primary playmaker supplying them.',
       benchmarks: {
-        elite: '>= 30.0% (Primary offensive focal point of team)',
-        good: '20.0% - 29.9% (Major offensive contributor)',
-        average: '12.0% - 19.9% (Complementary attacker)',
+        elite: '50.0% - 65.0% (Ideal balanced dual-threat forward)',
+        good: '66.0% - 80.0% (Pure goalscorer / finisher)',
+        average: '35.0% - 49.0% (Creative wide forward / playmaker)',
       },
       fmSource: 'Derived via analytical views in gold schema',
-      tags: ['Role', 'Tactics', 'Attacking'],
+      tags: ['Role', 'Tactics', 'Attacking', 'Striker', 'Playmaker'],
+    },
+    {
+      id: 'npxg-adj-per90',
+      name: 'League-Adjusted Non-Penalty xG per 90',
+      code: 'Adj NPxG/90',
+      category: 'attacking',
+      formula: '\\text{Adj NPxG/90} = \\text{NPxG/90} \\times \\text{League Difficulty Coef}',
+      shortDefinition: 'Non-penalty expected goals per 90 calibrated against league quality using competition difficulty coefficients.',
+      tacticalMeaning:
+        'Normalizes goal threat across different European and global tiers, preventing second-division or low-tier league attackers from dominating raw statistical leaderboards.',
+      moneyballSignificance:
+        'Enables cross-league scouting comparisons: a player producing 0.60 NPxG in a 0.70-rated league projects to 0.42 NPxG in an Apex league.',
+      benchmarks: {
+        elite: '>= 0.45 (Projects as high-level top-flight scorer)',
+        good: '0.32 - 0.44 (Capable starting forward)',
+        average: '0.18 - 0.31 (Mid-tier offensive output)',
+      },
+      fmSource: 'Calculated in gold mart from NP-xG and gold.dim_league coef',
+      tags: ['Competition', 'Normalization', 'Scouting', 'Attacking'],
+    },
+    {
+      id: 'npxg-plus-xa-adj',
+      name: 'League-Adjusted NP-xGI per 90',
+      code: 'Adj NP-xGI/90',
+      category: 'attacking',
+      formula: '\\text{Adj NP-xGI/90} = (\\text{NPxG/90} + \\text{xA/90}) \\times \\text{League Difficulty Coef}',
+      shortDefinition: 'Total expected goal involvement (scoring + creating) normalized by competition difficulty level.',
+      tacticalMeaning:
+        'The ultimate cross-league recruitment benchmark for offensive potency. Calibrates raw production against defensive quality faced.',
+      moneyballSignificance:
+        'The primary filter for finding bargain imports playing in Portugal, Belgium, or Championship who can succeed in the Premier League.',
+      benchmarks: {
+        elite: '>= 0.55 (Elite international recruitment target)',
+        good: '0.38 - 0.54 (Strong top-flight contributor)',
+        average: '0.22 - 0.37 (Solid squad depth)',
+      },
+      fmSource: 'Calculated in gold mart from NP-xGI and league difficulty coef',
+      tags: ['Moneyball', 'Recruitment', 'Cross-League', 'Attacking'],
     },
 
-    // --- PASSING & CREATION ---
+    // =========================================================================
+    // 2. PASSING & CREATION
+    // =========================================================================
     {
       id: 'xa-per90',
       name: 'Expected Assists per 90',
@@ -306,7 +547,27 @@ export default function MetricsPage() {
         poor: '< 0.08 (Minimal creative output)',
       },
       fmSource: 'xA/90 column from FM24 export',
-      tags: ['Assists', 'Vision', 'Playmaker', 'Passing'],
+      tags: ['Assists', 'Vision', 'Playmaker', 'Passing', 'Creation'],
+    },
+    {
+      id: 'assists-per90',
+      name: 'Assists per 90',
+      code: 'Ast/90',
+      category: 'passing',
+      formula: '\\text{Assists/90} = \\frac{\\text{Total Assists}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The actual number of goal-scoring final passes completed per 90 minutes.',
+      tacticalMeaning:
+        'Measures realized end product. Comparing Ast/90 against xA/90 reveals whether a creator’s teammates are overperforming or squandering open chances.',
+      moneyballSignificance:
+        'Exploits market inefficiencies: sell creators whose assist tallies are inflated by teammate wonder-strikes, and buy creators with high xA but low raw assists.',
+      benchmarks: {
+        elite: '>= 0.35 (Prolific primary assist provider)',
+        good: '0.22 - 0.34 (Consistent creator)',
+        average: '0.12 - 0.21 (Standard midfielder / winger)',
+        poor: '< 0.08 (Low direct assist creation)',
+      },
+      fmSource: 'Ast and Mins from FM24 export',
+      tags: ['Assists', 'Playmaker', 'Production', 'Passing'],
     },
     {
       id: 'npxg-xa-per90',
@@ -326,7 +587,7 @@ export default function MetricsPage() {
         poor: '< 0.20 (Low overall offensive involvement)',
       },
       fmSource: 'Sum of NP-xG/90 and xA/90',
-      tags: ['xGI', 'Offense', 'Benchmark', 'Moneyball'],
+      tags: ['xGI', 'Offense', 'Benchmark', 'Moneyball', 'Passing'],
     },
     {
       id: 'chance-quality',
@@ -346,15 +607,94 @@ export default function MetricsPage() {
         poor: '< 0.07 (Low-threat speculative delivery)',
       },
       fmSource: 'Calculated from xA/90 and OP-KP/90',
-      tags: ['Playmaker', 'Quality', 'Passing'],
+      tags: ['Playmaker', 'Quality', 'Passing', 'Decision Making'],
+    },
+    {
+      id: 'open-play-kp-per90',
+      name: 'Open-Play Key Passes per 90',
+      code: 'OP-KP/90',
+      category: 'passing',
+      formula: '\\text{OP-KP/90} = \\frac{\\text{Open-Play Key Passes}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Passes executed in open play (excluding set pieces) that lead directly to a teammate shot attempt.',
+      tacticalMeaning:
+        'Isolates dynamic in-game playmaking from corner kicks and free kicks. Set piece specialists can inflate total key passes without possessing dynamic open-play vision.',
+      moneyballSignificance:
+        'High OP-KP/90 proves a playmaker can unlock compact defensive blocks without relying on set-piece routines.',
+      benchmarks: {
+        elite: '>= 2.4 (Elite creative engine in open play)',
+        good: '1.6 - 2.3 (Strong attacking contributor)',
+        average: '0.8 - 1.5 (Standard midfielder)',
+        poor: '< 0.6 (Minimal open-play shot creation)',
+      },
+      fmSource: 'OPKP/90 from FM24 export',
+      tags: ['Playmaker', 'Key Passes', 'Passing', 'Creation'],
+    },
+    {
+      id: 'pass-accuracy',
+      name: 'Pass Accuracy %',
+      code: 'Pass Acc %',
+      category: 'passing',
+      formula: '\\text{Pass Accuracy \\%} = \\frac{\\text{Completed Passes}}{\\text{Attempted Passes}} \\times 100',
+      shortDefinition: 'The overall percentage of attempted passes that successfully reach a teammate.',
+      tacticalMeaning:
+        'Indicates technical cleanliness and security. Must always be interpreted alongside progressive passing: sideways centerbacks often have 94% accuracy, while creative #10s operate at 78% due to high-risk through-balls.',
+      moneyballSignificance:
+        'Crucial for possession-based systems (Tiki-Taka) where maintaining ball control prevents opponent transition counters.',
+      benchmarks: {
+        elite: '>= 90.0% (Elite ball retention metronome)',
+        good: '84.0% - 89.9% (Solid passing accuracy)',
+        average: '76.0% - 83.9% (Acceptable for creative wingers)',
+        poor: '< 72.0% (High turnover passing risk)',
+      },
+      fmSource: 'Pas % from FM24 export',
+      tags: ['Retention', 'Technique', 'Passing'],
+    },
+    {
+      id: 'completed-passes-per90',
+      name: 'Completed Passes per 90',
+      code: 'Cmp Passes/90',
+      category: 'passing',
+      formula: '\\text{Completed Passes/90} = \\text{Passes Attempted/90} \\times \\text{Pass Accuracy}',
+      shortDefinition: 'The absolute volume of successful passes delivered per 90 minutes.',
+      tacticalMeaning:
+        'Quantifies overall build-up involvement and tactical centrality. Deep-lying playmakers (Registas) typically complete 65+ passes per 90.',
+      moneyballSignificance:
+        'Confirms whether a scouted midfielder has the engine and capacity to handle primary ball-distribution duties.',
+      benchmarks: {
+        elite: '>= 65.0 (Central midfield tempo controller / Regista)',
+        good: '45.0 - 64.9 (Active build-up participant)',
+        average: '28.0 - 44.9 (Standard wing / forward involvement)',
+        poor: '< 22.0 (Peripheral on-ball involvement)',
+      },
+      fmSource: 'Derived from Pas A/90 and Pas % in gold mart',
+      tags: ['Distribution', 'Volume', 'Midfield', 'Passing'],
+    },
+    {
+      id: 'passes-attempted-per90',
+      name: 'Passes Attempted per 90',
+      code: 'Pass Att/90',
+      category: 'passing',
+      formula: '\\text{Pass Att/90} = \\frac{\\text{Total Passes Attempted}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The total volume of passing actions initiated per 90 minutes.',
+      tacticalMeaning:
+        'Reflects how often teammates look to give the player the ball. High pass attempts indicate trust and central responsibility in possession.',
+      moneyballSignificance:
+        'High pass attempts combined with low progressive output signals a conservative "sideways recycling" midfielder.',
+      benchmarks: {
+        elite: '>= 75.0 (High-usage midfield distributor)',
+        good: '52.0 - 74.9 (Regular build-up hub)',
+        average: '32.0 - 51.9 (Standard outfield involvement)',
+      },
+      fmSource: 'Pas A/90 from FM24 export',
+      tags: ['Involvement', 'Passing', 'Tactics'],
     },
     {
       id: 'prog-passes-per90',
       name: 'Progressive Passes per 90',
       code: 'Pr Passes/90',
       category: 'passing',
-      formula: '\\text{Pr passes/90} = \\frac{\\text{Progressive Passes}}{\\text{Minutes} / 90.0}',
-      shortDefinition: 'Completed passes that advance the ball substantially toward the opponent’s goal.',
+      formula: '\\text{Pr Passes/90} = \\frac{\\text{Progressive Passes}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Completed passes that advance the ball substantially (>=10 meters) toward the opponent’s goal.',
       tacticalMeaning:
         'Identifies line-breaking passers who transition their team from defense to attack. Crucial metric for Ball-Playing Defenders, Deep-Lying Playmakers, and Registas.',
       moneyballSignificance:
@@ -363,17 +703,58 @@ export default function MetricsPage() {
         elite: '>= 7.5 (Elite deep-lying distributor / midfield tempo controller)',
         good: '5.0 - 7.4 (Good progression)',
         average: '3.0 - 4.9 (Average progression)',
+        poor: '< 2.5 (Conservative, backwards passer)',
       },
       fmSource: 'Pr passes/90 column from FM24 export',
       tags: ['Progressive', 'Midfield', 'Ball-Playing Defender', 'Passing'],
+    },
+    {
+      id: 'prog-actions-per90',
+      name: 'Total Progressive Actions per 90',
+      code: 'Prog Actions/90',
+      category: 'passing',
+      formula: '\\text{Prog Actions/90} = \\text{Progressive Passes/90} + \\text{Dribbles Made/90}',
+      shortDefinition: 'Total volume of territory-advancing actions executed per 90, combining line-breaking passing and ball-carrying dribbles.',
+      tacticalMeaning:
+        'Holistic metric capturing the two primary methods of moving the ball upfield. Vital for evaluating dynamic fullbacks and modern #8 box-to-box midfielders.',
+      moneyballSignificance:
+        'Prevents bias toward pass-only or dribble-only players; surfaces versatile progressors who can adapt to varying defensive presses.',
+      benchmarks: {
+        elite: '>= 9.5 (Elite dual-threat transition progressor)',
+        good: '6.5 - 9.4 (Active progressive engine)',
+        average: '4.0 - 6.4 (Standard transition output)',
+        poor: '< 3.5 (Static, stationary player)',
+      },
+      fmSource: 'Derived from Pr passes/90 and Drb/90 in gold mart',
+      tags: ['Progression', 'Dribbling', 'Passing', 'Transitions'],
+    },
+    {
+      id: 'prog-rate-per-pass',
+      name: 'Progressive Pass Rate %',
+      code: 'Prog Pass %',
+      category: 'passing',
+      formula: '\\text{Prog Rate \\%} = \\frac{\\text{Progressive Passes/90}}{\\text{Passes Attempted/90}} \\times 100',
+      shortDefinition: 'The percentage of a player’s attempted passes that successfully advance the ball at least 10 meters toward goal.',
+      tacticalMeaning:
+        'Measures verticality and passing intent. High rates indicate direct, forward-thinking distributors; low rates indicate sideways possession recyclers.',
+      moneyballSignificance:
+        'Essential for vertical tiki-taka and direct counter-attacking systems where slow sideways passing kills attacking momentum.',
+      benchmarks: {
+        elite: '>= 16.0% (Highly penetrative, vertical line-breaker)',
+        good: '11.0% - 15.9% (Positive forward intent)',
+        average: '7.0% - 10.9% (Balanced possession distributor)',
+        poor: '< 6.0% (Risk-averse sideways recycler)',
+      },
+      fmSource: 'Derived in gold.vw_transfer_targets_outfield',
+      tags: ['Verticality', 'Efficiency', 'Passing'],
     },
     {
       id: 'progression-share',
       name: 'Team Progression Share %',
       code: 'Prog Share %',
       category: 'passing',
-      formula: '\\text{Progression Share} = \\frac{\\text{Player Pr Passes/90}}{\\text{Team Total Pr Passes/90}} \\times 100',
-      shortDefinition: 'The percentage of the entire team’s forward progression executed by this player.',
+      formula: '\\text{Progression Share \\%} = \\frac{\\text{Player Pr Passes/90}}{\\text{Team Total Pr Passes/90}} \\times 100',
+      shortDefinition: 'The percentage of the entire team’s forward progression executed by this individual player.',
       tacticalMeaning:
         'Reveals whether a midfielder is the irreplaceable metronome of their club’s build-up play.',
       moneyballSignificance:
@@ -384,14 +765,129 @@ export default function MetricsPage() {
         average: '< 15.0% (Secondary or peripheral progression role)',
       },
       fmSource: 'Derived in gold schema dimensional views',
-      tags: ['Midfield', 'Distribution', 'Tactics'],
+      tags: ['Midfield', 'Distribution', 'Tactics', 'Passing'],
+    },
+    {
+      id: 'completed-crosses-per90',
+      name: 'Completed Crosses per 90',
+      code: 'Crosses Cmp/90',
+      category: 'passing',
+      formula: '\\text{Completed Crosses/90} = \\text{Crosses Attempted/90} \\times \\text{Cross Accuracy}',
+      shortDefinition: 'The volume of successful crosses delivered into the penalty box per 90 minutes.',
+      tacticalMeaning:
+        'Key performance indicator for traditional wingers and attacking fullbacks/wingbacks in wing-play and target-man tactical frameworks.',
+      moneyballSignificance:
+        'Look at completed crosses rather than attempted crosses: high attempted crosses with low accuracy indicate wasteful turnover-generating flank play.',
+      benchmarks: {
+        elite: '>= 1.5 (Dominant wide flank deliverer)',
+        good: '0.8 - 1.4 (Consistent crossing threat)',
+        average: '0.3 - 0.7 (Standard wide involvement)',
+        poor: '< 0.2 (Minimal crossing output)',
+      },
+      fmSource: 'Derived from Crs A/90 and Crs % in gold mart',
+      tags: ['Crosses', 'Wingers', 'Fullback', 'Passing'],
+    },
+    {
+      id: 'op-completed-crosses-per90',
+      name: 'Open-Play Completed Crosses per 90',
+      code: 'OP-Crosses/90',
+      category: 'passing',
+      formula: '\\text{OP Completed Crosses} = \\text{Open-Play Crosses Attempted/90} \\times \\text{OP Cross Accuracy}',
+      shortDefinition: 'Successful crosses delivered during active open play, filtering out corner kicks and wide set pieces.',
+      tacticalMeaning:
+        'Measures ability to beat a fullback off the dribble or overlap effectively to deliver whipped crosses while moving at speed.',
+      moneyballSignificance:
+        'Separates pure dead-ball delivery specialists from genuine dynamic wide creators who create flank superiority in running play.',
+      benchmarks: {
+        elite: '>= 1.2 (Elite open-play wide creator)',
+        good: '0.6 - 1.1 (Solid flank crossing)',
+        average: '0.2 - 0.5 (Occasional crosser)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Crosses', 'Open Play', 'Flank', 'Passing'],
+    },
+    {
+      id: 'cross-share-creation',
+      name: 'Cross Share of Chance Creation %',
+      code: 'Cross Share %',
+      category: 'passing',
+      formula: '\\text{Cross Share \\%} = \\frac{\\text{Completed Crosses/90}}{\\text{Chances Created/90}} \\times 100',
+      shortDefinition: 'The proportion of a player’s total chance creation that originates from aerial or grounded crosses.',
+      tacticalMeaning:
+        'Identifies wide specialists vs interior playmakers: wingers with >60% rely on crossing; inverted wingers with <25% create via through-balls and cutbacks.',
+      moneyballSignificance:
+        'Crucial for tactical recruitment: ensure scouted wingers match your tactical philosophy (e.g. Inverted Winger vs Traditional Flank Winger).',
+      benchmarks: {
+        elite: '>= 55.0% (Pure traditional crossing winger)',
+        good: '30.0% - 54.9% (Balanced wide creator)',
+        average: '< 30.0% (Interior cutback / through-ball playmaker)',
+      },
+      fmSource: 'Derived in gold mart from crosses and chances created',
+      tags: ['Wing Play', 'Tactics', 'Creation', 'Passing'],
+    },
+    {
+      id: 'chance-creation-pass-pct',
+      name: 'Chance Creation per Pass %',
+      code: 'Chance/Pass %',
+      category: 'passing',
+      formula: '\\text{Chance Creation / Pass \\%} = \\frac{\\text{Chances Created/90}}{\\text{Passes Attempted/90}} \\times 100',
+      shortDefinition: 'The percentage of attempted passes that directly create a scoring opportunity for a teammate.',
+      tacticalMeaning:
+        'Measures creative density: how much attacking danger a player packs into their passing distribution.',
+      moneyballSignificance:
+        'Surfaces hyper-efficient creative super-subs or low-touch playmakers whose creative output per touch is off the charts.',
+      benchmarks: {
+        elite: '>= 4.5% (High-danger creative incisiveness)',
+        good: '2.8% - 4.4% (Solid creative danger)',
+        average: '1.4% - 2.7% (Standard midfielder)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Efficiency', 'Playmaker', 'Passing'],
+    },
+    {
+      id: 'assist-luck-shrunk',
+      name: 'Shrunk Assist Luck (Empirical Bayes)',
+      code: 'Assist Luck',
+      category: 'passing',
+      formula: '\\text{Assist Luck}_{\\text{shrunk}} = (\\text{Ast/90} - \\text{xA/90}) \\times \\left(\\frac{\\text{Minutes}}{\\text{Minutes} + 900}\\right)',
+      shortDefinition: 'The delta between actual assists and expected assists shrunk by minutes played to isolate teammate finishing variance.',
+      tacticalMeaning:
+        'A positive delta indicates the player’s teammates converted difficult chances at an unsustainable rate; a negative delta indicates teammates squandered great passes.',
+      moneyballSignificance:
+        'Prevents overpaying for playmakers whose high assist tallies were the product of teammate luck rather than sustainable pass delivery.',
+      benchmarks: {
+        elite: '+0.00 (Perfect alignment with underlying creation)',
+        good: '+0.05 to +0.10 (Benefiting from good finishing)',
+        poor: '< -0.10 (Severe teammate finishing underperformance)',
+      },
+      fmSource: 'Derived in gold schema from Ast/90, xA/90, and Mins',
+      tags: ['Bayesian', 'Regression', 'Assists', 'Moneyball', 'Passing'],
+    },
+    {
+      id: 'assists-per-op-kp',
+      name: 'Assist Conversion per Open-Play Key Pass',
+      code: 'Ast / OP-KP',
+      category: 'passing',
+      formula: '\\text{Ast / OP-KP} = \\frac{\\text{Assists/90}}{\\text{Open-Play Key Passes/90}}',
+      shortDefinition: 'The realized assist conversion rate per open-play key pass delivered.',
+      tacticalMeaning:
+        'Measures the real-world efficiency of a creator’s chance delivery in turning opportunities into scoreboard goals.',
+      moneyballSignificance:
+        'Useful for pairing playmakers with clinical strikers: a creator with high xA/OP-KP paired with a clinical finisher maximizes goal yield.',
+      benchmarks: {
+        elite: '>= 0.22 (Highly converted key pass deliveries)',
+        good: '0.14 - 0.21 (Standard conversion)',
+        average: '< 0.12 (Low conversion rate)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Conversion', 'Creation', 'Passing'],
     },
     {
       id: 'turnover-rate',
       name: 'Ball Turnover Rate %',
       code: 'Turnover %',
       category: 'passing',
-      formula: '\\text{Turnover \\%} = \\frac{\\text{Possession Lost/90}}{\\text{Passes Attempted/90} + \\text{Dribbles/90} + \\text{Crosses/90}} \\times 100',
+      formula: '\\text{Turnover \\%} = \\frac{\\text{Possession Lost/90}}{\\text{Passes Attempted/90} + \\text{Dribbles/90}} \\times 100',
       shortDefinition: 'The percentage of a player’s on-ball involvements that result in a loss of possession.',
       tacticalMeaning:
         'Measures ball security and retention. Vital for central midfielders and inverted fullbacks who operate in central transition zones where turnovers lead to opponent counterattacks.',
@@ -403,18 +899,20 @@ export default function MetricsPage() {
         average: '15.1% - 22.0% (Acceptable for creative wingers)',
         poor: '> 25.0% (High turnover risk)',
       },
-      fmSource: 'Derived from Poss Lost/90, Pas A/90, Drb/90, and Crs A/90',
-      tags: ['Retention', 'Security', 'Turnovers', 'Midfield'],
+      fmSource: 'Derived from Poss Lost/90, Pas A/90, and Drb/90',
+      tags: ['Retention', 'Security', 'Turnovers', 'Midfield', 'Passing'],
     },
 
-    // --- DEFENDING & DUELS ---
+    // =========================================================================
+    // 3. DEFENDING, DUELS & PHYSICAL
+    // =========================================================================
     {
       id: 'def-actions-per90',
       name: 'Total Defensive Actions per 90',
       code: 'Def Actions/90',
       category: 'defending',
-      formula: '\\text{Def Actions} = \\text{Tackles Won/90} + \\text{Interceptions/90} + \\text{Blocks/90} + \\text{Clearances/90}',
-      shortDefinition: 'The total volume of defensive interventions completed per 90 minutes.',
+      formula: '\\text{Def Actions} = (\\text{Tackles} \\times \\text{Tck Acc}) + \\text{Int/90} + \\text{Blocks/90} + \\text{Clearances/90}',
+      shortDefinition: 'The total volume of successful defensive interventions completed per 90 minutes.',
       tacticalMeaning:
         'Measures overall defensive workload and activity level. High values are characteristic of high-intensity ball-winners and active defenders.',
       moneyballSignificance:
@@ -423,16 +921,36 @@ export default function MetricsPage() {
         elite: '>= 8.5 (High-activity defensive destroyer / active centerback)',
         good: '6.5 - 8.4 (Solid defensive workload)',
         average: '4.5 - 6.4 (Standard output)',
+        poor: '< 4.0 (Passive defensive presence)',
       },
       fmSource: 'Derived from Tck A/90, Tck R, Int/90, Blk/90, Clr/90',
-      tags: ['Defending', 'Tackles', 'Interceptions', 'Centerback'],
+      tags: ['Defending', 'Tackles', 'Interceptions', 'Centerback', 'Workload'],
+    },
+    {
+      id: 'non-clearance-def-actions',
+      name: 'Non-Clearance Defensive Actions per 90',
+      code: 'NC Def Act/90',
+      category: 'defending',
+      formula: '\\text{NC Def Actions} = (\\text{Tackles} \\times \\text{Tck Acc}) + \\text{Int/90} + \\text{Blocks/90} + \\text{Shots Blocked/90}',
+      shortDefinition: 'Defensive intervention volume excluding clearances, creating an unbiased benchmark across centerbacks, fullbacks, and defensive midfielders.',
+      tacticalMeaning:
+        'Traditional defensive action metrics favor centerbacks who hoof clear balls. Stripping clearances isolates active ball-winning and passing lane interception skill.',
+      moneyballSignificance:
+        'Essential for scouting modern defensive midfielders (DMs) and inverted fullbacks who defend in midfield zones.',
+      benchmarks: {
+        elite: '>= 5.5 (Elite ball-winning disruptor)',
+        good: '3.8 - 5.4 (High defensive engagement)',
+        average: '2.5 - 3.7 (Standard defensive contribution)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Defending', 'Ball Winning', 'Midfield', 'Fullback'],
     },
     {
       id: 'reactive-ratio',
       name: 'Reactive vs Positional Defending Ratio',
       code: 'Reactive Ratio',
       category: 'defending',
-      formula: '\\text{Reactive Ratio} = \\frac{\\text{Interceptions/90}}{\\text{Interceptions/90} + \\text{Tackles Won/90}}',
+      formula: '\\text{Reactive Ratio} = \\frac{\\text{Interceptions/90}}{\\text{Interceptions/90} + (\\text{Tackles} \\times \\text{Tck Acc})}',
       shortDefinition: 'The ratio of interceptions (anticipatory defending) to tackles (reactive recovery challenges).',
       tacticalMeaning:
         'Classifies defensive style: a high ratio (>= 0.55) indicates a cerebral, anticipatory defender (like Maldini or van Dijk) who intercepts passing lanes without diving into challenges; a low ratio (<= 0.40) indicates an aggressive tackler who engages in ground duels.',
@@ -445,6 +963,142 @@ export default function MetricsPage() {
       },
       fmSource: 'Derived from Int/90 and Tackles Won/90',
       tags: ['Style', 'Centerback', 'Tactics', 'Defending'],
+    },
+    {
+      id: 'duels-won-per90',
+      name: 'Total Duels Won per 90 (Ground + Aerial)',
+      code: 'Duels Won/90',
+      category: 'defending',
+      formula: '\\text{Duels Won/90} = (\\text{Tackles} \\times \\text{Tck Acc}) + (\\text{Headers} \\times \\text{Heading Acc})',
+      shortDefinition: 'The total volume of 1v1 ground challenges and aerial duels won cleanly per 90 minutes.',
+      tacticalMeaning:
+        'The definitive measure of physical and duel dominance. Centerbacks and defensive midfielders must dominate duels to prevent opponents from establishing territory.',
+      moneyballSignificance:
+        'Teams with superior duel win volumes control match state and concede fewer high-danger transition counters.',
+      benchmarks: {
+        elite: '>= 6.5 (Physical powerhouse / dominant duel winner)',
+        good: '4.5 - 6.4 (Reliable contest winner)',
+        average: '3.0 - 4.4 (Moderate physical presence)',
+        poor: '< 2.8 (Vulnerable in 1v1 contests)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Duels', 'Physical', 'Tackles', 'Headers', 'Defending'],
+    },
+    {
+      id: 'tackles-attempted-per90',
+      name: 'Tackles Attempted per 90',
+      code: 'Tck Att/90',
+      category: 'defending',
+      formula: '\\text{Tackles Attempted/90} = \\frac{\\text{Tackles Attempted}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The frequency with which a player commits to physical ground tackling challenges per 90 minutes.',
+      tacticalMeaning:
+        'Measures defensive aggression and challenge volume. Always pair with tackle accuracy to ensure the player isn’t diving in recklessly.',
+      moneyballSignificance:
+        'High tackle attempts with low win rates cause defensive breakdowns and dangerous free kicks in your defensive third.',
+      benchmarks: {
+        elite: '>= 3.5 (Aggressive ground ball-winner)',
+        good: '2.4 - 3.4 (Active challenge engagement)',
+        average: '1.4 - 2.3 (Positional defending)',
+      },
+      fmSource: 'Tck A/90 from FM24 export',
+      tags: ['Tackles', 'Aggression', 'Defending'],
+    },
+    {
+      id: 'tackle-accuracy',
+      name: 'Tackle Win Rate %',
+      code: 'Tackle Win %',
+      category: 'defending',
+      formula: '\\text{Tackle Win Rate \\%} = \\frac{\\text{Tackles Won}}{\\text{Tackles Attempted}} \\times 100',
+      shortDefinition: 'The percentage of attempted ground tackles resulting in clean possession recovery without committing a foul.',
+      tacticalMeaning:
+        'Measures tackling timing, technique, and discipline. Defenders with >=75% win rate rarely get beaten off the dribble.',
+      moneyballSignificance:
+        'A high-volume tackler with 55% tackle accuracy is a defensive liability who gets dribbled past regularly.',
+      benchmarks: {
+        elite: '>= 80.0% (Elite 1v1 ground stopper)',
+        good: '70.0% - 79.9% (Reliable tackler)',
+        average: '60.0% - 69.9% (Average duel win rate)',
+        poor: '< 55.0% (Frequently beaten / dives in)',
+      },
+      fmSource: 'Tck R from FM24 export',
+      tags: ['Tackles', 'Accuracy', 'Defending'],
+    },
+    {
+      id: 'interceptions-per90',
+      name: 'Interceptions per 90',
+      code: 'Int/90',
+      category: 'defending',
+      formula: '\\text{Interceptions/90} = \\frac{\\text{Total Interceptions}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Passes intercepted per 90 minutes by reading opposition passing lanes.',
+      tacticalMeaning:
+        'Reflects tactical intelligence, anticipation, and positional discipline. The hallmark trait of elite holding midfielders (Kante, Busquets) and reading centerbacks (van Dijk).',
+      moneyballSignificance:
+        'Interceptions regain possession cleanly without stopping play or risking cards, initiating immediate transition attacks.',
+      benchmarks: {
+        elite: '>= 2.5 (World-class passing lane reader)',
+        good: '1.7 - 2.4 (Strong positional reader)',
+        average: '1.0 - 1.6 (Standard outfield contribution)',
+        poor: '< 0.8 (Passive lane coverage)',
+      },
+      fmSource: 'Int/90 from FM24 export',
+      tags: ['Interceptions', 'Anticipation', 'IQ', 'Defending'],
+    },
+    {
+      id: 'clearances-per90',
+      name: 'Clearances per 90',
+      code: 'Clr/90',
+      category: 'defending',
+      formula: '\\text{Clearances/90} = \\frac{\\text{Total Clearances}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Defensive emergency clearances executed under pressure per 90 minutes.',
+      tacticalMeaning:
+        'Measures penalty-box protection against crosses, long balls, and set pieces. Characteristic of traditional "no-nonsense" centerbacks in low-block systems.',
+      moneyballSignificance:
+        'Possession-heavy teams seek centerbacks with moderate clearances and high interceptions to recycle possession rather than kicking the ball out of play.',
+      benchmarks: {
+        elite: '>= 5.5 (Deep-block aerial clearer / penalty-box anchor)',
+        good: '3.5 - 5.4 (Solid defensive relief)',
+        average: '2.0 - 3.4 (Standard centerback / fullback)',
+      },
+      fmSource: 'Clr/90 from FM24 export',
+      tags: ['Clearances', 'Centerback', 'Defending'],
+    },
+    {
+      id: 'blocks-per90',
+      name: 'Blocked Passes & Crosses per 90',
+      code: 'Blocks/90',
+      category: 'defending',
+      formula: '\\text{Blocks/90} = \\frac{\\text{Total Blocks}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Opposition passes and crosses physically blocked per 90 minutes.',
+      tacticalMeaning:
+        'Reflects willingness to close down shooting and crossing angles on the perimeter of the box.',
+      moneyballSignificance:
+        'Fullbacks with high block numbers stifle opponent wingers from generating high-quality deliveries.',
+      benchmarks: {
+        elite: '>= 1.8 (Dominant angle-closer / active blocker)',
+        good: '1.1 - 1.7 (Solid lane obstruction)',
+        average: '0.6 - 1.0 (Standard outfield volume)',
+      },
+      fmSource: 'Blk/90 from FM24 export',
+      tags: ['Blocks', 'Fullback', 'Defending'],
+    },
+    {
+      id: 'shots-blocked-per90',
+      name: 'Opponent Shots Blocked per 90',
+      code: 'Shots Blk/90',
+      category: 'defending',
+      formula: '\\text{Shots Blocked/90} = \\frac{\\text{Opponent Shots Blocked}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Opponent shot attempts physically blocked by putting the body on the line inside the defensive third.',
+      tacticalMeaning:
+        'The ultimate measure of last-ditch penalty-box defending and shot suppression. Crucial attribute for centerbacks in Catenaccio and low-block frameworks.',
+      moneyballSignificance:
+        'Directly shields the goalkeeper by denying shots from ever reaching the goal frame.',
+      benchmarks: {
+        elite: '>= 1.2 (Brave, last-ditch shot stopper)',
+        good: '0.7 - 1.1 (Solid penalty-box shield)',
+        average: '< 0.6 (Standard CB presence)',
+      },
+      fmSource: 'Shots Blk/90 from FM24 export',
+      tags: ['Shot Blocking', 'Centerback', 'Defending'],
     },
     {
       id: 'aerial-won-per90',
@@ -461,9 +1115,129 @@ export default function MetricsPage() {
         elite: 'Aer Won >= 4.5 / 90 with Heading Acc >= 72% (Dominant colossus in the air)',
         good: 'Aer Won 3.0 - 4.4 / 90 with Heading Acc 63% - 71%',
         average: 'Aer Won < 2.5 / 90 or Heading Acc < 58%',
+        poor: '< 1.8 / 90 (Vulnerable in the air)',
       },
       fmSource: 'Aer A/90 and Hdr % from FM24 export',
-      tags: ['Aerial', 'Headers', 'Centerback', 'Striker'],
+      tags: ['Aerial', 'Headers', 'Centerback', 'Striker', 'Defending'],
+    },
+    {
+      id: 'heading-accuracy',
+      name: 'Heading Accuracy %',
+      code: 'Heading Acc %',
+      category: 'defending',
+      formula: '\\text{Heading Accuracy \\%} = \\frac{\\text{Aerial Duels Won}}{\\text{Aerial Duels Attempted}} \\times 100',
+      shortDefinition: 'The percentage of contested aerial duels won cleanly.',
+      tacticalMeaning:
+        'Isolates aerial duel success rate from raw volume. Vital for evaluating whether a defender wins their 50/50 aerial battles.',
+      moneyballSignificance:
+        'Target men and centerbacks below 60% heading accuracy struggle against physical Route One teams.',
+      benchmarks: {
+        elite: '>= 72.0% (Elite aerial dominance)',
+        good: '62.0% - 71.9% (Reliable in the air)',
+        average: '50.0% - 61.9% (Average aerial contest)',
+        poor: '< 48.0% (Aerial liability)',
+      },
+      fmSource: 'Hdr % from FM24 export',
+      tags: ['Aerial', 'Heading', 'Defending'],
+    },
+    {
+      id: 'dribbles-made-per90',
+      name: 'Successful Dribbles Made per 90',
+      code: 'Dribbles/90',
+      category: 'defending',
+      formula: '\\text{Dribbles Made/90} = \\frac{\\text{Successful Dribbles}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Completed 1v1 take-ons and dribbles past opposing defenders per 90 minutes.',
+      tacticalMeaning:
+        'Measures press-resistance and 1v1 flair. Attackers who complete dribbles collapse defensive structures by pulling second defenders out of position.',
+      moneyballSignificance:
+        'High dribble volume in wide areas creates numerical overloads and fouls in the attacking third.',
+      benchmarks: {
+        elite: '>= 3.2 (Elite 1v1 dynamic dribbler)',
+        good: '2.0 - 3.1 (Consistent take-on threat)',
+        average: '1.0 - 1.9 (Standard wing / midfield carrying)',
+        poor: '< 0.8 (Rarely takes on opponents)',
+      },
+      fmSource: 'Drb/90 from FM24 export',
+      tags: ['Dribbling', 'Possession', 'Flair', '1v1'],
+    },
+    {
+      id: 'net-ball-security',
+      name: 'Net Ball Security per 90',
+      code: 'Ball Security',
+      category: 'defending',
+      formula: '\\text{Net Ball Security} = \\text{Completed Passes/90} - \\text{Possession Lost/90}',
+      shortDefinition: 'Net margin of accurate passes completed over possessions lost per 90 minutes.',
+      tacticalMeaning:
+        'Evaluates overall on-ball net value. Players with high positive margins keep their team on the front foot; negative margins signal ball-retention liabilities.',
+      moneyballSignificance:
+        'Crucial for vetting deep midfielders: guarantees the player produces far more completed build-up actions than turnovers.',
+      benchmarks: {
+        elite: '>= 45.0 (Press-resistant build-up anchor)',
+        good: '30.0 - 44.9 (Safe, reliable ball progressor)',
+        average: '15.0 - 29.9 (Standard midfield security)',
+        poor: '< 10.0 (High turnover deficit)',
+      },
+      fmSource: 'Derived from Completed Passes/90 and Poss Lost/90',
+      tags: ['Security', 'Retention', 'Midfield', 'Turnovers'],
+    },
+    {
+      id: 'possession-won-per90',
+      name: 'Possession Won (Ball Recoveries) per 90',
+      code: 'Poss Won/90',
+      category: 'defending',
+      formula: '\\text{Poss Won/90} = \\frac{\\text{Possessions Won}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Loose ball recoveries and possession regains completed per 90 minutes.',
+      tacticalMeaning:
+        'Measures tenacity and second-ball awareness. Central midfielders who anticipate loose balls regain control before opponents can launch counters.',
+      moneyballSignificance:
+        'Essential for Gegenpressing: winning loose balls high up the pitch directly creates high-xG scoring chances against disorganized defenses.',
+      benchmarks: {
+        elite: '>= 8.5 (Relentless ball-recovery engine)',
+        good: '6.5 - 8.4 (Active loose-ball winner)',
+        average: '4.5 - 6.4 (Standard recovery rate)',
+      },
+      fmSource: 'Poss Won/90 from FM24 export',
+      tags: ['Recoveries', 'Pressing', 'Midfield', 'Defending'],
+    },
+    {
+      id: 'possession-lost-per90',
+      name: 'Possession Lost (Dispossessions) per 90',
+      code: 'Poss Lost/90',
+      category: 'defending',
+      formula: '\\text{Poss Lost/90} = \\frac{\\text{Possessions Lost}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The volume of times possession was surrendered through misplaced passes, failed dribbles, or dispossessions per 90.',
+      tacticalMeaning:
+        'Context-dependent: creative wingers who take high risks can tolerate 15-20 losses; central defensive midfielders losing possession >10 times per game are high liabilities.',
+      moneyballSignificance:
+        'Identify whether high turnover tallies are justified by commensurate high creative threat (e.g. NPxG+xA).',
+      benchmarks: {
+        elite: '<= 7.0 (Ultra-secure central metronome - fewer is better)',
+        good: '7.1 - 11.0 (Solid ball security)',
+        average: '11.1 - 16.0 (Normal for creative attackers)',
+        poor: '> 18.0 (Careless in possession)',
+      },
+      fmSource: 'Poss Lost/90 from FM24 export',
+      tags: ['Turnovers', 'Security', 'Risk Management'],
+    },
+    {
+      id: 'possession-differential',
+      name: 'Possession Differential per 90',
+      code: 'Poss Diff/90',
+      category: 'defending',
+      formula: '\\text{Possession Differential} = \\text{Possession Won/90} - \\text{Possession Lost/90}',
+      shortDefinition: 'Net on-pitch ball recoveries minus turnovers per 90 minutes.',
+      tacticalMeaning:
+        'Positive differential indicates a net ball winner; negative differential indicates a net ball surrenderer.',
+      moneyballSignificance:
+        'Holding midfielders must maintain positive possession differentials to stabilize team tactical structure.',
+      benchmarks: {
+        elite: '>= +3.0 (Dominant net ball recovery engine)',
+        good: '+0.5 to +2.9 (Net positive ball-winner)',
+        average: '-2.0 to +0.4 (Neutral balance)',
+        poor: '< -3.5 (Heavy possession surrenderer)',
+      },
+      fmSource: 'Derived from Poss Won/90 and Poss Lost/90',
+      tags: ['Possession', 'Ball Winning', 'Midfield', 'Defending'],
     },
     {
       id: 'press-efficiency',
@@ -482,10 +1256,207 @@ export default function MetricsPage() {
         average: '< 22.0% (Low pressing effectiveness)',
       },
       fmSource: 'Pres A/90 and Pres C/90 from FM24 export',
-      tags: ['Pressing', 'Work Rate', 'Gegenpress', 'Midfield'],
+      tags: ['Pressing', 'Work Rate', 'Gegenpress', 'Midfield', 'Defending'],
+    },
+    {
+      id: 'pressure-accuracy',
+      name: 'Press Success Percentage %',
+      code: 'Press Acc %',
+      category: 'defending',
+      formula: '\\text{Press Accuracy \\%} = \\frac{\\text{Pressures Completed}}{\\text{Pressures Attempted}} \\times 100',
+      shortDefinition: 'The proportion of pressing interventions that regain possession or force a turnover within 5 seconds.',
+      tacticalMeaning:
+        'Identifies smart pressers who trap ball carriers into mistakes rather than committing fouls or getting bypassed.',
+      moneyballSignificance:
+        'A high-pressing forward line with >28% press accuracy creates high-xG counter-pressing chances close to the opposition goal.',
+      benchmarks: {
+        elite: '>= 30.0% (Clinical pressing execution)',
+        good: '24.0% - 29.9% (Effective press participant)',
+        average: '18.0% - 23.9% (Standard press accuracy)',
+      },
+      fmSource: 'Pres C and Pres A from FM24 export',
+      tags: ['Pressing', 'Accuracy', 'Defending', 'Gegenpress'],
+    },
+    {
+      id: 'pressures-attempted-per90',
+      name: 'Pressures Attempted per 90',
+      code: 'Press Att/90',
+      category: 'defending',
+      formula: '\\text{Pressures Attempted/90} = \\frac{\\text{Total Pressures Attempted}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The frequency with which a player closes down opposing ball carriers per 90 minutes.',
+      tacticalMeaning:
+        'Measures defensive work-rate and intensity. High values indicate tireless workhorses essential for pressing frameworks.',
+      moneyballSignificance:
+        'Reveals whether expensive flair players are willing to work off the ball for the team.',
+      benchmarks: {
+        elite: '>= 22.0 (Relentless high-intensity pressing engine)',
+        good: '16.0 - 21.9 (Active pressing participant)',
+        average: '10.0 - 15.9 (Moderate pressing involvement)',
+        poor: '< 8.0 (Low defensive work rate)',
+      },
+      fmSource: 'Pres A/90 from FM24 export',
+      tags: ['Work Rate', 'Pressing', 'Intensity', 'Defending'],
+    },
+    {
+      id: 'sprints-per-km',
+      name: 'Sprints per km (Running Intensity)',
+      code: 'Sprints / km',
+      category: 'defending',
+      formula: '\\text{Sprints per km} = \\frac{\\text{Sprints/90}}{\\text{Distance Covered (km)/90}}',
+      shortDefinition: 'Running intensity index measuring the proportion of total running distance executed at high-speed sprint velocity.',
+      tacticalMeaning:
+        'Separates players who jog or coast (low sprints/km ~ 0.40) from explosive athletes who sprint relentlessly throughout 90 minutes (sprints/km >= 0.75).',
+      moneyballSignificance:
+        'Raw distance covered is deceptive because slow jogging pads distance. Sprints/km isolates true athletic explosiveness.',
+      benchmarks: {
+        elite: '>= 0.75 (Explosive, high-intensity athletic engine)',
+        good: '0.60 - 0.74 (Solid athletic intensity)',
+        average: '0.45 - 0.59 (Standard aerobic runner)',
+        poor: '< 0.40 (Low sprint intensity / slow jogger)',
+      },
+      fmSource: 'Derived from Sprints/90 and Dist/90 in gold mart',
+      tags: ['Athleticism', 'Intensity', 'Pace', 'Physical'],
+    },
+    {
+      id: 'high-press-load',
+      name: 'High Press Workload Index',
+      code: 'Press Load',
+      category: 'defending',
+      formula: '\\text{High Press Load} = \\text{Pressures Attempted/90} \\times \\text{Sprints per km}',
+      shortDefinition: 'Composite work-rate index combining pressing attempt volume with high-intensity sprinting speed.',
+      tacticalMeaning:
+        'Identifies the hardest-working defensive forwards and midfielders who physically overwhelm opponent build-up lines.',
+      moneyballSignificance:
+        'Crucial for recruiting front-line pressers in Jurgen Klopp or Marcelo Bielsa tactical systems.',
+      benchmarks: {
+        elite: '>= 12.0 (Elite Gegenpressing dynamo)',
+        good: '8.0 - 11.9 (High-workrate presser)',
+        average: '5.0 - 7.9 (Moderate press load)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Gegenpress', 'Workload', 'Physical', 'Defending'],
+    },
+    {
+      id: 'distance-covered-km-per90',
+      name: 'Distance Covered per 90 (km)',
+      code: 'Dist (km)/90',
+      category: 'defending',
+      formula: '\\text{Dist (km)/90} = \\frac{\\text{Total Distance Run in km}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The total aerobic running volume in kilometers completed per 90 minutes.',
+      tacticalMeaning:
+        'Measures stamina and physical durability. Box-to-box midfielders (Carrileros, Mezzalas) typically lead teams with 12.0+ km per match.',
+      moneyballSignificance:
+        'Ensures players possess the physical conditioning required to sustain performance in congested fixture calendars.',
+      benchmarks: {
+        elite: '>= 12.2 km (Tireless marathon runner / elite engine)',
+        good: '11.2 - 12.1 km (High work capacity)',
+        average: '10.0 - 11.1 km (Standard outfield running)',
+        poor: '< 9.5 km (Low stamina / limited mobility)',
+      },
+      fmSource: 'Dist/90 from FM24 export',
+      tags: ['Stamina', 'Physical', 'Work Rate', 'Fitness'],
+    },
+    {
+      id: 'sprints-per90',
+      name: 'High-Intensity Sprints per 90',
+      code: 'Sprints/90',
+      category: 'defending',
+      formula: '\\text{Sprints/90} = \\frac{\\text{Total Sprints Completed}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'The total volume of explosive, high-velocity sprint bursts executed per 90 minutes.',
+      tacticalMeaning:
+        'Evaluates pace and willingness to execute overlapping runs, recovery sprints, and channel bursts.',
+      moneyballSignificance:
+        'Pace and sprint volume are the most reliable predictors of seamless adaptation when stepping up to faster, higher-tier leagues.',
+      benchmarks: {
+        elite: '>= 9.0 (Dynamic sprinter / rapid recovery pace)',
+        good: '6.5 - 8.9 (Active runner)',
+        average: '4.0 - 6.4 (Standard sprint volume)',
+      },
+      fmSource: 'Sprints/90 from FM24 export',
+      tags: ['Pace', 'Sprints', 'Athleticism', 'Physical'],
+    },
+    {
+      id: 'fouls-won-net',
+      name: 'Net Fouls Drawn per 90',
+      code: 'Net Fouls/90',
+      category: 'defending',
+      formula: '\\text{Net Fouls Drawn} = \\text{Fouls Against/90} - \\text{Fouls Made/90}',
+      shortDefinition: 'Net margin of free kicks won for your team versus free kicks conceded per 90 minutes.',
+      tacticalMeaning:
+        'Measures tactical street-smarts and ball-shielding. Tricky wingers and target men win fouls to relieve defensive pressure and earn set pieces.',
+      moneyballSignificance:
+        'Positive net fouls generate set-piece scoring opportunities while running down the clock when protecting a lead.',
+      benchmarks: {
+        elite: '>= +1.5 (Elite foul-drawing magnet)',
+        good: '+0.5 to +1.4 (Net positive foul winner)',
+        average: '-0.5 to +0.4 (Neutral disciplinary balance)',
+        poor: '< -1.2 (Concedes excessive fouls)',
+      },
+      fmSource: 'Derived from Fouls and Fouled in gold mart',
+      tags: ['Discipline', 'Fouls', 'Game Management', 'Physical'],
+    },
+    {
+      id: 'discipline-index',
+      name: 'Disciplinary Penalty Index',
+      code: 'Discipline Idx',
+      category: 'defending',
+      formula: '\\text{Discipline Index} = \\text{Fouls/90} + (3.0 \\times \\text{Yellows/90}) + (8.0 \\times \\text{Reds/90})',
+      shortDefinition: 'Weighted disciplinary penalty index measuring suspension risk and liability from cards and fouls.',
+      tacticalMeaning:
+        'Identifies reckless tacklers prone to match-losing red cards and multi-match accumulation suspensions.',
+      moneyballSignificance:
+        'A high-performing defender who misses 6 games per season through suspensions damages squad reliability and squad chemistry.',
+      benchmarks: {
+        elite: '<= 1.5 (Clean, disciplined defender - lower is better)',
+        good: '1.6 - 2.8 (Normal card exposure)',
+        average: '2.9 - 4.5 (Moderate disciplinary caution)',
+        poor: '> 5.0 (Severe red-card liability)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Cards', 'Discipline', 'Risk', 'Suspensions'],
+    },
+    {
+      id: 'cards-per-foul',
+      name: 'Disciplinary Severity (Cards per Foul)',
+      code: 'Cards / Foul',
+      category: 'defending',
+      formula: '\\text{Cards per Foul} = \\frac{\\text{Yellow Cards/90} + \\text{Red Cards/90}}{\\text{Fouls Made/90}}',
+      shortDefinition: 'The ratio of cards received relative to total fouls committed.',
+      tacticalMeaning:
+        'Separates tactical "smart fouls" that break up counters without receiving cards from reckless, dangerous challenges punished immediately.',
+      moneyballSignificance:
+        'Smart tactical foulers stop counterattacks without receiving yellow cards early in games.',
+      benchmarks: {
+        elite: '<= 0.10 (Masters of smart tactical fouls)',
+        good: '0.11 - 0.20 (Standard referee caution rate)',
+        poor: '> 0.30 (High card severity per foul)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Discipline', 'Fouls', 'Referees'],
+    },
+    {
+      id: 'weighted-def-actions',
+      name: 'Weighted Defensive Actions (Centerback Priority)',
+      code: 'W-Def Actions',
+      category: 'defending',
+      formula: '\\text{W-Def Actions} = (\\text{Int} \\times 0.50) + (\\text{Clr} \\times 0.25) + ((\\text{Blk} + \\text{Shots Blk}) \\times 0.25)',
+      shortDefinition: 'Positional defense score weighting anticipatory interceptions (50%) above reactive clearances (25%) and blocks (25%).',
+      tacticalMeaning:
+        'Developed specifically for Central Defender reports to reward defenders who read play over defenders who panic and clear.',
+      moneyballSignificance:
+        'Isolates elite Ball-Playing Defenders who defend proactively on the front foot.',
+      benchmarks: {
+        elite: '>= 3.8 (Elite proactive modern centerback)',
+        good: '2.6 - 3.7 (Solid defensive weighting)',
+        average: '< 2.5 (Standard defensive intervention)',
+      },
+      fmSource: 'Derived in gold.vw_squad_central_defender_detailed_reports',
+      tags: ['Centerback', 'Positional', 'Intelligence', 'Defending'],
     },
 
-    // --- GOALKEEPER METRICS ---
+    // =========================================================================
+    // 4. GOALKEEPER METRICS
+    // =========================================================================
     {
       id: 'shot-stopping-delta',
       name: 'Shot-Stopping Delta (Save% - xSave%)',
@@ -505,6 +1476,25 @@ export default function MetricsPage() {
       },
       fmSource: 'Sv % and xSave % from team_gks.csv / interested_gks.csv',
       tags: ['Goalkeeper', 'Shot Stopping', 'Save %', 'xSave %'],
+    },
+    {
+      id: 'shot-stopping-delta-shrunk',
+      name: 'Shrunk Shot-Stopping Delta (Empirical Bayes)',
+      code: 'Shot Stop Delta (Shrunk)',
+      category: 'goalkeeper',
+      formula: '\\text{Delta}_{\\text{shrunk}} = \\frac{\\text{Shots Faced Total} \\times \\text{Shot Stop Delta}}{\\text{Shots Faced Total} + 300.0}',
+      shortDefinition: 'Shot-stopping delta regressed toward zero based on sample size of shots faced (prior weight k=300).',
+      tacticalMeaning:
+        'Goalkeepers with small samples (e.g. backup keepers with 5 appearances) frequently show massive +12% deltas that disappear over a full season. Shrinkage normalizes sample size.',
+      moneyballSignificance:
+        'Guarantees you do not overpay for backup goalkeepers riding short-term hot streaks.',
+      benchmarks: {
+        elite: '>= +3.0% (Proven elite shot stopper over large sample)',
+        good: '+1.0% to +2.9% (Consistent shot-stopping value)',
+        average: '-0.9% to +0.9% (Average keeper)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Bayesian', 'Shrinkage', 'Shot Stopping', 'Goalkeeper'],
     },
     {
       id: 'xg-prevented-per90',
@@ -527,12 +1517,207 @@ export default function MetricsPage() {
       tags: ['Goalkeeper', 'Goals Prevented', 'Moneyball'],
     },
     {
+      id: 'xgp-per-shot',
+      name: 'Goals Prevented per Shot Faced',
+      code: 'xGP / Shot',
+      category: 'goalkeeper',
+      formula: '\\text{xGP / Shot} = \\frac{\\text{xGoals Prevented/90}}{\\text{Shots Faced/90}}',
+      shortDefinition: 'The average fraction of a goal prevented on every individual shot on target faced.',
+      tacticalMeaning:
+        'Normalizes shot prevention by workload. A keeper facing 2 shots per game can now be compared fairly against a keeper facing 7 shots per game.',
+      moneyballSignificance:
+        'Isolates pure shot-stopping quality regardless of whether the goalkeeper plays for a dominant team or a relegation-battler.',
+      benchmarks: {
+        elite: '>= +0.06 (Elite shot-stopping efficiency per shot)',
+        good: '+0.02 to +0.05 (Above-average keeper)',
+        average: '-0.01 to +0.01 (Standard expectancy)',
+        poor: '< -0.03 (Underperforming on each shot)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Shot Stopping', 'Efficiency', 'Goalkeeper'],
+    },
+    {
+      id: 'xgp-per-shot-shrunk',
+      name: 'Shrunk Goals Prevented per Shot (Bayes k=300)',
+      code: 'xGP/Shot (Shrunk)',
+      category: 'goalkeeper',
+      formula: '\\text{xGP/Shot}_{\\text{shrunk}} = \\frac{\\text{Shots Faced Total} \\times \\text{xGP/Shot} + 300 \\times 0.0}{\\text{Shots Faced Total} + 300}',
+      shortDefinition: 'Goalkeeper shot-stopping efficiency shrunk toward zero based on total career/season shot exposure.',
+      tacticalMeaning:
+        'The gold standard metric used in the goalkeeper screener and radar chart. Provides Bayesian certainty that a high-ranking keeper is genuinely elite.',
+      moneyballSignificance:
+        'The primary sorting metric for goalkeeper recruitment.',
+      benchmarks: {
+        elite: '>= +0.035 (Proven world-class shot stopper)',
+        good: '+0.015 to +0.034 (Reliable starting keeper)',
+        average: '-0.010 to +0.014 (Solid mid-table keeper)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Bayesian', 'Recruitment', 'Shot Stopping', 'Goalkeeper'],
+    },
+    {
+      id: 'goals-vs-xgot-ratio',
+      name: 'Goals Conceded to xGOT Faced Ratio',
+      code: 'Goals / xGOT',
+      category: 'goalkeeper',
+      formula: '\\text{Goals / xGOT Ratio} = \\frac{\\text{Goals Conceded/90}}{\\text{xGOT Faced/90}}',
+      shortDefinition: 'The ratio of actual goals allowed relative to post-shot expected goals on target faced.',
+      tacticalMeaning:
+        'Values below 1.0 indicate the keeper allowed fewer goals than shot trajectory warranted (e.g. 0.80 means 20% fewer goals conceded); values above 1.0 indicate concessions above expectation.',
+      moneyballSignificance:
+        'Intuitive multiplier for scouts: a keeper at 0.75 is outperforming expectation by 25%.',
+      benchmarks: {
+        elite: '<= 0.82 (Concedes 18%+ fewer goals than expected)',
+        good: '0.83 - 0.95 (Positive shot stopping)',
+        average: '0.96 - 1.04 (Saves exactly expected goals)',
+        poor: '> 1.10 (Concedes 10%+ more goals than expected)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Shot Stopping', 'Ratio', 'Goalkeeper'],
+    },
+    {
+      id: 'xgp-per-season',
+      name: 'Projected Goals Saved per Season',
+      code: 'xGP / Season',
+      category: 'goalkeeper',
+      formula: '\\text{xGP / Season} = \\text{xGoals Prevented/90} \\times 38.0',
+      shortDefinition: 'The projected cumulative number of goals saved above expectation over a full 38-game league campaign.',
+      tacticalMeaning:
+        'Translates abstract per-90 rates into real-world league points: saving 8 extra goals over a season typically translates to 6 to 9 additional league table points.',
+      moneyballSignificance:
+        'Quantifies the return on investment when signing an elite goalkeeper.',
+      benchmarks: {
+        elite: '>= +8.0 goals (Translates to ~6-9 extra league points)',
+        good: '+3.5 to +7.9 goals (Solid value-add)',
+        average: '-2.0 to +3.4 goals (Neutral league impact)',
+        poor: '< -4.0 goals (Costs points over season)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Season', 'Points', 'Impact', 'Goalkeeper'],
+    },
+    {
+      id: 'saves-percentage',
+      name: 'Goalkeeper Save Percentage %',
+      code: 'Save %',
+      category: 'goalkeeper',
+      formula: '\\text{Save \\%} = \\frac{\\text{Saves Made}}{\\text{Shots on Target Faced}} \\times 100',
+      shortDefinition: 'The raw percentage of all on-target shots faced that are successfully saved.',
+      tacticalMeaning:
+        'The classic baseline metric. While raw save % does not adjust for shot quality, elite keepers rarely drop below 72% over multi-season samples.',
+      moneyballSignificance:
+        'Always evaluate alongside shot difficulty (xGOT/Shot): a keeper with 78% save rate facing easy long shots may be worse than a keeper with 73% facing point-blank tap-ins.',
+      benchmarks: {
+        elite: '>= 76.0% (Elite shot retention)',
+        good: '71.0% - 75.9% (Reliable starting keeper)',
+        average: '65.0% - 70.9% (Average top-flight level)',
+        poor: '< 64.0% (Low save rate)',
+      },
+      fmSource: 'Sv % from FM24 export',
+      tags: ['Saves', 'Volume', 'Goalkeeper'],
+    },
+    {
+      id: 'shot-difficulty',
+      name: 'Shot Difficulty Faced (xGOT / Shot)',
+      code: 'Shot Difficulty',
+      category: 'goalkeeper',
+      formula: '\\text{Shot Difficulty} = \\frac{\\text{xGOT Faced/90}}{\\text{Shots Faced/90}}',
+      shortDefinition: 'The average post-shot expected goal difficulty of each shot on target faced by the goalkeeper.',
+      tacticalMeaning:
+        'Measures how well the defense protects the goalkeeper. High values (>0.36) mean the defense allows opponent strikers into point-blank 1v1 positions; low values (<0.28) mean the defense restricts opponents to harmless long shots.',
+      moneyballSignificance:
+        'Vital contextual equalizer: excuses keepers playing behind porous, wide-open defensive backlines.',
+      benchmarks: {
+        elite: '<= 0.28 (Defense forces low-danger shots - lower is easier)',
+        average: '0.29 - 0.35 (Standard defensive concessions)',
+        poor: '>= 0.36 (Goalkeeper faces high-difficulty point-blank shots)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Workload', 'Context', 'Defense', 'Goalkeeper'],
+    },
+    {
+      id: 'shots-faced-total',
+      name: 'Total Shots Faced (Sample Exposure)',
+      code: 'Shots Faced Total',
+      category: 'goalkeeper',
+      formula: '\\text{Shots Faced Total} = \\text{Shots Faced/90} \\times \\left(\\frac{\\text{Minutes}}{90.0}\\right)',
+      shortDefinition: 'The cumulative total number of on-target shots faced across the competitive season.',
+      tacticalMeaning:
+        'Determines sample reliability. In the warehouse, goalkeepers with >=40 shots faced are flagged as `is_eligible = 1` for recruitment consideration.',
+      moneyballSignificance:
+        'Forms the mathematical denominator for Bayesian shrinkage models ($k=300$).',
+      benchmarks: {
+        elite: '>= 80 shots (High sample confidence)',
+        good: '40 - 79 shots (Qualified for recruitment screening)',
+        poor: '< 40 shots (Unreliable low sample size)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Sample Size', 'Reliability', 'Goalkeeper'],
+    },
+    {
+      id: 'shots-faced-per90',
+      name: 'Shots Faced per 90',
+      code: 'Shots Faced/90',
+      category: 'goalkeeper',
+      formula: '\\text{Shots Faced/90} = \\text{Saves Made/90} + \\text{Goals Conceded/90}',
+      shortDefinition: 'The average volume of on-target shots the goalkeeper must deal with per 90 minutes.',
+      tacticalMeaning:
+        'Indicates match engagement and defensive workload. Keepers facing 6+ shots per match must maintain acute concentration throughout.',
+      moneyballSignificance:
+        'Keepers facing high shot volumes can show inflated raw save counts that mask technical flaws.',
+      benchmarks: {
+        elite: '<= 3.0 (Protected by dominant defense)',
+        average: '3.1 - 4.8 (Standard workload)',
+        poor: '>= 5.0 (Heavy defensive exposure)',
+      },
+      fmSource: 'Derived from Saves/90 and Gls Con/90',
+      tags: ['Workload', 'Exposure', 'Goalkeeper'],
+    },
+    {
+      id: 'xgot-faced-per90',
+      name: 'Post-Shot xG (xGOT) Faced per 90',
+      code: 'xGOT Faced/90',
+      category: 'goalkeeper',
+      formula: '\\text{xGOT Faced/90} = \\text{xGoals Prevented/90} + \\text{Goals Conceded/90}',
+      shortDefinition: 'The total post-shot expected goal quality of shots on target faced per 90 minutes.',
+      tacticalMeaning:
+        'Unlike pre-shot xG, xGOT measures shot placement and speed after leaving the striker’s boot. A shot into the top corner has high xGOT; a shot straight at the keeper has low xGOT.',
+      moneyballSignificance:
+        'The true metric of shot threat faced by the goalkeeper.',
+      benchmarks: {
+        elite: '<= 0.90 (Low danger conceded by defense)',
+        average: '0.91 - 1.40 (Standard top-flight level)',
+        poor: '>= 1.50 (Extreme goal threat faced)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['xGOT', 'Threat', 'Goalkeeper'],
+    },
+    {
+      id: 'parry-rate',
+      name: 'Parry Rebound Risk Rate %',
+      code: 'Parry Rate %',
+      category: 'goalkeeper',
+      formula: '\\text{Parry Rate \\%} = \\frac{\\text{Saves Parried/90}}{\\text{Total Saves Made/90}} \\times 100',
+      shortDefinition: 'The percentage of saved shots that are parried back into play rather than caught or tipped safely out.',
+      tacticalMeaning:
+        'Crucial handling risk metric: parrying shots back into the 6-yard box creates chaos and secondary rebound tap-ins for opposing strikers.',
+      moneyballSignificance:
+        'A goalkeeper with great reflexes but a 65% parry rate will concede preventable secondary rebound goals.',
+      benchmarks: {
+        elite: '<= 40.0% (Safe handling, rarely concedes rebounds - lower is better)',
+        good: '40.1% - 52.0% (Acceptable parry control)',
+        average: '52.1% - 62.0% (Moderate rebound risk)',
+        poor: '> 65.0% (High rebound risk / parries into danger)',
+      },
+      fmSource: 'Derived from Saves Parried/90 and Saves/90',
+      tags: ['Handling', 'Rebounds', 'Risk', 'Goalkeeper'],
+    },
+    {
       id: 'hold-rate',
-      name: 'Goalkeeper Hold Rate % (Rebound Prevention)',
+      name: 'Goalkeeper Catch & Hold Rate %',
       code: 'Hold Rate %',
       category: 'goalkeeper',
       formula: '\\text{Hold Rate \\%} = \\frac{\\text{Shots Held/90}}{\\text{Total Saves/90}} \\times 100',
-      shortDefinition: 'The percentage of saved shots that are cleanly caught and held rather than parried back into danger.',
+      shortDefinition: 'The percentage of saved shots that are cleanly caught and held rather than parried.',
       tacticalMeaning:
         'Catching the ball terminates the opposition’s attack immediately. High hold rates prevent dangerous secondary rebound tap-ins.',
       moneyballSignificance:
@@ -540,51 +1725,270 @@ export default function MetricsPage() {
       benchmarks: {
         elite: '>= 48.0% (Elite handling and rebound prevention)',
         good: '38.0% - 47.9% (Reliable hands)',
-        average: '< 34.0% (Prone to parrying into danger zones)',
+        average: '28.0% - 37.9% (Standard handling)',
+        poor: '< 25.0% (Prone to parrying into danger zones)',
       },
       fmSource: 'Held/90 and Saves/90 from FM24 export',
-      tags: ['Handling', 'Rebounds', 'Goalkeeper'],
+      tags: ['Handling', 'Rebounds', 'Catching', 'Goalkeeper'],
     },
     {
-      id: 'sweeper-index',
-      name: 'Sweeper Keeper Index per 90',
-      code: 'Sweeper Index',
+      id: 'hold-rate-shrunk',
+      name: 'Shrunk Hold Rate % (Bayes k=150)',
+      code: 'Hold Rate (Shrunk)',
       category: 'goalkeeper',
-      formula: '\\text{Sweeper Index} = \\text{Interceptions/90} + \\text{Clearances/90} + \\text{Possession Won/90}',
-      shortDefinition: 'Aggressive defensive interventions executed outside the 6-yard box and penalty area.',
+      formula: '\\text{Hold Rate}_{\\text{shrunk}} = \\frac{\\text{Total Saves} \\times \\text{Hold Rate} + 150 \\times 0.30}{\\text{Total Saves} + 150}',
+      shortDefinition: 'Goalkeeper catch and hold percentage regressed toward the global positional baseline (30%) with sample weight k=150.',
+      tacticalMeaning:
+        'Prevents small-sample handling distortions, ensuring high hold rates are confirmed over extended shot volumes.',
+      moneyballSignificance:
+        'Eliminates transfer mistakes caused by small-sample handling statistics.',
+      benchmarks: {
+        elite: '>= 40.0% (Confirmed elite handling over sample)',
+        good: '32.0% - 39.9% (Solid catching control)',
+        average: '27.0% - 31.9% (Average hands)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Bayesian', 'Handling', 'Goalkeeper'],
+    },
+    {
+      id: 'hold-rate-over-expected',
+      name: 'Hold Rate Over Expected (Difficulty-Adjusted)',
+      code: 'Hold Rate OE',
+      category: 'goalkeeper',
+      formula: '\\text{Hold Rate OE} = \\text{Hold Rate} - (0.1143 + 0.5230 \\times \\text{Shot Difficulty})',
+      shortDefinition: 'Residual handling efficiency adjusted for the incoming difficulty and velocity of shots faced.',
+      tacticalMeaning:
+        'Catching a 30-yard speculative shot is expected; catching a 12-yard blast requires world-class technique. Hold Rate OE gives full credit for catching difficult shots.',
+      moneyballSignificance:
+        'The truest mathematical measure of pure handling skill in modern football analytics.',
+      benchmarks: {
+        elite: '>= +0.060 (Catches difficult, high-velocity shots)',
+        good: '+0.015 to +0.059 (Above-average handling)',
+        average: '-0.020 to +0.014 (Expected catching level)',
+        poor: '< -0.040 (Parries catchable shots)',
+      },
+      fmSource: 'Regression model derived in gold.mart_gk_scouting_summary',
+      tags: ['Handling', 'Advanced', 'Goalkeeper'],
+    },
+    {
+      id: 'sweeper-actions-per90',
+      name: 'Sweeper Actions per 90',
+      code: 'Sweeper Act/90',
+      category: 'goalkeeper',
+      formula: '\\text{Sweeper Actions/90} = \\text{Interceptions/90} + \\text{Clearances/90}',
+      shortDefinition: 'Aggressive defensive interventions executed outside the 6-yard box and penalty area per 90 minutes.',
       tacticalMeaning:
         'Crucial for teams playing a high defensive line. Evaluates whether the goalkeeper rushes out to smother through-balls before opponent strikers can reach them.',
       moneyballSignificance:
-        'Essential for modern Pep Guardiola / Klopp / De Zerbi style high-line tactical frameworks.',
+        'Essential for modern high-line tactical frameworks (Pep Guardiola, Jurgen Klopp, Roberto De Zerbi).',
       benchmarks: {
         elite: '>= 2.5 (Proactive Sweeper Keeper / high-line safety net)',
         good: '1.6 - 2.4 (Active off line)',
-        average: '< 1.2 (Traditional penalty-box line keeper)',
+        average: '0.8 - 1.5 (Moderate sweeping activity)',
+        poor: '< 0.7 (Traditional goal-line keeper)',
       },
-      fmSource: 'Int/90, Clr/90, Poss Won/90 from FM24 export',
+      fmSource: 'Derived from Int/90 and Clr/90 in gold mart',
       tags: ['Sweeper Keeper', 'High Line', 'Goalkeeper'],
     },
+    {
+      id: 'sweeper-share',
+      name: 'Proactive Sweeper Share %',
+      code: 'Sweeper Share %',
+      category: 'goalkeeper',
+      formula: '\\text{Sweeper Share \\%} = \\frac{\\text{Interceptions/90}}{\\text{Interceptions/90} + \\text{Clearances/90}} \\times 100',
+      shortDefinition: 'The proportion of sweeping actions that are clean proactive interceptions rather than emergency clearances under pressure.',
+      tacticalMeaning:
+        'High share indicates the goalkeeper reads the flight of the ball early and intercepts comfortably; low share indicates frantic, late rushing.',
+      moneyballSignificance:
+        'Clean interceptions allow the keeper to immediately distribute the ball forward into a counter-attack.',
+      benchmarks: {
+        elite: '>= 20.0% (Clean, anticipatory sweeper)',
+        good: '10.0% - 19.9% (Active lane interceptor)',
+        average: '< 10.0% (Reactive clearance sweeper)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Sweeper Keeper', 'Anticipation', 'Goalkeeper'],
+    },
+    {
+      id: 'gk-completed-passes-per90',
+      name: 'Goalkeeper Distribution Completed Passes per 90',
+      code: 'GK Cmp Passes/90',
+      category: 'goalkeeper',
+      formula: '\\text{Completed Passes/90} = \\text{Passes Attempted/90} \\times \\text{Pass Accuracy}',
+      shortDefinition: 'The volume of successful passes completed per 90 minutes by the goalkeeper.',
+      tacticalMeaning:
+        'Measures active involvement as the "11th outfield player" in build-up play. Essential for beating opponent high presses.',
+      moneyballSignificance:
+        'Recruiters in possession systems require goalkeepers completing >=15 passes per 90.',
+      benchmarks: {
+        elite: '>= 18.0 (Modern ball-playing goalkeeper / build-up hub)',
+        good: '13.0 - 17.9 (Active distributor)',
+        average: '8.0 - 12.9 (Traditional distribution)',
+        poor: '< 7.0 (Long-ball clearance keeper)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Distribution', 'Buildup', 'Ball-Playing Keeper', 'Goalkeeper'],
+    },
+    {
+      id: 'gk-pass-accuracy',
+      name: 'Goalkeeper Pass Accuracy %',
+      code: 'GK Pass Acc %',
+      category: 'goalkeeper',
+      formula: '\\text{Pass Accuracy \\%} = \\frac{\\text{Completed Passes}}{\\text{Attempted Passes}} \\times 100',
+      shortDefinition: 'The percentage of goalkeeper distribution passes that successfully reach a teammate.',
+      tacticalMeaning:
+        'Evaluates distribution composure: keepers playing short ground passes have 75-85% accuracy; long hoofers operate at 45-55%.',
+      moneyballSignificance:
+        'Misplaced goalkeeper passes inside the defensive third lead to immediate high-xG concessions.',
+      benchmarks: {
+        elite: '>= 75.0% (Clean, accurate short distributor)',
+        good: '65.0% - 74.9% (Solid passing accuracy)',
+        average: '50.0% - 64.9% (Mixed long/short distribution)',
+        poor: '< 48.0% (Frequent direct turnovers)',
+      },
+      fmSource: 'Pas % from FM24 export',
+      tags: ['Accuracy', 'Distribution', 'Goalkeeper'],
+    },
+    {
+      id: 'giveaways-per90',
+      name: 'Giveaways per 90 (Lost Buildup)',
+      code: 'Giveaways/90',
+      category: 'goalkeeper',
+      formula: '\\text{Giveaways/90} = \\text{Passes Attempted/90} \\times (1.0 - \\text{Pass Accuracy})',
+      shortDefinition: 'The volume of incomplete passes and surrendered possessions per 90 during goalkeeper distribution.',
+      tacticalMeaning:
+        'Measures distribution safety. Keepers who repeatedly kick the ball directly to opposing midfielders invite constant pressure.',
+      moneyballSignificance:
+        'High giveaways directly correlate with high defensive concession pressure in your defensive half.',
+      benchmarks: {
+        elite: '<= 4.5 (Ultra-secure distribution - fewer is better)',
+        good: '4.6 - 7.5 (Solid distribution security)',
+        average: '7.6 - 11.0 (Normal long-ball turnover volume)',
+        poor: '> 12.0 (High turnover risk in buildup)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Turnovers', 'Security', 'Goalkeeper'],
+    },
+    {
+      id: 'pen-save-shrunk',
+      name: 'Shrunk Penalty Save % (Bayes k=20)',
+      code: 'Pen Save % (Shrunk)',
+      category: 'goalkeeper',
+      formula: '\\text{Pen Save \\%}_{\\text{shrunk}} = \\frac{\\text{Pens Faced} \\times \\text{Pen Save \\%} + 20 \\times 0.20}{\\text{Pens Faced} + 20} \\times 100',
+      shortDefinition: 'Penalty kick save percentage regressed toward the historical league mean (20%) with Bayesian prior weight k=20.',
+      tacticalMeaning:
+        'A goalkeeper who saves 2 out of 2 penalties has a 100% raw save rate, but this is a tiny sample. Bayesian shrinkage pulls them to an honest ~27% projection.',
+      moneyballSignificance:
+        'Isolates genuine penalty-saving specialists for cup competitions and penalty shootouts.',
+      benchmarks: {
+        elite: '>= 28.0% (Proven penalty specialist)',
+        good: '22.0% - 27.9% (Above-average penalty stopper)',
+        average: '18.0% - 21.9% (Standard penalty baseline)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Penalties', 'Bayesian', 'Specialist', 'Goalkeeper'],
+    },
+    {
+      id: 'sample-reliability',
+      name: 'Goalkeeper Sample Reliability Factor',
+      code: 'Sample Reliability',
+      category: 'goalkeeper',
+      formula: '\\text{Sample Reliability} = \\frac{\\text{Shots Faced Total}}{\\text{Shots Faced Total} + 300.0}',
+      shortDefinition: 'Bayesian confidence coefficient (0.0 to 1.0) measuring statistical reliability based on total shots on target faced.',
+      tacticalMeaning:
+        'Ranges from 0.0 (no confidence, zero sample) to 1.0 (absolute confidence, massive multi-season sample). Used to weight projected performance.',
+      moneyballSignificance:
+        'Multiplies seasonal goals saved to discount small-sample backup goalkeepers.',
+      benchmarks: {
+        elite: '>= 0.40 (High-confidence statistical sample)',
+        good: '0.25 - 0.39 (Sufficient sample for recruitment)',
+        poor: '< 0.20 (Low statistical confidence)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Bayesian', 'Confidence', 'Sample Size', 'Goalkeeper'],
+    },
+    {
+      id: 'gk-errors-leading-to-goal',
+      name: 'Errors Leading to Opponent Goal per 90',
+      code: 'Errors/90',
+      category: 'goalkeeper',
+      formula: '\\text{Errors/90} = \\frac{\\text{Mistakes Leading to Goals}}{\\text{Minutes Played} / 90.0}',
+      shortDefinition: 'Unforced individual blunders directly resulting in an opponent goal per 90 minutes.',
+      tacticalMeaning:
+        'Reflects mental composure and error-proneness. Even an elite shot-stopper who commits 3-4 catastrophic blunders per season wipes out their positive goals prevented impact.',
+      moneyballSignificance:
+        'Disqualifying metric: never invest heavily in error-prone goalkeepers.',
+      benchmarks: {
+        elite: '0.00 (Flawless, blunder-free campaign)',
+        good: '<= 0.03 (Very low error frequency)',
+        poor: '>= 0.08 (Error-prone liability)',
+      },
+      fmSource: 'Derived in gold.mart_gk_scouting_summary',
+      tags: ['Errors', 'Composure', 'Risk', 'Goalkeeper'],
+    },
 
-    // --- MONEYBALL & VALUATION ---
+    // =========================================================================
+    // 5. MONEYBALL & VALUATION
+    // =========================================================================
     {
       id: 'cost-per-xgi',
       name: 'Cost per Expected Goal Involvement (£k)',
       code: 'Cost per xGI',
       category: 'valuation',
-      formula: '\\text{Cost per xGI} = \\frac{\\text{Transfer Value (£M)} \\times 1000 + (\\text{Weekly Wage (£k)} \\times 52)}{\\text{NPxG} + \\text{xA}}',
-      shortDefinition: 'The total financial investment (transfer fee + annual salary) required for each unit of expected goal contribution delivered.',
+      formula: '\\text{Cost per xGI} = \\frac{(\\text{Weekly Wage (£k)} \\times 52) + (\\text{Transfer Fee (£k)} / 3)}{\\text{Annual Expected Goal Involvement}}',
+      shortDefinition: 'The annualized financial investment (annual salary + amortized fee) required for each unit of expected goal contribution delivered.',
       tacticalMeaning:
         'The centerpiece metric of the Moneyball engine. Identifies undervalued statistical phenoms playing in secondary leagues whose output matches superstars at a fraction of the cost.',
       moneyballSignificance:
-        'If Star A costs £250k per xGI and Star B costs £1,200k per xGI with identical tactical profiles, buying Star A saves millions to reinvest in squad depth.',
+        'If Star A costs £15k per xGI and Star B costs £120k per xGI with identical tactical profiles, buying Star A saves millions to reinvest in squad depth.',
       benchmarks: {
-        elite: '<= £150k / xGI (Tremendous Moneyball bargain)',
-        good: '£151k - £350k / xGI (High-value starter)',
-        average: '£351k - £800k / xGI (Standard market price)',
-        poor: '> £1,000k / xGI (Overpriced luxury asset)',
+        elite: '<= £8k / xGI (Tremendous Moneyball bargain)',
+        good: '£9k - £25k / xGI (High-value starter)',
+        average: '£26k - £60k / xGI (Standard market price)',
+        poor: '> £80k / xGI (Overpriced luxury asset)',
       },
       fmSource: 'Derived from Transfer Value, Wage, and NPxG+xA',
-      tags: ['Moneyball', 'Bargains', 'Finance', 'Recruitment'],
+      tags: ['Moneyball', 'Bargains', 'Finance', 'Recruitment', 'Valuation'],
+    },
+    {
+      id: 'xgi-per-cost-m',
+      name: 'Expected Goal Involvement Output per £M Annual Cost',
+      code: 'xGI / £M',
+      category: 'valuation',
+      formula: '\\text{xGI / £M} = \\frac{\\text{Annual Expected Goal Involvement}}{\\text{Annualized Wage} + (\\text{Fee} / 3.0)}',
+      shortDefinition: 'The units of expected goal involvement delivered per £1,000,000 of annualized club expenditure.',
+      tacticalMeaning:
+        'The inverse of Cost per xGI. Measures capital efficiency: how much goal threat your budget purchases.',
+      moneyballSignificance:
+        'Essential for budget-constrained clubs competing in top-flight leagues against oil-funded giants.',
+      benchmarks: {
+        elite: '>= 60.0 (Massive offensive production per £M spent)',
+        good: '35.0 - 59.9 (High-value squad contributor)',
+        average: '15.0 - 34.9 (Fair market efficiency)',
+        poor: '< 12.0 (Low return on investment)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Capital Efficiency', 'ROI', 'Moneyball', 'Valuation'],
+    },
+    {
+      id: 'value-gap',
+      name: 'Value Gap Index (Moneyball Percentile Gap)',
+      code: 'Value Gap',
+      category: 'valuation',
+      formula: '\\text{Value Gap} = \\text{PERCENT\\_RANK}(\\text{Output}) - \\text{PERCENT\\_RANK}(\\text{Transfer Value (£M)})',
+      shortDefinition: 'The percentile spread between on-pitch statistical output and market transfer valuation (ranging from -100 to +100).',
+      tacticalMeaning:
+        'A Value Gap of +50 means the player is in the 85th percentile for performance output but only the 35th percentile for transfer value. They are severely underpriced by the market.',
+      moneyballSignificance:
+        'The ultimate 1-click filter for uncovering hidden gems playing in undervalued clubs, smaller leagues, or nearing contract expiration.',
+      benchmarks: {
+        elite: '>= +45.0 (Extreme market inefficiency / immediate buy target)',
+        good: '+25.0 to +44.9 (High-value transfer candidate)',
+        average: '-15.0 to +24.9 (Fair market valuation)',
+        poor: '< -25.0 (Heavily overpriced asset / sell immediately)',
+      },
+      fmSource: 'Computed across gold schema scouting summary marts',
+      tags: ['Value Gap', 'Arbitrage', 'Bargains', 'Moneyball', 'Valuation'],
     },
     {
       id: 'bargain-indices',
@@ -603,10 +2007,89 @@ export default function MetricsPage() {
         average: '< 1.0 (Fair market price or overvalued)',
       },
       fmSource: 'Calculated in gold.vw_bargain_watch',
-      tags: ['Bargains', 'Value', 'Scouting'],
+      tags: ['Bargains', 'Value', 'Scouting', 'Valuation'],
+    },
+    {
+      id: 'transfer-value-m',
+      name: 'Market Transfer Valuation (£M)',
+      code: 'Valuation (£M)',
+      category: 'valuation',
+      formula: '\\text{Estimated Transfer Value in Millions (£M)}',
+      shortDefinition: 'Estimated financial acquisition cost derived from Football Manager market valuation ranges.',
+      tacticalMeaning:
+        'Reflects reputation, league stature, age, and contract length rather than pure statistical output.',
+      moneyballSignificance:
+        'The denominator in all Moneyball valuation models.',
+      benchmarks: {
+        elite: '<= £15.0M for elite output (High-value recruitment zone)',
+        good: '£15.1M - £35.0M (Competitive market price)',
+        poor: '> £60.0M (Superstar premium / low efficiency)',
+      },
+      fmSource: 'Parsed from Value string in bronze to silver and gold.fact_players_value',
+      tags: ['Valuation', 'Transfer Fee', 'Finance', 'Valuation'],
+    },
+    {
+      id: 'wage-per-week-k',
+      name: 'Contractual Weekly Wage (£k)',
+      code: 'Wage (£k/wk)',
+      category: 'valuation',
+      formula: '\\text{Contractual Basic Weekly Wage in Thousands (£k/wk)}',
+      shortDefinition: 'The ongoing weekly payroll obligation committed to the player.',
+      tacticalMeaning:
+        'Directly impacts club financial health and squad wage hierarchy structure.',
+      moneyballSignificance:
+        'Annual wages typically exceed amortized transfer fees over a 4-year contract; controlling wage inflation is vital for long-term sustainability.',
+      benchmarks: {
+        elite: '<= £20k/wk for starting contributor (Efficient payroll)',
+        good: '£21k - £50k/wk (Standard top-flight starter)',
+        poor: '> £120k/wk (High financial burden)',
+      },
+      fmSource: 'Parsed from Wage string in silver to gold schema',
+      tags: ['Wage', 'Salary', 'Payroll', 'Finance', 'Valuation'],
+    },
+    {
+      id: 'on-pitch-goal-diff-per90',
+      name: 'On-Pitch Net Goal Differential per 90',
+      code: 'On-Pitch GD/90',
+      category: 'valuation',
+      formula: '\\text{On-Pitch GD/90} = \\text{Team Goals Scored/90} - \\text{Team Goals Conceded/90}',
+      shortDefinition: 'The net goal differential achieved by the team while this specific player was on the pitch.',
+      tacticalMeaning:
+        'Football’s equivalent to basketball’s "Plus/Minus (+/-)". Measures team performance when the player is playing.',
+      moneyballSignificance:
+        'Highlights subtle glue players whose presence dramatically improves team balance even if their personal scoring stats are modest.',
+      benchmarks: {
+        elite: '>= +1.20 / 90 (Dominant positive team net impact)',
+        good: '+0.40 to +1.19 / 90 (Positive team impact)',
+        average: '-0.20 to +0.39 / 90 (Neutral team differential)',
+        poor: '< -0.50 / 90 (Negative team differential)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Plus-Minus', 'Team Impact', 'Valuation'],
+    },
+    {
+      id: 'on-pitch-gd-shrunk',
+      name: 'Shrunk On-Pitch Goal Differential',
+      code: 'On-Pitch GD (Shrunk)',
+      category: 'valuation',
+      formula: '\\text{GD}_{\\text{shrunk}} = (\\text{Team Goals Scored} - \\text{Team Goals Conceded}) \\times \\left(\\frac{\\text{Minutes}}{\\text{Minutes} + 900}\\right)',
+      shortDefinition: 'On-pitch goal differential regressed toward zero based on minute sample size.',
+      tacticalMeaning:
+        'Filters out short-term sample distortions (e.g. substitutes who played 100 minutes during an 8-0 blowout win).',
+      moneyballSignificance:
+        'Provides statistically robust plus-minus evaluation for recruitment analysis.',
+      benchmarks: {
+        elite: '>= +0.80 (Proven positive impact over large sample)',
+        good: '+0.25 to +0.79 (Consistent winning contributor)',
+        poor: '< -0.30 (Negative on-pitch drag)',
+      },
+      fmSource: 'Derived in gold.mart_outfield_scouting_summary',
+      tags: ['Bayesian', 'Plus-Minus', 'Sample Size', 'Valuation'],
     },
 
-    // --- MATHEMATICAL & SIMILARITY MODELS ---
+    // =========================================================================
+    // 6. SIMILARITY, COMPETITION & MATHEMATICAL MODELING
+    // =========================================================================
     {
       id: 'euclidean-similarity',
       name: 'Scale-Weighted Euclidean Distance Matcher',
@@ -625,7 +2108,7 @@ export default function MetricsPage() {
         poor: 'D > 5.00 (Fundamentally different player profile)',
       },
       fmSource: '8 Positional views in gold schema (gold.vw_similar_*)',
-      tags: ['Euclidean', 'Similarity', 'Replacement', 'Math'],
+      tags: ['Euclidean', 'Similarity', 'Replacement', 'Math', 'Modeling'],
     },
     {
       id: 'profile-match-pct',
@@ -642,9 +2125,10 @@ export default function MetricsPage() {
         elite: '>= 90.0% (Plug-and-play tactical clone)',
         good: '80.0% - 89.9% (Very close fit)',
         average: '70.0% - 79.9% (Usable alternative with minor tactical adaptations)',
+        poor: '< 65.0% (Poor tactical alignment)',
       },
       fmSource: 'Computed across all gold.vw_similar_* views',
-      tags: ['Match %', 'Similarity', 'Scouting'],
+      tags: ['Match %', 'Similarity', 'Scouting', 'Math'],
     },
     {
       id: 'scd2-architecture',
@@ -663,9 +2147,100 @@ export default function MetricsPage() {
         average: 'Historical season queries via Point-in-Time dimension joins',
       },
       fmSource: 'Built into gold.load_gold ETL procedure and dimension tables',
-      tags: ['SCD2', 'Database', 'Engineering', 'History'],
+      tags: ['SCD2', 'Database', 'Engineering', 'History', 'Math'],
+    },
+    {
+      id: 'league-difficulty-coef',
+      name: 'League Difficulty Calibration Multiplier',
+      code: 'League Coef (x)',
+      category: 'math',
+      formula: '\\text{Adjusted Metric} = \\text{Raw Metric} \\times \\text{League Difficulty Coef}',
+      shortDefinition: 'Competition quality calibration factor scaling raw player statistics according to domestic league tier.',
+      tacticalMeaning:
+        'Calibrates player output against standard top-flight difficulty: Apex leagues (Premier League, La Liga, Serie A, Bundesliga) = 1.00; SL1 (Championship, Portugal, Netherlands) = 0.85-0.90; SL2 (League One, Belgium, Scotland) = 0.75-0.80; lower tiers scale down to 0.50.',
+      moneyballSignificance:
+        'Eliminates the common scouting trap of signing a striker who scored 25 goals in a weak league and flops in a premier competition.',
+      benchmarks: {
+        elite: '1.00x (Apex competition: Premier League, La Liga, Serie A)',
+        good: '0.80x - 0.90x (High-caliber tier: Championship, Eredivisie, Liga Portugal)',
+        average: '0.65x - 0.75x (Mid-tier developmental leagues)',
+        poor: '<= 0.60x (Lower-division competitions)',
+      },
+      fmSource: 'gold.dim_league reference table in SQL Server',
+      tags: ['Competition', 'Normalization', 'Calibration', 'Math'],
+    },
+    {
+      id: 'relative-translation-coef',
+      name: 'Relative Translation Multiplier (Squad Calibrated)',
+      code: 'Rel Translation (x)',
+      category: 'math',
+      formula: '\\text{Relative Translation Coef} = \\frac{\\text{Target League Coef}}{\\text{User Club League Coef}}',
+      shortDefinition: 'Personalized competition multiplier scaling a scouted player’s output directly relative to the user’s managed club baseline.',
+      tacticalMeaning:
+        'If managing a League One club (coef 0.70) and scouting a player in the Scottish Premiership (coef 0.75), their stats are translated by (0.75 / 0.70) = 1.07x. Powers the "Adjust to My League" toggle and Ghost Radar outline.',
+      moneyballSignificance:
+        'Provides tailor-made performance projections specifically calibrated for your club’s exact division.',
+      benchmarks: {
+        elite: '> 1.10x (Stepping down from a stronger league - expected performance boost)',
+        good: '0.95x - 1.05x (Direct lateral league transfer)',
+        average: '< 0.90x (Stepping up to a tougher league - expected performance compression)',
+      },
+      fmSource: 'Computed dynamically in webapp player dossier and screener',
+      tags: ['Custom', 'Translation', 'Ghost Radar', 'Math'],
+    },
+    {
+      id: 'dim-team-tactical-archetypes',
+      name: 'Team Tactical Archetype Affinity Index (0-100)',
+      code: 'Archetype Score',
+      category: 'math',
+      formula: '\\text{Score} = \\sum_{j=1}^m w_j \\cdot \\text{PERCENT\\_RANK}\\left(\\text{Event Metric}_j\\right) \\times 100',
+      shortDefinition: 'Minutes-weighted composite scoring classifying football clubs across 7 distinct tactical philosophies.',
+      tacticalMeaning:
+        'Aggregates pressures attempted, passes attempted, progressive passing, crossing volume, aerial headers, and defensive blocks into 0-100 affinity scores for Gegenpressing, Tiki-Taka, Vertical Tiki-Taka, Fluid Counter, Direct Counter, Wing Play, and Catenaccio.',
+      moneyballSignificance:
+        'Ensures strategic recruitment alignment: prevents signing players whose tactical strengths contradict the manager’s playing style.',
+      benchmarks: {
+        elite: '>= 80 (Undisputed tactical framework purity)',
+        good: '65 - 79 (Strong tactical system affinity)',
+        average: '45 - 64 (Flexible hybrid tactical system)',
+      },
+      fmSource: 'gold.dim_team_tactical_archetypes table',
+      tags: ['Tactics', 'Archetypes', 'Gegenpress', 'Tiki-Taka', 'Math'],
+    },
+    {
+      id: 'empirical-bayes-shrinkage',
+      name: 'Empirical Bayes Multi-Tier Shrinkage Framework',
+      code: 'Bayes Shrinkage',
+      category: 'math',
+      formula: '\\hat{\\theta}_{\\text{shrunk}} = \\frac{n \\cdot \\bar{x} + k \\cdot \\mu_0}{n + k}',
+      shortDefinition: 'Universal Bayesian shrinkage framework applied across the warehouse to pull small-sample metrics toward established population priors.',
+      tacticalMeaning:
+        'Applied across multiple domains: Finishing Delta (prior 0.0, k=900 mins), Assist Luck (prior 0.0, k=900 mins), Goalkeeper xGP/Shot (prior 0.0, k=300 shots), Hold Rate (prior 30%, k=150 saves), Penalty Save % (prior 20%, k=20 pens), Error Rate (prior 0.022, k=5000 mins).',
+      moneyballSignificance:
+        'The mathematical backbone preventing transfer mistakes caused by small sample sizes and short-term variance.',
+      benchmarks: {
+        elite: 'Sample n >= 3 * k (Uncompromised signal dominates shrinkage)',
+        good: 'Sample n >= k (50%+ signal retention)',
+        average: 'Sample n < k (Heavily shrunk toward prior for safety)',
+      },
+      fmSource: 'Built into SQL Server procedures and gold mart views',
+      tags: ['Bayesian', 'Statistics', 'Shrinkage', 'Architecture', 'Math'],
     },
   ];
+
+  // Dynamic Category Configuration
+  const categories = useMemo(() => {
+    return [
+      { id: 'all', label: 'All Knowledge', icon: Layers, count: metrics.length + graphs.length },
+      { id: 'graphs', label: 'Visual Graphs & Charts', icon: BarChart3, count: graphs.length },
+      { id: 'attacking', label: 'Attacking & Shooting', icon: Target, count: metrics.filter((m) => m.category === 'attacking').length },
+      { id: 'passing', label: 'Passing & Creation', icon: Zap, count: metrics.filter((m) => m.category === 'passing').length },
+      { id: 'defending', label: 'Defending & Duels', icon: Shield, count: metrics.filter((m) => m.category === 'defending').length },
+      { id: 'goalkeeper', label: 'Goalkeeping', icon: Activity, count: metrics.filter((m) => m.category === 'goalkeeper').length },
+      { id: 'valuation', label: 'Moneyball & Valuation', icon: Coins, count: metrics.filter((m) => m.category === 'valuation').length },
+      { id: 'math', label: 'Similarity & Modeling', icon: Calculator, count: metrics.filter((m) => m.category === 'math').length },
+    ];
+  }, [metrics, graphs]);
 
   // Filtered lists
   const filteredMetrics = useMemo(() => {
@@ -768,7 +2343,7 @@ export default function MetricsPage() {
             }}
           >
             A comprehensive reference explaining every graph, percentile benchmark, mathematical model, and advanced
-            Moneyball metric across the FM Analytics scouting platform.
+            Moneyball metric across the entire Football Manager Analytics platform.
           </p>
 
           {/* Quick Search */}
@@ -1315,9 +2890,9 @@ export default function MetricsPage() {
                         Performance Benchmarks:
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', color: 'var(--text-muted)' }}>
-                        <div>🟢 <strong style={{ color: 'var(--accent-emerald)' }}>Elite:</strong> {m.benchmarks.elite}</div>
-                        <div>🔵 <strong style={{ color: '#38bdf8' }}>Good:</strong> {m.benchmarks.good}</div>
-                        <div>🟡 <strong style={{ color: '#fbbf24' }}>Average:</strong> {m.benchmarks.average}</div>
+                        {m.benchmarks.elite && <div>🟢 <strong style={{ color: 'var(--accent-emerald)' }}>Elite:</strong> {m.benchmarks.elite}</div>}
+                        {m.benchmarks.good && <div>🔵 <strong style={{ color: '#38bdf8' }}>Good:</strong> {m.benchmarks.good}</div>}
+                        {m.benchmarks.average && <div>🟡 <strong style={{ color: '#fbbf24' }}>Average:</strong> {m.benchmarks.average}</div>}
                         {m.benchmarks.poor && <div>🔴 <strong style={{ color: '#f43f5e' }}>Below Avg:</strong> {m.benchmarks.poor}</div>}
                       </div>
                     </div>

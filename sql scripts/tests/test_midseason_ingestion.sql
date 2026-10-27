@@ -48,9 +48,11 @@ BEGIN TRY
     EXEC gold.load_gold @Season = '2023/24';
 
     DECLARE @TestPlayerId INT = 899901;
+    DECLARE @TestPlayerBetaId INT = 899902;
 
     -- Clean up any residual test records from silver if present
     DELETE FROM silver.fmdata_team_players WHERE player_id = @TestPlayerId;
+    DELETE FROM silver.fmdata_interested_out_players WHERE player_id = @TestPlayerBetaId;
 
     -- ===============================================================
     -- STAGE 1: Midseason Ingestion (January - 1,200 mins, 8 goals)
@@ -81,6 +83,33 @@ BEGIN TRY
         2.50, 0.60, 0.80, 14.0, 10.5,
         0.05, 1.10, 1.40, 2, 0,
         45.0, 25.0, '2024-01-15 10:00:00', '9999-12-31 23:59:59.9999999', 1
+    );
+
+    -- Also insert scouted target Beta in 2023/24 (simulating a player scouted in 2023/24)
+    INSERT INTO silver.fmdata_interested_out_players (
+        player_id, player_name, club_name, league, position, age, minutes_played,
+        team_goals_scored_per90, team_goals_conceded_per90, goals, goals_outside_the_box,
+        shots_per90, xGoals_per_shot, shot_accuracy, shots_on_target_per90, shots_outside_the_box_per90,
+        goals_per90, xGoals_per90, non_penalty_xGoals_per90, xGoals_overperformance, conversion_rate,
+        assists, assists_per90, passes_attempted_per90, pass_accuracy, xAssits_per90, open_play_key_passes_per90,
+        chances_created_per90, dribbles_made_per90, progressive_passes_per90, open_play_crosses_attempted_per90,
+        open_play_cross_accuracy, crosses_attempted_per90, cross_accuracy, tackles_attempted_per90, tackle_accuracy,
+        pressures_attempted_per90, pressures_completed_per90, possession_won_per90, possession_lost_per90,
+        key_tackles_per90, interceptions_per90, clearances_per90, blocks_per90, shots_blocked_per90,
+        headers_attempted_per90, heading_accuracy, key_headers_per90, sprints_per90, distance_covered_km_per90,
+        mistakes_leading_to_goals_per90, fouls_made_per90, fouls_against_per90, yellow_cards_per90, red_cards_per90,
+        wage_per_week_k, transfer_value_m, dwh_create_date, dwh_cd_valid_till, dwh_current_validity
+    ) VALUES (
+        @TestPlayerBetaId, 'Test Target Beta Omitted', 'Midseason FC', 'Test League Alpha', 'Striker', 22, 1400,
+        1.70, 0.95, 9, 1, 3.10, 0.15, 0.52, 1.61, 0.90,
+        0.58, 0.50, 0.45, 0.08, 0.16,
+        4, 0.25, 26.0, 0.80, 0.22, 1.30,
+        1.70, 2.00, 3.20, 0.75, 0.22,
+        1.00, 0.22, 1.10, 0.68, 14.0, 8.0,
+        4.00, 7.90, 0.35, 0.55, 0.45, 0.28, 0.08,
+        2.30, 0.58, 0.75, 13.5, 10.2,
+        0.04, 1.00, 1.30, 1, 0,
+        35.0, 18.0, '2024-01-15 10:00:00', '9999-12-31 23:59:59.9999999', 1
     );
 
     EXEC gold.load_gold @Season = '2023/24';
@@ -277,6 +306,12 @@ BEGIN TRY
         dwh_cd_valid_till = '2025-05-30 18:00:00'
     WHERE player_id = @TestPlayerId AND dwh_current_validity = 1;
 
+    -- Target Beta is omitted from the 2024/25 export (retired in silver)
+    UPDATE silver.fmdata_interested_out_players
+    SET dwh_current_validity = 0,
+        dwh_cd_valid_till = '2025-05-30 18:00:00'
+    WHERE player_id = @TestPlayerBetaId AND dwh_current_validity = 1;
+
     INSERT INTO silver.fmdata_team_players (
         player_id, player_name, club_name, league, position, age, minutes_played,
         team_goals_scored_per90, team_goals_conceded_per90, goals, goals_outside_the_box,
@@ -328,6 +363,102 @@ BEGIN TRY
     ELSE
     BEGIN
         PRINT CONCAT('[FAIL] Test 8: True Season-over-Season Growth - Expected +20.00M from 2023/24 to 2024/25, found: delta = ', @DeltaValue, ', cur = ', @CurSeason, ', prev = ', @PrevSeason);
+        SET @FailedTests = @FailedTests + 1;
+    END;
+
+    -- ===============================================================
+    -- STAGE 4: Validating Omitted Player Ingestion Isolation
+    -- (Target Beta was in 2023/24 but absent from 2024/25 export)
+    -- ===============================================================
+
+    -- Test 9: Omitted Player Has Exactly 0 Active Dimension Records in Gold
+    SET @TotalTests = @TotalTests + 1;
+    DECLARE @BetaActiveDimCount INT = 0;
+    SELECT @BetaActiveDimCount = COUNT(*)
+    FROM gold.dim_player_info
+    WHERE player_id = @TestPlayerBetaId AND dwh_current_validity = 1;
+
+    IF @BetaActiveDimCount = 0
+    BEGIN
+        PRINT '[PASS] Test 9: Omitted Player Isolation - Zero active dimension records for player omitted in new season.';
+        SET @PassedTests = @PassedTests + 1;
+    END
+    ELSE
+    BEGIN
+        PRINT CONCAT('[FAIL] Test 9: Omitted Player Isolation - Expected 0 active dim records, found ', @BetaActiveDimCount);
+        SET @FailedTests = @FailedTests + 1;
+    END;
+
+    -- Test 10: Omitted Player Has Exactly 0 Active Fact Records in Gold
+    SET @TotalTests = @TotalTests + 1;
+    DECLARE @BetaActiveFactCount INT = 0;
+    SELECT @BetaActiveFactCount = COUNT(*)
+    FROM gold.fact_outfield_player_stats f
+    INNER JOIN gold.dim_player_info p ON f.player_key = p.player_key
+    WHERE p.player_id = @TestPlayerBetaId AND f.dwh_current_validity = 1;
+
+    IF @BetaActiveFactCount = 0
+    BEGIN
+        PRINT '[PASS] Test 10: Omitted Player Fact Isolation - Zero active fact records for player omitted in new season.';
+        SET @PassedTests = @PassedTests + 1;
+    END
+    ELSE
+    BEGIN
+        PRINT CONCAT('[FAIL] Test 10: Omitted Player Fact Isolation - Expected 0 active fact records, found ', @BetaActiveFactCount);
+        SET @FailedTests = @FailedTests + 1;
+    END;
+
+    -- Test 11: Omitted Player Has NO Records Created For Season '2024/25' (No Phantom Season Duplication)
+    SET @TotalTests = @TotalTests + 1;
+    DECLARE @Beta2425RowCount INT = 0;
+    SELECT @Beta2425RowCount = COUNT(*)
+    FROM gold.dim_player_info
+    WHERE player_id = @TestPlayerBetaId AND season = '2024/25';
+
+    IF @Beta2425RowCount = 0
+    BEGIN
+        PRINT '[PASS] Test 11: No Phantom Season Duplication - Zero records created for 2024/25 for omitted player.';
+        SET @PassedTests = @PassedTests + 1;
+    END
+    ELSE
+    BEGIN
+        PRINT CONCAT('[FAIL] Test 11: No Phantom Season Duplication - Expected 0 records for 2024/25, found ', @Beta2425RowCount);
+        SET @FailedTests = @FailedTests + 1;
+    END;
+
+    -- Test 12: Omitted Player Historical Record from 2023/24 Preserved Intact (Validity = 0)
+    SET @TotalTests = @TotalTests + 1;
+    DECLARE @BetaHist2324Count INT = 0;
+    SELECT @BetaHist2324Count = COUNT(*)
+    FROM gold.dim_player_info
+    WHERE player_id = @TestPlayerBetaId AND season = '2023/24' AND dwh_current_validity = 0;
+
+    IF @BetaHist2324Count = 1
+    BEGIN
+        PRINT '[PASS] Test 12: Historical Snapshot Preservation - 2023/24 historical record preserved with validity=0.';
+        SET @PassedTests = @PassedTests + 1;
+    END
+    ELSE
+    BEGIN
+        PRINT CONCAT('[FAIL] Test 12: Historical Snapshot Preservation - Expected 1 historical 2023/24 record, found ', @BetaHist2324Count);
+        SET @FailedTests = @FailedTests + 1;
+    END;
+
+    -- Test 13: Omitted Player Does Not Generate False 0-Delta Growth Rows in vw_player_growth_tracking
+    SET @TotalTests = @TotalTests + 1;
+    DECLARE @BetaGrowthRowCount INT = 0;
+    SELECT @BetaGrowthRowCount = COUNT(*)
+    FROM gold.vw_player_growth_tracking
+    WHERE player_id = @TestPlayerBetaId;
+
+    IF @BetaGrowthRowCount = 0
+    BEGIN
+        PRINT '[PASS] Test 13: Growth Tracking Integrity - Omitted player generates zero false season transition deltas.';
+        SET @PassedTests = @PassedTests + 1;
+    END
+    ELSE
+    BEGIN
+        PRINT CONCAT('[FAIL] Test 13: Growth Tracking Integrity - Expected 0 growth tracking rows for single-season player, found ', @BetaGrowthRowCount);
         SET @FailedTests = @FailedTests + 1;
     END;
 

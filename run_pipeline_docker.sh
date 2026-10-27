@@ -110,7 +110,7 @@ echo -e "${GREEN}[OK] SQL Server is active and accepting connections.${NC}"
 # -------------------------------------------------------------------
 echo -e "${BLUE}>>> Preparing and synchronizing FM data exports...${NC}"
 if command -v python3 >/dev/null 2>&1; then
-    python3 "python scripts/prepare_ingestion.py" --target-dir documents/ 2>/dev/null || true
+    python3 "python scripts/prepare_ingestion.py" --target-dir documents/ --season "${TARGET_SEASON}" 2>/dev/null || true
 else
     echo -e "${YELLOW}[INFO] python3 not detected; using pre-packaged dataset in documents/.${NC}"
 fi
@@ -118,6 +118,7 @@ fi
 echo -e "${BLUE}>>> Verifying volume mounts / container directories...${NC}"
 # If /data or /scripts are not mounted as volumes, ensure they exist and copy files
 docker exec -u 0 "${CONTAINER_NAME}" mkdir -p /data /scripts >/dev/null 2>&1 || true
+docker exec -u 0 "${CONTAINER_NAME}" bash -c "rm -f /data/interested_out_players*.csv" >/dev/null 2>&1 || true
 docker cp documents/. "${CONTAINER_NAME}:/data/" >/dev/null 2>&1
 docker cp "sql scripts/." "${CONTAINER_NAME}:/scripts/" >/dev/null 2>&1
 docker exec -u 0 "${CONTAINER_NAME}" chown -R mssql:mssql /data /scripts >/dev/null 2>&1 || true

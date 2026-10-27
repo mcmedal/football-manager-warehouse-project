@@ -38,6 +38,7 @@ CONTAINER_NAME="${CONTAINER_NAME:-sql_server}"
 SA_PASSWORD="${MSSQL_SA_PASSWORD:-McMedal@14}"
 PORT="${MSSQL_PORT:-1433}"
 TARGET_SEASON="${SEASON:-}"
+SOURCE_DIR="${FM_DATA_DIR:-}"
 
 # Parse optional arguments
 while [[ $# -gt 0 ]]; do
@@ -46,12 +47,17 @@ while [[ $# -gt 0 ]]; do
             TARGET_SEASON="$2"
             shift 2
             ;;
+        --src|--source-dir)
+            SOURCE_DIR="$2"
+            shift 2
+            ;;
         -h|--help)
             echo "Usage: ./prepare_data.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  -s, --season <SEASON>   Automatically execute dbo.usp_run_warehouse_pipeline for the given season (e.g. '2024/25')"
-            echo "  -h, --help              Show this help message"
+            echo "  -s, --season <SEASON>       Automatically execute dbo.usp_run_warehouse_pipeline for the given season (e.g. '2024/25')"
+            echo "  --src, --source-dir <PATH>  Specify path to directory containing raw FM24 exports"
+            echo "  -h, --help                  Show this help message"
             exit 0
             ;;
         *)
@@ -67,7 +73,14 @@ echo -e "${BLUE}================================================================
 
 # 1. Run Python Normalization & HTML -> CSV Conversion
 echo -e "${BLUE}>>> Converting HTML exports and normalizing schemas...${NC}"
-python3 "python scripts/prepare_ingestion.py" --target-dir documents/
+PREPARE_ARGS=("--target-dir" "documents/")
+if [[ -n "${TARGET_SEASON}" ]]; then
+    PREPARE_ARGS+=("--season" "${TARGET_SEASON}")
+fi
+if [[ -n "${SOURCE_DIR}" ]]; then
+    PREPARE_ARGS+=("--source-dir" "${SOURCE_DIR}")
+fi
+python3 "python scripts/prepare_ingestion.py" "${PREPARE_ARGS[@]}"
 
 # 2. Check Docker Container Status & Sync Files
 if docker info >/dev/null 2>&1; then

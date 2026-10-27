@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
-    const seasonFilter = searchParams.get('season') || 'all'; // 'current' | 'all'
+    const seasonFilter = searchParams.get('season') || 'current'; // 'current' | 'all'
 
     if (!query || query.trim().length < 2) {
       return NextResponse.json({ results: [] });
     }
 
     const cleanQuery = `%${query.trim()}%`;
-    const seasonCondition = seasonFilter === 'current' ? 'AND p.dwh_current_validity = 1' : '';
+    const seasonCondition = seasonFilter !== 'all' ? 'AND p.dwh_current_validity = 1' : '';
 
     const rows = await executeQuery<SearchPlayerResult>(
       `

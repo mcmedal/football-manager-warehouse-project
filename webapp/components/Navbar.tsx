@@ -36,7 +36,7 @@ export default function Navbar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [onlyCurrentSeason, setOnlyCurrentSeason] = useState(false);
+  const [onlyCurrentSeason, setOnlyCurrentSeason] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function Navbar() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const seasonParam = onlyCurrentSeason ? '&season=current' : '';
+        const seasonParam = onlyCurrentSeason ? '&season=current' : '&season=all';
         const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm.trim())}${seasonParam}`);
         const data = await res.json();
         setResults(data.results || []);

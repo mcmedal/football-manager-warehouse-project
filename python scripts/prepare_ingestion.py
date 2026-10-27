@@ -378,33 +378,59 @@ def normalize_outfield_partitions(src_dir, dest_dir):
     return partitions_processed, total_written
 
 
-def resolve_source_directory(cli_source=None):
-    """Resolves source directory with smart fallback."""
+def resolve_source_directory(cli_source=None, season=None):
+    """Resolves source directory with smart fallback and season subfolder support."""
+    base_dir = None
     if cli_source and os.path.isdir(cli_source):
-        return os.path.abspath(cli_source)
+        base_dir = os.path.abspath(cli_source)
+    else:
+        env_dir = os.environ.get("FM_DATA_DIR")
+        if env_dir and os.path.isdir(env_dir):
+            base_dir = os.path.abspath(env_dir)
+        elif os.path.exists(".env"):
+            with open(".env", "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.startswith("FM_DATA_DIR="):
+                        val = line.strip().split("=", 1)[1].strip("'\"")
+                        if os.path.isdir(val):
+                            base_dir = os.path.abspath(val)
+                            break
+        if not base_dir and os.path.isdir(DEFAULT_STEAM_EXPORT_DIR):
+            base_dir = os.path.abspath(DEFAULT_STEAM_EXPORT_DIR)
 
-    env_dir = os.environ.get("FM_DATA_DIR")
-    if env_dir and os.path.isdir(env_dir):
-        return os.path.abspath(env_dir)
+    if not base_dir:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        doc_dir = os.path.join(project_root, "documents")
+        if os.path.isdir(doc_dir):
+            return doc_dir
+        return None
 
-    # Check .env file directly if not loaded into environment
-    if os.path.exists(".env"):
-        with open(".env", "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("FM_DATA_DIR="):
-                    val = line.strip().split("=", 1)[1].strip("'\"")
-                    if os.path.isdir(val):
-                        return os.path.abspath(val)
+    # If season is specified, check for season-specific subdirectories
+    if season and os.path.isdir(base_dir):
+        s_clean = season.replace("/", "-").replace("\\", "-").strip()
+        candidates = [s_clean, s_clean.replace("-", "_")]
+        parts = s_clean.split("-")
+        if len(parts) == 2:
+            p1, p2 = parts[0], parts[1]
+            short1 = p1[-2:] if len(p1) >= 2 else p1
+            short2 = p2[-2:] if len(p2) >= 2 else p2
+            candidates.extend([f"{short1}-{short2}", f"{short1}_{short2}", f"20{short1}-20{short2}"])
 
-    if os.path.isdir(DEFAULT_STEAM_EXPORT_DIR):
-        return os.path.abspath(DEFAULT_STEAM_EXPORT_DIR)
+        for cand in candidates:
+            sub = os.path.join(base_dir, cand)
+            if os.path.isdir(sub):
+                # If the subdirectory contains a zip file but no CSV/HTML, automatically unzip
+                zip_files = glob.glob(os.path.join(sub, "*.zip"))
+                csv_files = glob.glob(os.path.join(sub, "*.csv"))
+                html_files = glob.glob(os.path.join(sub, "*.html"))
+                if zip_files and not csv_files and not html_files:
+                    import zipfile
+                    for z in zip_files:
+                        with zipfile.ZipFile(z, 'r') as zf:
+                            zf.extractall(sub)
+                return os.path.abspath(sub)
 
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    doc_dir = os.path.join(project_root, "documents")
-    if os.path.isdir(doc_dir):
-        return doc_dir
-
-    return None
+    return os.path.abspath(base_dir)
 
 
 def main():
@@ -415,10 +441,12 @@ def main():
                         help="Path to directory containing FM24 exports.")
     parser.add_argument("--target-dir", "--dest", dest="target_dir", default="documents",
                         help="Target directory where standardized CSVs will be output.")
+    parser.add_argument("-s", "--season", dest="season", default=None,
+                        help="Target season (e.g. '2023/24' or '2024/25') to auto-detect season folders.")
 
     args = parser.parse_args()
 
-    src_dir = resolve_source_directory(args.source_dir)
+    src_dir = resolve_source_directory(args.source_dir, args.season)
     if not src_dir:
         print("[ERROR] Could not locate FM24 exports directory.")
         sys.exit(1)

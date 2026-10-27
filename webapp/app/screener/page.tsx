@@ -138,75 +138,120 @@ interface PlayerRow {
   value_gap?: number;
 }
 
-// Outfield Metric Catalog
+// Outfield Metric Catalog - comprehensive catalog of all table columns & metrics
 const OUTFIELD_CATALOG = [
-  { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
+  // General & Competition
   { field: 'age', label: 'Age', category: 'General', defaultOp: '<=', defaultVal: 23, unit: 'yrs' },
   { field: 'minutes_played', label: 'Minutes Played', category: 'General', defaultOp: '>=', defaultVal: 900, unit: 'mins' },
+  { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
+
+  // Financials & Valuation
   { field: 'transfer_value_m', label: 'Transfer Value', category: 'Financials', defaultOp: '<=', defaultVal: 15, unit: '£M' },
   { field: 'wage_per_week_k', label: 'Wage Per Week', category: 'Financials', defaultOp: '<=', defaultVal: 20, unit: '£k' },
   { field: 'cost_per_xgi', label: 'Cost per xGI (Moneyball)', category: 'Financials', defaultOp: '<=', defaultVal: 20, unit: '£k' },
   { field: 'xgi_per_cost_m', label: 'xGI Output per £M (Moneyball)', category: 'Financials', defaultOp: '>=', defaultVal: 50.0, unit: '/£M' },
   { field: 'value_gap', label: 'Value Gap Index (Moneyball Gap)', category: 'Financials', defaultOp: '>=', defaultVal: 40.0, unit: '' },
+
+  // Attacking
+  { field: 'goals_per90', label: 'Goals / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.30, unit: '/90' },
   { field: 'npxg_plus_xa_per90', label: 'NP-xG + xA / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.45, unit: '/90' },
   { field: 'non_penalty_xGoals_per90', label: 'Non-Penalty xG / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.35, unit: '/90' },
-  { field: 'xAssists_per90', label: 'Expected Assists (xA) / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.20, unit: '/90' },
+  { field: 'xGoals_per90', label: 'Expected Goals (xG) / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.35, unit: '/90' },
   { field: 'goals_minus_xg_per90', label: 'Goals - xG (Shrunk Delta)', category: 'Attacking', defaultOp: '>=', defaultVal: 0.05, unit: '/90' },
+  { field: 'shots_per90', label: 'Shots / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 2.0, unit: '/90' },
   { field: 'npxg_per_shot', label: 'NP-xG per Shot', category: 'Attacking', defaultOp: '>=', defaultVal: 0.12, unit: '' },
-  { field: 'shots_per90', label: 'Shots / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 2.5, unit: '/90' },
   { field: 'shot_on_target_rate', label: 'Shot on Target %', category: 'Attacking', defaultOp: '>=', defaultVal: 0.40, unit: '%' },
+  { field: 'conversion_rate', label: 'Conversion Rate %', category: 'Attacking', defaultOp: '>=', defaultVal: 0.15, unit: '%' },
   { field: 'long_range_goal_share', label: 'Long Range Goal Share %', category: 'Attacking', defaultOp: '>=', defaultVal: 0.20, unit: '%' },
   { field: 'npxg_plus_xa_per90_adj', label: 'League-Adj NP-xGI / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.35, unit: '/90' },
-  { field: 'progressive_passes_per90', label: 'Prog. Passes / 90', category: 'Passing', defaultOp: '>=', defaultVal: 3.5, unit: '/90' },
-  { field: 'progressive_actions_per90', label: 'Prog. Actions (Pass+Drib) / 90', category: 'Passing', defaultOp: '>=', defaultVal: 5.0, unit: '/90' },
-  { field: 'open_play_key_passes_per90', label: 'Key Passes / 90', category: 'Passing', defaultOp: '>=', defaultVal: 0.8, unit: '/90' },
-  { field: 'completed_crosses_per90', label: 'Completed Crosses / 90', category: 'Passing', defaultOp: '>=', defaultVal: 0.5, unit: '/90' },
-  { field: 'completed_passes_per90', label: 'Completed Passes / 90', category: 'Passing', defaultOp: '>=', defaultVal: 35.0, unit: '/90' },
-  { field: 'pass_accuracy', label: 'Pass Accuracy %', category: 'Passing', defaultOp: '>=', defaultVal: 0.82, unit: '%' },
-  { field: 'dribbles_made_per90', label: 'Dribbles Made / 90', category: 'Possession', defaultOp: '>=', defaultVal: 1.5, unit: '/90' },
-  { field: 'net_ball_security', label: 'Net Ball Security / 90', category: 'Possession', defaultOp: '>=', defaultVal: 20.0, unit: '/90' },
-  { field: 'turnover_rate', label: 'Turnover Rate', category: 'Possession', defaultOp: '<=', defaultVal: 0.35, unit: '' },
+  { field: 'goals_per90_adj', label: 'League-Adj Goals / 90', category: 'Attacking', defaultOp: '>=', defaultVal: 0.25, unit: '/90' },
+
+  // Creation & Passing
+  { field: 'assists_per90', label: 'Assists / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 0.20, unit: '/90' },
+  { field: 'xAssists_per90', label: 'Expected Assists (xA) / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 0.20, unit: '/90' },
+  { field: 'progressive_passes_per90', label: 'Prog. Passes / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 3.5, unit: '/90' },
+  { field: 'progressive_actions_per90', label: 'Prog. Actions (Pass+Drib) / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 5.0, unit: '/90' },
+  { field: 'open_play_key_passes_per90', label: 'Key Passes / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 0.8, unit: '/90' },
+  { field: 'completed_crosses_per90', label: 'Completed Crosses / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 0.5, unit: '/90' },
+  { field: 'completed_passes_per90', label: 'Completed Passes / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 35.0, unit: '/90' },
+  { field: 'passes_attempted_per90', label: 'Passes Attempted / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 40.0, unit: '/90' },
+  { field: 'pass_accuracy', label: 'Pass Accuracy %', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 0.82, unit: '%' },
+  { field: 'dribbles_made_per90', label: 'Dribbles Made / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 1.5, unit: '/90' },
+  { field: 'net_ball_security', label: 'Net Ball Security / 90', category: 'Creation & Passing', defaultOp: '>=', defaultVal: 20.0, unit: '/90' },
+  { field: 'turnover_rate', label: 'Turnover Rate', category: 'Creation & Passing', defaultOp: '<=', defaultVal: 0.35, unit: '' },
+
+  // Defending
   { field: 'defensive_actions_per90', label: 'Defensive Actions / 90', category: 'Defending', defaultOp: '>=', defaultVal: 3.5, unit: '/90' },
   { field: 'non_clearance_def_actions_per90', label: 'Non-Clearance Def Act / 90', category: 'Defending', defaultOp: '>=', defaultVal: 3.0, unit: '/90' },
   { field: 'duels_won_per90', label: 'Duels Won / 90 (Ground+Air)', category: 'Defending', defaultOp: '>=', defaultVal: 4.0, unit: '/90' },
   { field: 'tackles_attempted_per90', label: 'Tackles Attempted / 90', category: 'Defending', defaultOp: '>=', defaultVal: 2.0, unit: '/90' },
+  { field: 'tackle_accuracy', label: 'Tackle Accuracy %', category: 'Defending', defaultOp: '>=', defaultVal: 0.70, unit: '%' },
   { field: 'interceptions_per90', label: 'Interceptions / 90', category: 'Defending', defaultOp: '>=', defaultVal: 1.2, unit: '/90' },
+  { field: 'clearances_per90', label: 'Clearances / 90', category: 'Defending', defaultOp: '>=', defaultVal: 2.0, unit: '/90' },
+  { field: 'blocks_per90', label: 'Blocks / 90', category: 'Defending', defaultOp: '>=', defaultVal: 0.8, unit: '/90' },
+  { field: 'shots_blocked_per90', label: 'Shots Blocked / 90', category: 'Defending', defaultOp: '>=', defaultVal: 0.5, unit: '/90' },
   { field: 'pressure_accuracy', label: 'Press Success %', category: 'Defending', defaultOp: '>=', defaultVal: 25.0, unit: '%' },
-  { field: 'aerial_duels_won_per90', label: 'Aerial Duels Won / 90', category: 'Aerial', defaultOp: '>=', defaultVal: 2.5, unit: '/90' },
-  { field: 'heading_accuracy', label: 'Heading Accuracy %', category: 'Aerial', defaultOp: '>=', defaultVal: 0.50, unit: '%' },
-  { field: 'sprints_per_km', label: 'Sprints per km (Intensity)', category: 'Physical', defaultOp: '>=', defaultVal: 0.60, unit: '/km' },
-  { field: 'high_press_load', label: 'High Press Load Index', category: 'Physical', defaultOp: '>=', defaultVal: 8.0, unit: '' },
-  { field: 'fouls_won_net', label: 'Net Fouls Drawn / 90', category: 'Physical', defaultOp: '>=', defaultVal: 0.5, unit: '/90' },
-  { field: 'distance_covered_km_per90', label: 'Distance Covered / 90', category: 'Physical', defaultOp: '>=', defaultVal: 11.5, unit: 'km' },
+  { field: 'pressure_efficiency', label: 'Pressure Efficiency', category: 'Defending', defaultOp: '>=', defaultVal: 0.25, unit: '' },
+
+  // Physical & Aerial
+  { field: 'aerial_duels_won_per90', label: 'Aerial Duels Won / 90', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 2.5, unit: '/90' },
+  { field: 'heading_accuracy', label: 'Heading Accuracy %', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 0.50, unit: '%' },
+  { field: 'sprints_per_km', label: 'Sprints per km (Intensity)', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 0.60, unit: '/km' },
+  { field: 'sprints_per90', label: 'Sprints / 90', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 15.0, unit: '/90' },
+  { field: 'distance_covered_km_per90', label: 'Distance Covered / 90', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 11.0, unit: 'km' },
+  { field: 'high_press_load', label: 'High Press Load Index', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 8.0, unit: '' },
+  { field: 'fouls_won_net', label: 'Net Fouls Drawn / 90', category: 'Physical & Aerial', defaultOp: '>=', defaultVal: 0.5, unit: '/90' },
+  { field: 'cards_per_foul', label: 'Cards per Foul Ratio', category: 'Physical & Aerial', defaultOp: '<=', defaultVal: 0.15, unit: '' },
+  { field: 'foul_per_duel', label: 'Fouls per Duel Ratio', category: 'Physical & Aerial', defaultOp: '<=', defaultVal: 0.25, unit: '' },
 ];
 
-// Goalkeeper Metric Catalog
+// Goalkeeper Metric Catalog - comprehensive catalog of all table columns & metrics
 const GK_CATALOG = [
-  { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
+  // General & Competition
   { field: 'age', label: 'Age', category: 'General', defaultOp: '<=', defaultVal: 28, unit: 'yrs' },
   { field: 'minutes_played', label: 'Minutes Played', category: 'General', defaultOp: '>=', defaultVal: 900, unit: 'mins' },
+  { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
+  { field: 'sample_reliability', label: 'Sample Reliability Factor', category: 'General', defaultOp: '>=', defaultVal: 0.25, unit: '' },
+
+  // Financials
   { field: 'transfer_value_m', label: 'Transfer Value', category: 'Financials', defaultOp: '<=', defaultVal: 10, unit: '£M' },
   { field: 'wage_per_week_k', label: 'Wage Per Week', category: 'Financials', defaultOp: '<=', defaultVal: 20, unit: '£k' },
+  { field: 'value_gap', label: 'Value Gap Index (Moneyball Gap)', category: 'Financials', defaultOp: '>=', defaultVal: 40.0, unit: '' },
+
+  // Shot Stopping
+  { field: 'shots_faced_per90', label: 'Shots Faced / 90', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 4.0, unit: '/90' },
+  { field: 'shots_faced_total', label: 'Shots Faced Total (Exposure)', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 40, unit: 'shots' },
+  { field: 'shot_difficulty', label: 'Shot Difficulty Faced (xGOT/Shot)', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.35, unit: '' },
   { field: 'xgp_per_shot', label: 'xGP per Shot (Shot Prevention)', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.05, unit: '/shot' },
   { field: 'xgp_per_shot_shrunk', label: 'xGP per Shot (Shrunk k=300)', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.02, unit: '/shot' },
   { field: 'goals_vs_xgot_ratio', label: 'Goals Conceded / xGOT Ratio', category: 'Shot Stopping', defaultOp: '<=', defaultVal: 0.85, unit: '' },
   { field: 'xgp_per_season', label: 'Projected Goals Saved / Season', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 4.0, unit: 'goals' },
   { field: 'xGoals_prevented_per90', label: 'xG Prevented / 90', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.15, unit: '/90' },
-  { field: 'saves_percentage', label: 'Save Percentage', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.72, unit: '%' },
-  { field: 'shot_difficulty', label: 'Shot Difficulty Faced (xGOT/Shot)', category: 'Workload & Quality', defaultOp: '>=', defaultVal: 0.35, unit: '' },
-  { field: 'shots_faced_total', label: 'Shots Faced Total (Exposure)', category: 'Workload & Quality', defaultOp: '>=', defaultVal: 40, unit: 'shots' },
-  { field: 'parry_rate', label: 'Parry Rate (Rebound Risk)', category: 'Handling', defaultOp: '<=', defaultVal: 0.65, unit: '' },
-  { field: 'hold_rate_shrunk', label: 'Hold Rate (Shrunk k=150)', category: 'Handling', defaultOp: '>=', defaultVal: 0.30, unit: '' },
-  { field: 'hold_rate_over_expected', label: 'Hold Rate Over Expected', category: 'Handling', defaultOp: '>=', defaultVal: 0.02, unit: '' },
-  { field: 'hold_rate_pct', label: 'Hold Rate % (Rebound Control)', category: 'Handling', defaultOp: '>=', defaultVal: 30.0, unit: '%' },
-  { field: 'sweeper_actions_per90', label: 'Sweeper Actions / 90 (Int+Clr)', category: 'Sweeping & Aerial', defaultOp: '>=', defaultVal: 7.5, unit: '/90' },
-  { field: 'sweeper_share', label: 'Proactive Sweeper Share', category: 'Sweeping & Aerial', defaultOp: '>=', defaultVal: 0.05, unit: '' },
+  { field: 'saves_percentage', label: 'Save Percentage %', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.72, unit: '%' },
+  { field: 'saves_made_per90', label: 'Saves Made / 90', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 3.0, unit: '/90' },
+  { field: 'goals_conceded_per90', label: 'Goals Conceded / 90', category: 'Shot Stopping', defaultOp: '<=', defaultVal: 1.20, unit: '/90' },
+  { field: 'xSave_rate', label: 'Expected Save Rate (xSave %)', category: 'Shot Stopping', defaultOp: '>=', defaultVal: 0.70, unit: '%' },
+
+  // Handling & Sweeping
+  { field: 'parry_rate', label: 'Parry Rate (Rebound Risk)', category: 'Handling & Sweeping', defaultOp: '<=', defaultVal: 0.65, unit: '' },
+  { field: 'hold_rate_pct', label: 'Hold Rate % (Rebound Control)', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 30.0, unit: '%' },
+  { field: 'hold_rate_shrunk', label: 'Hold Rate (Shrunk k=150)', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 0.30, unit: '' },
+  { field: 'hold_rate_over_expected', label: 'Hold Rate Over Expected', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 0.02, unit: '' },
+  { field: 'sweeper_actions_per90', label: 'Sweeper Actions / 90 (Int+Clr)', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 7.5, unit: '/90' },
+  { field: 'sweeper_share', label: 'Proactive Sweeper Share', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 0.05, unit: '' },
+  { field: 'clearances_per90', label: 'Clearances / 90', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 4.0, unit: '/90' },
+  { field: 'interceptions_per90', label: 'Interceptions / 90', category: 'Handling & Sweeping', defaultOp: '>=', defaultVal: 1.0, unit: '/90' },
+  { field: 'errors_leading_to_goal_per90', label: 'Errors Leading to Goal / 90', category: 'Handling & Sweeping', defaultOp: '<=', defaultVal: 0.05, unit: '/90' },
+
+  // Distribution
+  { field: 'passes_attempted_per90', label: 'Passes Attempted / 90', category: 'Distribution', defaultOp: '>=', defaultVal: 15.0, unit: '/90' },
   { field: 'completed_passes_per90', label: 'Completed Passes / 90', category: 'Distribution', defaultOp: '>=', defaultVal: 12.0, unit: '/90' },
-  { field: 'giveaways_per90', label: 'Giveaways / 90 (Lost Buildup)', category: 'Distribution', defaultOp: '<=', defaultVal: 8.0, unit: '/90' },
   { field: 'pass_accuracy', label: 'Pass Accuracy %', category: 'Distribution', defaultOp: '>=', defaultVal: 0.65, unit: '%' },
+  { field: 'giveaways_per90', label: 'Giveaways / 90 (Lost Buildup)', category: 'Distribution', defaultOp: '<=', defaultVal: 8.0, unit: '/90' },
+
+  // Specialist
   { field: 'pen_save_shrunk', label: 'Penalty Save % (Shrunk k=20)', category: 'Specialist', defaultOp: '>=', defaultVal: 0.20, unit: '%' },
-  { field: 'sample_reliability', label: 'Sample Reliability Factor', category: 'General', defaultOp: '>=', defaultVal: 0.25, unit: '' },
-  { field: 'value_gap', label: 'Value Gap Index (Moneyball Gap)', category: 'Financials', defaultOp: '>=', defaultVal: 40.0, unit: '' },
+  { field: 'penalties_faced_per90', label: 'Penalties Faced / 90', category: 'Specialist', defaultOp: '>=', defaultVal: 0.10, unit: '/90' },
 ];
 
 
@@ -467,6 +512,7 @@ function ScreenerContent() {
 
   // Popover & modal
   const [showAddFilterModal, setShowAddFilterModal] = useState<boolean>(false);
+  const [catalogSearch, setCatalogSearch] = useState<string>('');
   const [editingFilterIdx, setEditingFilterIdx] = useState<number | null>(null);
   const [editOp, setEditOp] = useState<string>('>=');
   const [editVal, setEditVal] = useState<string>('');
@@ -634,6 +680,28 @@ function ScreenerContent() {
     setPage(1);
   };
 
+  // Quick toggle / edit filter from table column header
+  const handleToggleColumnFilter = (colKey: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const existingIdx = activeFilters.findIndex((f) => f.field === colKey);
+    if (existingIdx !== -1) {
+      handleStartEditFilter(existingIdx);
+    } else {
+      const metric = metricCatalog.find((m) => m.field === colKey);
+      if (metric) {
+        const newFilter: ScreenerFilter = {
+          field: metric.field,
+          operator: metric.defaultOp as any,
+          value: metric.defaultVal,
+        };
+        const nextFilters = [...activeFilters, newFilter];
+        setActiveFilters(nextFilters);
+        handleStartEditFilter(nextFilters.length - 1);
+        setPage(1);
+      }
+    }
+  };
+
   const renderSortTh = (
     colKey: string,
     label: string,
@@ -641,21 +709,32 @@ function ScreenerContent() {
     minWidth?: string
   ) => {
     const isSorted = sortBy === colKey;
+    const catalogItem = metricCatalog.find((m) => m.field === colKey);
+    const activeFilterIdx = activeFilters.findIndex((f) => f.field === colKey);
+    const hasFilter = activeFilterIdx !== -1;
+    const activeFilter = hasFilter ? activeFilters[activeFilterIdx] : null;
+
     return (
       <th
-        onClick={() => handleSort(colKey)}
         style={{
           textAlign: align,
-          cursor: 'pointer',
-          color: isSorted ? '#fbbf24' : 'var(--text-muted)',
-          fontWeight: isSorted ? 700 : 600,
-          background: isSorted ? 'rgba(251, 191, 36, 0.08)' : undefined,
-          borderBottom: isSorted ? '2px solid #fbbf24' : undefined,
+          color: isSorted ? '#fbbf24' : hasFilter ? (isGK ? '#34d399' : '#38bdf8') : 'var(--text-muted)',
+          fontWeight: isSorted || hasFilter ? 700 : 600,
+          background: isSorted
+            ? 'rgba(251, 191, 36, 0.08)'
+            : hasFilter
+            ? (isGK ? 'rgba(16, 185, 129, 0.08)' : 'rgba(56, 189, 248, 0.08)')
+            : undefined,
+          borderBottom: isSorted
+            ? '2px solid #fbbf24'
+            : hasFilter
+            ? (isGK ? '2px solid #10b981' : '2px solid #38bdf8')
+            : undefined,
           minWidth: minWidth,
           userSelect: 'none',
           transition: 'all 0.15s ease',
+          padding: '0.65rem 0.5rem',
         }}
-        title={`Sort by ${label} (${isSorted ? (sortOrder === 'DESC' ? 'High to Low (click to reverse)' : 'Low to High (click to reverse)') : 'Click to sort'})`}
       >
         <div
           style={{
@@ -666,15 +745,63 @@ function ScreenerContent() {
             width: '100%',
           }}
         >
-          <span>{label}</span>
-          {isSorted ? (
-            sortOrder === 'DESC' ? (
-              <ArrowDown size={12} color="#fbbf24" />
+          <span
+            onClick={() => handleSort(colKey)}
+            style={{
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+            }}
+            title={`Sort by ${label} (${isSorted ? (sortOrder === 'DESC' ? 'High to Low (click to reverse)' : 'Low to High (click to reverse)') : 'Click to sort'})`}
+          >
+            <span>{label}</span>
+            {isSorted ? (
+              sortOrder === 'DESC' ? (
+                <ArrowDown size={12} color="#fbbf24" />
+              ) : (
+                <ArrowUp size={12} color="#fbbf24" />
+              )
             ) : (
-              <ArrowUp size={12} color="#fbbf24" />
-            )
-          ) : (
-            <ArrowUpDown size={11} style={{ opacity: 0.3 }} />
+              <ArrowUpDown size={11} style={{ opacity: 0.3 }} />
+            )}
+          </span>
+
+          {catalogItem && (
+            <button
+              type="button"
+              onClick={(e) => handleToggleColumnFilter(colKey, e)}
+              title={
+                hasFilter
+                  ? `Filter active: ${activeFilter?.operator} ${activeFilter?.value}. Click to edit or remove.`
+                  : `Screen by ${label} (Click to set filter threshold)`
+              }
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px',
+                padding: hasFilter ? '2px 5px' : '2px 4px',
+                borderRadius: '4px',
+                background: hasFilter
+                  ? (isGK ? 'rgba(16, 185, 129, 0.25)' : 'rgba(56, 189, 248, 0.25)')
+                  : 'rgba(255, 255, 255, 0.05)',
+                border: hasFilter
+                  ? `1px solid ${isGK ? '#10b981' : '#38bdf8'}`
+                  : '1px solid rgba(255, 255, 255, 0.1)',
+                color: hasFilter ? (isGK ? '#34d399' : '#38bdf8') : 'var(--text-dim)',
+                cursor: 'pointer',
+                fontSize: '0.62rem',
+                fontWeight: 700,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Filter size={10} color={hasFilter ? (isGK ? '#34d399' : '#38bdf8') : 'currentColor'} />
+              {hasFilter && (
+                <span>
+                  {activeFilter?.operator}{activeFilter?.value}
+                </span>
+              )}
+            </button>
           )}
         </div>
       </th>
@@ -1130,73 +1257,157 @@ function ScreenerContent() {
         </button>
       </div>
 
-      {/* FILTER EDIT POPOVER */}
-      {editingFilterIdx !== null && (
+      {/* FILTER EDIT MODAL */}
+      {editingFilterIdx !== null && activeFilters[editingFilterIdx] && (
         <div
-          ref={popoverRef}
           style={{
-            position: 'absolute',
-            zIndex: 100,
-            background: '#161e31',
-            border: `1px solid ${isGK ? '#10b981' : '#38bdf8'}`,
-            borderRadius: '10px',
-            padding: '1rem',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 1050,
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
+            justifyContent: 'center',
+            padding: '1.5rem',
           }}
+          onClick={() => setEditingFilterIdx(null)}
         >
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>
-            {getMetricLabel(activeFilters[editingFilterIdx].field)}:
-          </span>
-          <select
-            value={editOp}
-            onChange={(e) => setEditOp(e.target.value)}
+          <div
+            ref={popoverRef}
+            className="glass-card"
             style={{
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
-              color: '#fff',
-              padding: '0.3rem 0.5rem',
-              fontSize: '0.8rem',
+              width: '100%',
+              maxWidth: '400px',
+              background: '#121827',
+              border: `1px solid ${isGK ? '#10b981' : '#38bdf8'}`,
+              borderRadius: '12px',
+              padding: '1.5rem',
+              boxShadow: '0 20px 48px rgba(0,0,0,0.85)',
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <option value=">=">&gt;=</option>
-            <option value="<=">&lt;=</option>
-            <option value=">">&gt;</option>
-            <option value="<">&lt;</option>
-            <option value="=">=</option>
-          </select>
-          <input
-            type="number"
-            step="any"
-            value={editVal}
-            onChange={(e) => setEditVal(e.target.value)}
-            style={{
-              width: '80px',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
-              color: '#fff',
-              padding: '0.3rem 0.5rem',
-              fontSize: '0.8rem',
-            }}
-          />
-          <button
-            onClick={handleSaveEditFilter}
-            className="btn-primary"
-            style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
-          >
-            Apply
-          </button>
-          <button
-            onClick={() => setEditingFilterIdx(null)}
-            className="btn-secondary"
-            style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
-          >
-            Cancel
-          </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <div
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    color: isGK ? '#34d399' : '#38bdf8',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  Edit Filter Metric
+                </div>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
+                  {getMetricLabel(activeFilters[editingFilterIdx].field)}
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingFilterIdx(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+              <select
+                value={editOp}
+                onChange={(e) => setEditOp(e.target.value)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  padding: '0.55rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <option value=">=" style={{ background: '#121827' }}>&gt;= (At least)</option>
+                <option value="<=" style={{ background: '#121827' }}>&lt;= (At most)</option>
+                <option value=">" style={{ background: '#121827' }}>&gt; (Greater than)</option>
+                <option value="<" style={{ background: '#121827' }}>&lt; (Less than)</option>
+                <option value="=" style={{ background: '#121827' }}>= (Exactly)</option>
+              </select>
+
+              <div style={{ flex: 1, position: 'relative' }}>
+                <input
+                  type="number"
+                  step="any"
+                  autoFocus
+                  value={editVal}
+                  onChange={(e) => setEditVal(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveEditFilter();
+                  }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    padding: '0.55rem 0.75rem',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  handleRemoveFilter(editingFilterIdx);
+                  setEditingFilterIdx(null);
+                }}
+                className="btn-secondary"
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  fontSize: '0.78rem',
+                  color: '#fb7185',
+                  borderColor: 'rgba(251, 113, 133, 0.3)',
+                }}
+              >
+                Remove Filter
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingFilterIdx(null)}
+                  className="btn-secondary"
+                  style={{ padding: '0.45rem 0.85rem', fontSize: '0.78rem' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEditFilter}
+                  className="btn-primary"
+                  style={{
+                    padding: '0.45rem 1.1rem',
+                    fontSize: '0.78rem',
+                    background: isGK ? '#10b981' : undefined,
+                    borderColor: isGK ? '#10b981' : undefined,
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1214,14 +1425,17 @@ function ScreenerContent() {
             justifyContent: 'center',
             padding: '1.5rem',
           }}
-          onClick={() => setShowAddFilterModal(false)}
+          onClick={() => {
+            setShowAddFilterModal(false);
+            setCatalogSearch('');
+          }}
         >
           <div
             className="glass-card"
             style={{
               width: '100%',
-              maxWidth: '640px',
-              maxHeight: '80vh',
+              maxWidth: '680px',
+              maxHeight: '82vh',
               overflowY: 'auto',
               background: '#101522',
               border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -1237,67 +1451,169 @@ function ScreenerContent() {
                 <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
                   {isGK
                     ? 'Screen across shot stopping, sweeping mobility, rebound control, and distribution'
-                    : 'Select from available outfield stats and valuation indices'}
+                    : 'Select from available outfield stats, performance metrics, and valuation indices'}
                 </p>
               </div>
               <button
-                onClick={() => setShowAddFilterModal(false)}
-                style={{ color: 'var(--text-muted)', cursor: 'pointer' }}
+                type="button"
+                onClick={() => {
+                  setShowAddFilterModal(false);
+                  setCatalogSearch('');
+                }}
+                style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'transparent', border: 'none' }}
               >
                 <X size={20} />
               </button>
             </div>
 
+            {/* Search Input in Add Filter Modal */}
+            <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
+              <Search
+                size={14}
+                style={{
+                  position: 'absolute',
+                  left: '0.85rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-dim)',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Search metrics (e.g. goals, passes, tackles, xG, save %, difficulty)..."
+                value={catalogSearch}
+                onChange={(e) => setCatalogSearch(e.target.value)}
+                autoFocus
+                style={{
+                  width: '100%',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  padding: '0.6rem 0.85rem 0.6rem 2.4rem',
+                  color: '#fff',
+                  fontSize: '0.85rem',
+                  outline: 'none',
+                }}
+              />
+              {catalogSearch && (
+                <button
+                  type="button"
+                  onClick={() => setCatalogSearch('')}
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-dim)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {Array.from(new Set(metricCatalog.map((m) => m.category))).map((category) => {
-                const catMetrics = metricCatalog.filter((m) => m.category === category);
-                return (
-                  <div key={category}>
-                    <div
-                      style={{
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        color: 'var(--text-dim)',
-                        textTransform: 'uppercase',
-                        marginBottom: '0.5rem',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      {category}
+              {(() => {
+                const filtered = metricCatalog.filter((m) => {
+                  if (!catalogSearch.trim()) return true;
+                  const q = catalogSearch.toLowerCase().trim();
+                  return (
+                    m.label.toLowerCase().includes(q) ||
+                    m.field.toLowerCase().includes(q) ||
+                    m.category.toLowerCase().includes(q)
+                  );
+                });
+
+                const categories = Array.from(new Set(filtered.map((m) => m.category)));
+
+                if (categories.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+                      No metrics match &ldquo;{catalogSearch}&rdquo;. Try another search term.
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
-                      {catMetrics.map((m) => {
-                        const isAlreadyAdded = activeFilters.some((f) => f.field === m.field);
-                        return (
-                          <button
-                            key={m.field}
-                            onClick={() => handleAddFilter(m)}
-                            disabled={isAlreadyAdded}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '0.55rem 0.75rem',
-                              borderRadius: '6px',
-                              background: isAlreadyAdded ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
-                              border: isAlreadyAdded ? '1px solid rgba(255, 255, 255, 0.04)' : '1px solid var(--border-subtle)',
-                              color: isAlreadyAdded ? 'var(--text-dim)' : '#fff',
-                              fontSize: '0.78rem',
-                              fontWeight: 500,
-                              textAlign: 'left',
-                              cursor: isAlreadyAdded ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.15s ease',
-                            }}
-                          >
-                            <span>{m.label}</span>
-                            <Plus size={12} color="var(--text-dim)" />
-                          </button>
-                        );
-                      })}
+                  );
+                }
+
+                return categories.map((category) => {
+                  const catMetrics = filtered.filter((m) => m.category === category);
+                  return (
+                    <div key={category}>
+                      <div
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          color: 'var(--text-dim)',
+                          textTransform: 'uppercase',
+                          marginBottom: '0.5rem',
+                          letterSpacing: '0.05em',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <span>{category}</span>
+                        <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>
+                          {catMetrics.length} metrics
+                        </span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', gap: '0.5rem' }}>
+                        {catMetrics.map((m) => {
+                          const isAlreadyAdded = activeFilters.some((f) => f.field === m.field);
+                          return (
+                            <button
+                              key={m.field}
+                              type="button"
+                              onClick={() => {
+                                handleAddFilter(m);
+                                setCatalogSearch('');
+                              }}
+                              disabled={isAlreadyAdded}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '0.55rem 0.75rem',
+                                borderRadius: '6px',
+                                background: isAlreadyAdded ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
+                                border: isAlreadyAdded ? '1px solid rgba(255, 255, 255, 0.04)' : '1px solid var(--border-subtle)',
+                                color: isAlreadyAdded ? 'var(--text-dim)' : '#fff',
+                                fontSize: '0.78rem',
+                                fontWeight: 500,
+                                textAlign: 'left',
+                                cursor: isAlreadyAdded ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.15s ease',
+                                gap: '0.4rem',
+                              }}
+                            >
+                              <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {m.label}
+                              </span>
+                              {m.unit && (
+                                <span
+                                  style={{
+                                    fontSize: '0.62rem',
+                                    padding: '1px 4px',
+                                    borderRadius: '3px',
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    color: 'var(--text-dim)',
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {m.unit}
+                                </span>
+                              )}
+                              <Plus size={12} color={isAlreadyAdded ? 'rgba(255,255,255,0.1)' : 'var(--text-dim)'} />
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>

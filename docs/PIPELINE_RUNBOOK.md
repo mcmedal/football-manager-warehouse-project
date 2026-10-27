@@ -134,6 +134,9 @@ EXEC dbo.usp_run_warehouse_pipeline
 
 *(Or do both steps in one command via `./prepare_data.sh --season 2024/25`)*
 
+> [!IMPORTANT]
+> **Docker Container Synchronization:** `dbo.usp_run_warehouse_pipeline` executes inside the SQL Server Docker container and reads the CSV files currently located in `/data/` inside the container. Executing `EXEC dbo.usp_run_warehouse_pipeline` alone in SSMS or Azure Data Studio does not copy fresh files from your host machine; it will simply re-ingest the previous season's CSV files already inside the container. Always run `./prepare_data.sh --season <SEASON>` (or run `./prepare_data.sh` before executing the SQL command) to convert and synchronize your new season's exports into the container.
+
 * `gold.load_gold` will automatically expire old records (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`) and insert the new snapshot without deleting past history.
 
 ### 3.5. Midseason & Winter Transfer Ingestion (Intra-Season SCD2)

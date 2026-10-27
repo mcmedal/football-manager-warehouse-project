@@ -356,7 +356,7 @@ export default function MetricsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', alignItems: 'center' }}>
             {/* SVG Radial Chart */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '340px' }}>
-              <svg width="320" height="320" viewBox="0 0 320 320" style={{ overflow: 'visible' }}>
+              <svg width="320" height="320" viewBox="0 0 320 320" style={{ overflow: 'visible' }} suppressHydrationWarning>
                 <defs>
                   <radialGradient id="radar-bg-radial" cx="50%" cy="50%" r="50%">
                     <stop offset="0%" stopColor="#0e1726" stopOpacity="0.8" />
@@ -383,12 +383,15 @@ export default function MetricsPage() {
                     const angleStep = (2 * Math.PI) / total;
                     const startAngle = i * angleStep - Math.PI / 2;
                     const endAngle = (i + 1) * angleStep - Math.PI / 2;
-                    const radius = (slice.pct / 100) * 135;
+                    const radius = Number(((slice.pct / 100) * 135).toFixed(2));
 
-                    const x1 = 160 + radius * Math.cos(startAngle);
-                    const y1 = 160 + radius * Math.sin(startAngle);
-                    const x2 = 160 + radius * Math.cos(endAngle);
-                    const y2 = 160 + radius * Math.sin(endAngle);
+                    const x1 = (160 + radius * Math.cos(startAngle)).toFixed(2);
+                    const y1 = (160 + radius * Math.sin(startAngle)).toFixed(2);
+                    const x2 = (160 + radius * Math.cos(endAngle)).toFixed(2);
+                    const y2 = (160 + radius * Math.sin(endAngle)).toFixed(2);
+
+                    const spokeX2 = (160 + 140 * Math.cos(startAngle)).toFixed(2);
+                    const spokeY2 = (160 + 140 * Math.sin(startAngle)).toFixed(2);
 
                     const isSelected = selectedGraphSlice === i;
 
@@ -401,15 +404,17 @@ export default function MetricsPage() {
                           stroke={slice.color}
                           strokeWidth={isSelected ? 2 : 1}
                           style={{ transition: 'all 0.2s ease' }}
+                          suppressHydrationWarning
                         />
                         {/* Spoke Divider Line */}
                         <line
                           x1="160"
                           y1="160"
-                          x2={160 + 140 * Math.cos(startAngle)}
-                          y2={160 + 140 * Math.sin(startAngle)}
+                          x2={spokeX2}
+                          y2={spokeY2}
                           stroke="rgba(255,255,255,0.08)"
                           strokeWidth="1"
+                          suppressHydrationWarning
                         />
                       </g>
                     );
@@ -423,8 +428,8 @@ export default function MetricsPage() {
                           const total = demoSlices.length;
                           const angle = i * ((2 * Math.PI) / total) - Math.PI / 2;
                           const r = (slice.pct / 100) * 135;
-                          const x = 160 + r * Math.cos(angle);
-                          const y = 160 + r * Math.sin(angle);
+                          const x = (160 + r * Math.cos(angle)).toFixed(2);
+                          const y = (160 + r * Math.sin(angle)).toFixed(2);
                           return `${x},${y}`;
                         })
                         .join(' ');
@@ -434,6 +439,7 @@ export default function MetricsPage() {
                           fill="rgba(56, 189, 248, 0.35)"
                           stroke="#38bdf8"
                           strokeWidth="2.5"
+                          suppressHydrationWarning
                         />
                       );
                     })()}

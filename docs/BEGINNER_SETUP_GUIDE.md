@@ -333,7 +333,11 @@ Move or copy your exported `.html` (or `.csv`) files into the [`documents/`](fil
 
 ### Step 4: Re-Run the Pipeline
 - **Windows:** In PowerShell, run `powershell -ExecutionPolicy Bypass -File .\run_pipeline_docker.ps1`
-- **Mac / Linux:** In Terminal, run `./prepare_data.sh` (or `./run_pipeline_docker.sh`)
+- **Mac / Linux (Default / Re-sync):** In Terminal, run `./prepare_data.sh` (or `./run_pipeline_docker.sh`)
+- **Mac / Linux (New Season Ingestion):** In Terminal, run:
+  ```bash
+  ./prepare_data.sh --season 2024/25
+  ```
 
 Refresh **[http://localhost:3000](http://localhost:3000)** — your own club and scouted targets are now live in the web app!
 

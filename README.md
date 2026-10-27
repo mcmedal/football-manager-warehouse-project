@@ -185,6 +185,15 @@ The project comes pre-loaded with **over 11,350 scouted players** and a complete
 
 ---
 
+### 🔄 Ingesting Subsequent Seasons (Multi-Season SCD2)
+When you progress to a new season in FM24, ingest the new data with 1-click while preserving all historical growth:
+```bash
+./prepare_data.sh --season 2024/25
+```
+*(For detailed instructions and manual two-step workflows, see [docs/PIPELINE_RUNBOOK.md](docs/PIPELINE_RUNBOOK.md#34-ingesting-a-new-season-going-forward-multi-season-scd2)).*
+
+---
+
 ### 🛠️ Native SQL Execution (Windows without Docker / SSMS)
 If you are running native Microsoft SQL Server and SSMS:
 ```sql

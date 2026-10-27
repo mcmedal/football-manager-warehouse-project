@@ -115,29 +115,39 @@ EXEC dbo.usp_run_warehouse_pipeline
     @RunTests = 1;
 ```
 
-### 3.4. Loading Subsequent Seasons (Multi-Season SCD2)
-When transitioning to a new in-game season (e.g. at the conclusion of 2023/24):
-1. Export fresh HTML or CSV files from FM24 for the new season.
-2. Run [`prepare_data.sh`](file:///prepare_data.sh) to automatically convert HTML exports to CSV, normalize goalkeeper/outfield schemas, and synchronize files to the database container:
+### 3.4. Ingesting a New Season Going Forward (Multi-Season SCD2)
+When transitioning to a new in-game season (e.g. from `2023/24` to `2024/25`):
+
+1. **Export Fresh Data from FM24:** Export your fresh HTML or CSV files from FM24 into your export directory (e.g. `24-25/` subfolder or root export folder).
+2. **Execute Ingestion:** Run the 1-click seasonal preparation and ingestion command:
 
 ```bash
-./prepare_data.sh
+./prepare_data.sh --season 2024/25
 ```
 
-3. Execute the master orchestrator passing the new season string:
-
-```sql
-EXEC dbo.usp_run_warehouse_pipeline 
-    @Season = '2024/25', 
-    @RunTests = 1;
-```
-
-*(Or do both steps in one command via `./prepare_data.sh --season 2024/25`)*
+This single command automatically:
+* **Auto-detects & Normalizes:** Detects the new season's exports (e.g., in a `24-25/` or `2024-25/` subfolder, unzips archives if needed, and normalizes outfield and goalkeeper schemas).
+* **Prunes Stale Partitions:** Automatically removes old partition files (e.g., `interested_out_players*.csv`) from both `documents/` on the host and `/data/` inside the container to prevent partition leakage.
+* **Synchronizes Container:** Copies the standardized CSVs into `/data/` inside the SQL Server container.
+* **Executes Pipeline:** Calls `EXEC dbo.usp_run_warehouse_pipeline @Season = '2024/25', @DataPath = '/data/', @RunTests = 1;`.
+* **Maintains SCD Type 2 History:** Automatically expires previous records (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`) and activates the new season (`dwh_current_validity = 1`) without deleting past history.
 
 > [!IMPORTANT]
-> **Docker Container Synchronization:** `dbo.usp_run_warehouse_pipeline` executes inside the SQL Server Docker container and reads the CSV files currently located in `/data/` inside the container. Executing `EXEC dbo.usp_run_warehouse_pipeline` alone in SSMS or Azure Data Studio does not copy fresh files from your host machine; it will simply re-ingest the previous season's CSV files already inside the container. Always run `./prepare_data.sh --season <SEASON>` (or run `./prepare_data.sh` before executing the SQL command) to convert and synchronize your new season's exports into the container.
+> **Why Not Run `EXEC dbo.usp_run_warehouse_pipeline` Alone in SSMS?**  
+> `dbo.usp_run_warehouse_pipeline` runs inside the SQL Server Docker container and reads the CSV files currently located in `/data/` inside the container. Executing `EXEC dbo.usp_run_warehouse_pipeline @Season = '2024/25'` directly in SSMS or Azure Data Studio without running `./prepare_data.sh` will **not** transfer your new export files from your host machine into the container; it will simply re-ingest the previous season's CSV files already inside the container, producing duplicate players with identical stats. Always use `./prepare_data.sh --season <SEASON>` (or run `./prepare_data.sh` before the SQL command) to synchronize your data.
 
-* `gold.load_gold` will automatically expire old records (`dwh_current_validity = 0`, `dwh_cd_valid_till = GETDATE()`) and insert the new snapshot without deleting past history.
+#### Alternative: Manual Two-Step Execution
+If you prefer to separate file synchronization from SQL pipeline execution:
+1. Synchronize the files to the container:
+   ```bash
+   ./prepare_data.sh
+   ```
+2. Then execute the master orchestrator in SSMS, Azure Data Studio, or `sqlcmd`:
+   ```sql
+   EXEC dbo.usp_run_warehouse_pipeline 
+       @Season = '2024/25', 
+       @RunTests = 1;
+   ```
 
 ### 3.5. Midseason & Winter Transfer Ingestion (Intra-Season SCD2)
 The warehouse natively supports midseason data exports (e.g. at the January transfer window or during a midseason tactical review) without affecting or distorting subsequent end-of-season loads:

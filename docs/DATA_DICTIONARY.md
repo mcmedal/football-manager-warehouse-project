@@ -409,7 +409,7 @@ The Gold schema exposes 24 analytical views and dimensional marts categorized in
 | **`xAssists_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `xAssists_per90 * league_difficulty_coef`. League-difficulty normalized expected assists per 90. |
 | **`npxg_plus_xa_per90_adj`** | `DECIMAL(7,4)` | YES | **Formula:** `npxg_plus_xa_per90 * league_difficulty_coef`. League-difficulty normalized goal involvement threat per 90. |
 | **`cost_per_xgi`** | `DECIMAL(10,2)` | YES | **Formula:** `((wage * 52) + (fee / 3)) / NULLIF(npxGI * (minutes / 90.0), 0)`. Annualized financial cost (£k) per annual expected goal involvement. |
-| **`xgi_per_cost_m`** | `DECIMAL(7,4)` | YES | **Formula:** `(npxGI * (minutes / 90.0)) / NULLIF((wage * 0.052) + (fee / 3.0), 0)`. Annual expected goal contribution output per £1M annualized expenditure. |
+| **`xgi_per_cost_m`** | `DECIMAL(12,4)` | YES | **Formula:** `(npxGI * (minutes / 90.0)) / NULLIF((wage * 0.052) + (fee / 3.0), 0)`. Annual expected goal contribution output per £1M annualized expenditure. |
 | **`value_gap`** | `DECIMAL(5,1)` | YES | **Formula:** `PERCENT_RANK(npxGI) - PERCENT_RANK(transfer_value_m)`. Market undervaluation index ($[-100.0, +100.0]$). High positive values indicate elite performers available at discount fees. |
 | **`on_pitch_goal_diff_per90`** | `DECIMAL(5,2)` | YES | **Formula:** `team_goals_scored_per90 - team_goals_conceded_per90`. Net team goal difference while player was on the pitch. |
 | **`on_pitch_gd_shrunk`** | `DECIMAL(7,4)` | YES | **Formula:** `(team_goals_scored - team_goals_conceded) * (minutes / (minutes + 900.0))`. Sample-size shrunk on-pitch goal differential. |

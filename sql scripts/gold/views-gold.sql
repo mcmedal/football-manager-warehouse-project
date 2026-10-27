@@ -160,7 +160,7 @@ SELECT
 
     -- Moneyball Efficiency Indices & Valuation
     CAST(((v.wage_per_week_k * 52.0) + (v.transfer_value_m * 1000.0 / 3.0)) / NULLIF((s.non_penalty_xGoals_per90 + s.xAssits_per90) * (s.minutes_played / 90.0), 0) AS DECIMAL(10,2)) AS cost_per_xgi,
-    CAST(((s.non_penalty_xGoals_per90 + s.xAssits_per90) * (s.minutes_played / 90.0)) / NULLIF((v.wage_per_week_k * 0.052) + (v.transfer_value_m / 3.0), 0) AS DECIMAL(7,4)) AS xgi_per_cost_m,
+    CAST(((s.non_penalty_xGoals_per90 + s.xAssits_per90) * (s.minutes_played / 90.0)) / NULLIF((v.wage_per_week_k * 0.052) + (v.transfer_value_m / 3.0), 0) AS DECIMAL(12,4)) AS xgi_per_cost_m,
     CAST((PERCENT_RANK() OVER (ORDER BY (s.non_penalty_xGoals_per90 + s.xAssits_per90)) * 100.0) - 
          (PERCENT_RANK() OVER (ORDER BY COALESCE(v.transfer_value_m, 0.10)) * 100.0) AS DECIMAL(5,1)) AS value_gap,
 

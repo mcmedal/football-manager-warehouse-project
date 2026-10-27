@@ -19,7 +19,9 @@ import {
   RotateCcw,
   Globe,
   Coins,
-  DollarSign
+  DollarSign,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import { useShortlist } from '@/lib/shortlist';
 
@@ -36,6 +38,8 @@ interface ScatterPlayer {
   wage_per_week_k: number | null;
   value_gap: number | null;
   is_own_squad: number | boolean;
+  data_freshness?: 'Fresh' | 'Stale' | 'New';
+  is_stats_stale?: number | boolean;
   x: number;
   y: number;
 }
@@ -59,6 +63,7 @@ interface ScatterData {
 const OUTFIELD_METRIC_OPTIONS = [
   { group: 'Finishing & Goal Threat', options: [
     { value: 'goals_per90', label: 'Goals / 90' },
+    { value: 'xGoals_per90', label: 'Expected Goals (xG) / 90' },
     { value: 'non_penalty_xGoals_per90', label: 'Non-Penalty xG / 90' },
     { value: 'goals_minus_xg_per90', label: 'Goals - xG / 90 (Finishing Delta)' },
     { value: 'finishing_overperf_shrunk', label: 'Shrunk Finishing Overperf' },
@@ -67,42 +72,75 @@ const OUTFIELD_METRIC_OPTIONS = [
     { value: 'conversion_rate', label: 'Shot Conversion %' },
     { value: 'npxg_per_shot', label: 'NP-xG / Shot (Shot Quality)' },
     { value: 'box_presence_proxy', label: 'Box Presence Proxy' },
+    { value: 'long_range_goal_share', label: 'Long Range Goal Share %' },
+    { value: 'goals_per90_adj', label: 'League-Adj Goals / 90' },
+    { value: 'non_penalty_xGoals_per90_adj', label: 'League-Adj NP-xG / 90' },
   ]},
   { group: 'Creation & Passing', options: [
     { value: 'assists_per90', label: 'Assists / 90' },
     { value: 'xAssists_per90', label: 'Expected Assists (xA) / 90' },
     { value: 'npxg_plus_xa_per90', label: 'NP-xG + xA / 90' },
+    { value: 'npxg_plus_xa_per90_adj', label: 'League-Adj NP-xGI / 90' },
+    { value: 'chances_created_per90', label: 'Chances Created / 90' },
     { value: 'open_play_key_passes_per90', label: 'Open-Play Key Passes / 90' },
     { value: 'progressive_passes_per90', label: 'Progressive Passes / 90' },
     { value: 'progressive_actions_per90', label: 'Total Progressive Actions / 90' },
     { value: 'completed_passes_per90', label: 'Completed Passes / 90' },
+    { value: 'passes_attempted_per90', label: 'Passes Attempted / 90' },
     { value: 'pass_accuracy', label: 'Pass Accuracy %' },
     { value: 'completed_crosses_per90', label: 'Completed Crosses / 90' },
+    { value: 'cross_accuracy', label: 'Cross Accuracy %' },
+    { value: 'crosses_attempted_per90', label: 'Crosses Attempted / 90' },
     { value: 'crosses_share_of_creation', label: 'Cross Share of Creation' },
     { value: 'assist_luck_shrunk', label: 'Shrunk Assist Luck' },
   ]},
-  { group: 'Progression & Ball Carrying', options: [
+  { group: 'Progression & Ball Retention', options: [
     { value: 'dribbles_made_per90', label: 'Dribbles Completed / 90' },
     { value: 'turnover_rate', label: 'Turnover Rate %' },
     { value: 'net_ball_security', label: 'Net Ball Security' },
-    { value: 'distance_covered_km_per90', label: 'Distance Covered (km/90)' },
-    { value: 'sprints_per90', label: 'Sprints / 90' },
+    { value: 'possession_won_per90', label: 'Possession Won (Recoveries) / 90' },
+    { value: 'possession_lost_per90', label: 'Possession Lost (Turnovers) / 90' },
+    { value: 'possession_differential', label: 'Net Possession Differential / 90' },
+    { value: 'prog_rate_per_pass', label: 'Progression Rate per Pass' },
   ]},
   { group: 'Defending & Pressing', options: [
     { value: 'defensive_actions_per90', label: 'Total Defensive Actions / 90' },
     { value: 'non_clearance_def_actions_per90', label: 'Non-Clearance Def Actions / 90' },
     { value: 'tackles_attempted_per90', label: 'Tackles Attempted / 90' },
     { value: 'tackle_accuracy', label: 'Tackle Win %' },
+    { value: 'key_tackles_per90', label: 'Key Tackles / 90' },
     { value: 'interceptions_per90', label: 'Interceptions / 90' },
     { value: 'clearances_per90', label: 'Clearances / 90' },
-    { value: 'aerial_duels_won_per90', label: 'Aerial Duels Won / 90' },
+    { value: 'blocks_per90', label: 'Blocks / 90' },
+    { value: 'shots_blocked_per90', label: 'Shots Blocked / 90' },
     { value: 'pressures_attempted_per90', label: 'Pressures Attempted / 90' },
+    { value: 'pressures_completed_per90', label: 'Pressures Completed / 90' },
+    { value: 'pressure_accuracy', label: 'Press Success %' },
     { value: 'pressure_efficiency', label: 'Pressure Efficiency' },
+    { value: 'mistakes_leading_to_goals_per90', label: 'Errors Leading to Goal / 90' },
+  ]},
+  { group: 'Physical & Aerial Dominance', options: [
+    { value: 'heading_accuracy', label: 'Headers Won % (Heading Acc)' },
+    { value: 'aerial_duels_won_per90', label: 'Aerial Duels Won / 90' },
+    { value: 'headers_attempted_per90', label: 'Headers Attempted / 90' },
+    { value: 'key_headers_per90', label: 'Key Headers / 90' },
+    { value: 'duels_won_per90', label: 'Duels Won (Ground+Air) / 90' },
+    { value: 'distance_covered_km_per90', label: 'Distance Covered (km/90)' },
+    { value: 'sprints_per90', label: 'Sprints / 90' },
+    { value: 'sprints_per_km', label: 'Sprint Intensity (Sprints/km)' },
+    { value: 'high_press_load', label: 'High Press Load Index' },
+    { value: 'fouls_won_net', label: 'Net Fouls Drawn / 90' },
+    { value: 'fouls_made_per90', label: 'Fouls Committed / 90' },
+    { value: 'cards_per_foul', label: 'Cards per Foul Ratio' },
+    { value: 'foul_per_duel', label: 'Fouls per Duel Ratio' },
   ]},
   { group: 'Valuation & Moneyball', options: [
     { value: 'value_gap', label: 'Value Gap (Output %ile - Value %ile)' },
+    { value: 'cost_per_xgi', label: 'Cost per xGI (Moneyball)' },
+    { value: 'xgi_per_cost_m', label: 'xGI Output per £M' },
     { value: 'transfer_value_m', label: 'Transfer Value (£M)' },
     { value: 'wage_per_week_k', label: 'Wage (£k/wk)' },
+    { value: 'on_pitch_gd_shrunk', label: 'On-Pitch Goal Diff / 90' },
     { value: 'league_difficulty_coef', label: 'League Difficulty Coef (x)' },
     { value: 'minutes_played', label: 'Minutes Played' },
     { value: 'age', label: 'Age' },
@@ -110,26 +148,40 @@ const OUTFIELD_METRIC_OPTIONS = [
 ];
 
 const GK_METRIC_OPTIONS = [
-  { group: 'Shot Stopping', options: [
+  { group: 'Shot Stopping & Prevention', options: [
     { value: 'save_pct', label: 'Save %' },
     { value: 'psxg_net_per90', label: 'Goals Prevented / 90' },
+    { value: 'goals_conceded_per90', label: 'Goals Conceded / 90' },
+    { value: 'saves_made_per90', label: 'Saves Made / 90' },
+    { value: 'shots_faced_per90', label: 'Shots Faced / 90' },
     { value: 'xgp_per_shot', label: 'Goals Prevented / Shot' },
+    { value: 'xgp_per_season', label: 'Projected Goals Saved / Season' },
+    { value: 'shot_stopping_delta', label: 'Shot Stopping Delta' },
+    { value: 'xSave_rate', label: 'Expected Save Rate %' },
+    { value: 'goals_vs_xgot_ratio', label: 'Goals Conceded / xGOT Ratio' },
     { value: 'xgot_faced_per90', label: 'xGOT Faced / 90 (Workload)' },
+    { value: 'shot_difficulty', label: 'Shot Difficulty (xGOT/Shot)' },
     { value: 'hold_rate_pct', label: 'Catch / Hold Rate %' },
+    { value: 'parry_rate', label: 'Parry Rate (Rebound Risk)' },
     { value: 'hold_rate', label: 'Hold Rate' },
   ]},
   { group: 'Command of Area & Sweeping', options: [
     { value: 'sweeper_actions_per90', label: 'Sweeper Actions / 90' },
+    { value: 'sweeper_index', label: 'Sweeper Index' },
     { value: 'sweeper_share', label: 'Sweeper Share of Actions' },
     { value: 'clearances_per90', label: 'Clearances / 90' },
     { value: 'interceptions_per90', label: 'Interceptions / 90' },
+    { value: 'errors_leading_to_goal_per90', label: 'Errors Leading to Goal / 90' },
   ]},
   { group: 'Distribution & Reliability', options: [
     { value: 'completed_passes_per90', label: 'Completed Passes / 90' },
+    { value: 'passes_attempted_per90', label: 'Passes Attempted / 90' },
     { value: 'pass_accuracy', label: 'Pass Accuracy %' },
+    { value: 'passing_involvement', label: 'Passing Involvement' },
     { value: 'distribution_value', label: 'Distribution Value Proxy' },
     { value: 'turnovers_per90', label: 'Turnovers / 90' },
-    { value: 'errors_leading_to_goal_per90', label: 'Errors Leading to Goal / 90' },
+    { value: 'possession_differential', label: 'Net Possession Diff / 90' },
+    { value: 'pen_save_shrunk', label: 'Penalty Save % (Shrunk)' },
   ]},
   { group: 'Valuation & Moneyball', options: [
     { value: 'value_gap', label: 'Value Gap (Output %ile - Value %ile)' },
@@ -152,13 +204,17 @@ interface Preset {
 const PRESETS: Preset[] = [
   { name: 'Finishing Overperformance', x: 'non_penalty_xGoals_per90', y: 'goals_per90', desc: 'Identifies elite finishers vs xG underperformers', mode: 'outfield' },
   { name: 'Creation vs Threat', x: 'open_play_key_passes_per90', y: 'npxg_plus_xa_per90', desc: 'Dual-threat offensive dynamos', mode: 'outfield' },
+  { name: 'Aerial Dominance (Monsters)', x: 'aerial_duels_won_per90', y: 'heading_accuracy', desc: 'Aerial duel volume vs win percentage (Target Men & Center Backs)', mode: 'outfield' },
   { name: 'Progression vs Security', x: 'progressive_actions_per90', y: 'net_ball_security', desc: 'High ball carriers who protect possession', mode: 'outfield' },
+  { name: 'Flank Delivery (Crosses)', x: 'completed_crosses_per90', y: 'cross_accuracy', desc: 'Cross delivery volume vs crossing completion %', mode: 'outfield' },
   { name: 'Defensive Work vs Efficiency', x: 'tackles_attempted_per90', y: 'tackle_accuracy', desc: 'High volume ball-winners who win duels cleanly', mode: 'outfield' },
+  { name: 'Possession Differential', x: 'possession_won_per90', y: 'possession_differential', desc: 'Ball recoveries won vs net possession won/lost balance', mode: 'outfield' },
   { name: 'Moneyball Value Gap', x: 'transfer_value_m', y: 'value_gap', desc: 'Top output players available at bargain valuations', mode: 'outfield' },
   { name: 'Wage vs Threat', x: 'wage_per_week_k', y: 'npxg_plus_xa_per90', desc: 'Attacking production relative to weekly wage burden', mode: 'outfield' },
   { name: 'League Level vs Output', x: 'league_difficulty_coef', y: 'npxg_plus_xa_per90', desc: 'Performance normalized across league difficulty levels', mode: 'outfield' },
   // GK Presets
   { name: 'GK: Shot Stopping Mastery', x: 'psxg_net_per90', y: 'save_pct', desc: 'Goals prevented vs raw save percentage', mode: 'gk' },
+  { name: 'GK: Prevention vs Conceded', x: 'psxg_net_per90', y: 'goals_conceded_per90', desc: 'Goals prevented above expectation vs actual goals conceded', mode: 'gk' },
   { name: 'GK: Sweeper-Keeper Index', x: 'sweeper_actions_per90', y: 'psxg_net_per90', desc: 'High sweeping presence combined with reliable shot stopping', mode: 'gk' },
   { name: 'GK: Handling & Catch Security', x: 'hold_rate_pct', y: 'psxg_net_per90', desc: 'Handling security vs shot-stopping impact', mode: 'gk' },
   { name: 'GK: Moneyball Value Gap', x: 'transfer_value_m', y: 'value_gap', desc: 'Goalkeepers with positive goals prevented at low valuations', mode: 'gk' },
@@ -176,6 +232,7 @@ export default function ScatterPage() {
   const [minCoef, setMinCoef] = useState<string>('ALL');
   const [maxPrice, setMaxPrice] = useState<string>('ALL');
   const [maxWage, setMaxWage] = useState<string>('ALL');
+  const [freshness, setFreshness] = useState<string>('ALL');
   const [highlightOwnSquad, setHighlightOwnSquad] = useState(true);
   const [searchPlayer, setSearchPlayer] = useState('');
 
@@ -198,6 +255,7 @@ export default function ScatterPage() {
     minCoef !== 'ALL' || 
     maxPrice !== 'ALL' || 
     maxWage !== 'ALL' || 
+    freshness !== 'ALL' ||
     maxAge !== '' || 
     posGroup !== 'ALL' || 
     minMinutes !== 450 || 
@@ -207,6 +265,7 @@ export default function ScatterPage() {
     setMinCoef('ALL');
     setMaxPrice('ALL');
     setMaxWage('ALL');
+    setFreshness('ALL');
     setMaxAge('');
     setPosGroup('ALL');
     setMinMinutes(450);
@@ -259,6 +318,9 @@ export default function ScatterPage() {
     if (maxWage !== 'ALL') {
       params.append('maxWage', maxWage);
     }
+    if (freshness !== 'ALL') {
+      params.append('freshness', freshness);
+    }
     if (searchPlayer.trim().length >= 2) {
       params.append('search', searchPlayer.trim());
     }
@@ -279,7 +341,7 @@ export default function ScatterPage() {
     return () => {
       isMounted = false;
     };
-  }, [mode, xMetric, yMetric, posGroup, debouncedMinMinutes, maxAge, minCoef, maxPrice, maxWage, searchPlayer]);
+  }, [mode, xMetric, yMetric, posGroup, debouncedMinMinutes, maxAge, minCoef, maxPrice, maxWage, freshness, searchPlayer]);
 
   // Label lookups
   const metricOptions = mode === 'gk' ? GK_METRIC_OPTIONS : OUTFIELD_METRIC_OPTIONS;
@@ -289,6 +351,62 @@ export default function ScatterPage() {
       if (found) return found.label;
     }
     return key;
+  };
+
+  const formatMetricValue = (key: string, val: number | null | undefined): string => {
+    if (val === null || val === undefined || isNaN(val)) return '-';
+
+    // 0 to 1 percentage metrics
+    const ZERO_TO_ONE_PCT_KEYS = new Set([
+      'heading_accuracy',
+      'tackle_accuracy',
+      'pass_accuracy',
+      'cross_accuracy',
+      'open_play_cross_accuracy',
+      'shot_on_target_rate',
+      'conversion_rate',
+      'long_range_goal_share',
+      'save_pct',
+      'saves_percentage',
+      'xSave_rate',
+      'pen_save_shrunk',
+      'penalties_save_percentage',
+    ]);
+
+    if (ZERO_TO_ONE_PCT_KEYS.has(key)) {
+      return `${(val * 100).toFixed(1)}%`;
+    }
+
+    // 0 to 100 percentage metrics
+    if (key === 'pressure_accuracy' || key === 'hold_rate_pct') {
+      return `${val.toFixed(1)}%`;
+    }
+
+    if (key === 'transfer_value_m') {
+      return val > 0 ? `£${val.toFixed(1)}M` : 'Free';
+    }
+
+    if (key === 'wage_per_week_k') {
+      return `£${val.toFixed(1)}k/wk`;
+    }
+
+    if (key === 'cost_per_xgi') {
+      return `£${(val / 1000).toFixed(1)}k`;
+    }
+
+    if (key === 'league_difficulty_coef') {
+      return `${val.toFixed(2)}x`;
+    }
+
+    if (key === 'minutes_played') {
+      return `${Math.round(val)} mins`;
+    }
+
+    if (key === 'age') {
+      return `${Math.round(val)} yrs`;
+    }
+
+    return val.toFixed(2);
   };
 
   // SVG dimensions
@@ -716,6 +834,34 @@ export default function ScatterPage() {
             </select>
           </div>
 
+          {/* Data Freshness Filter */}
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: freshness !== 'ALL' ? '#fbbf24' : 'var(--text-dim)', fontWeight: 600, marginBottom: '0.35rem' }}>
+              <Clock size={13} style={{ color: '#fbbf24' }} />
+              DATA FRESHNESS
+            </label>
+            <select
+              value={freshness}
+              onChange={(e) => setFreshness(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.55rem 0.75rem',
+                borderRadius: '8px',
+                background: freshness !== 'ALL' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(0,0,0,0.4)',
+                border: freshness !== 'ALL' ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.1)',
+                color: freshness !== 'ALL' ? '#fbbf24' : '#fff',
+                fontSize: '0.85rem',
+                fontWeight: freshness !== 'ALL' ? 600 : 400,
+              }}
+            >
+              <option value="ALL">All Records (Fresh &amp; Stale)</option>
+              <option value="EXCLUDE_STALE">Exclude Stale (Unchanged)</option>
+              <option value="FRESH">Fresh Stats Only</option>
+              <option value="STALE">Stale / Unchanged Only (⚠️)</option>
+              <option value="NEW">New Ingestion Only (✨)</option>
+            </select>
+          </div>
+
           {/* Reset Filters / Clear Button */}
           {hasActiveFilters && (
             <div>
@@ -755,6 +901,10 @@ export default function ScatterPage() {
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8' }} />
               Scouted Targets
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', border: '1px dashed #fbbf24', background: 'transparent' }} />
+              <span style={{ color: '#fbbf24' }}>Unchanged / Stale (⚠️)</span>
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               <span style={{ display: 'inline-block', width: '14px', height: '1px', borderTop: '1px dashed #e2e8f0' }} />
@@ -868,7 +1018,7 @@ export default function ScatterPage() {
                     fontSize="10"
                     fontWeight="500"
                   >
-                    Median: {scatterData?.xMedian.toFixed(2)}
+                    Median: {formatMetricValue(xMetric, scatterData?.xMedian)}
                   </text>
 
                   {/* Y Median Line (Horizontal) */}
@@ -889,7 +1039,7 @@ export default function ScatterPage() {
                     fontSize="10"
                     fontWeight="500"
                   >
-                    Median: {scatterData?.yMedian.toFixed(2)}
+                    Median: {formatMetricValue(yMetric, scatterData?.yMedian)}
                   </text>
 
                   {/* Axis Borders */}
@@ -944,6 +1094,8 @@ export default function ScatterPage() {
                       p.player_name.toLowerCase().includes(searchPlayer.toLowerCase().trim());
                     const isHovered = hoveredPlayer?.player_key === p.player_key;
                     const isSelected = selectedPlayer?.player_key === p.player_key;
+                    const isStale = p.data_freshness === 'Stale' || p.is_stats_stale === 1;
+                    const isNew = p.data_freshness === 'New';
 
                     // Color assignment
                     let dotColor = '#38bdf8';
@@ -996,13 +1148,27 @@ export default function ScatterPage() {
                           />
                         )}
 
+                        {/* Stale Player Indicator Ring */}
+                        {isStale && !isOwn && !isSelected && (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={radius + 2.5}
+                            fill="none"
+                            stroke="#fbbf24"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                            strokeOpacity="0.85"
+                          />
+                        )}
+
                         <circle
                           cx={cx}
                           cy={cy}
                           r={radius}
                           fill={dotColor}
-                          fillOpacity={isHovered || isSelected || isMatchSearch || isOwn ? 1 : 0.75}
-                          stroke={isSelected ? '#ffffff' : '#0a0d14'}
+                          fillOpacity={isHovered || isSelected || isMatchSearch || isOwn ? 1 : isStale ? 0.55 : 0.75}
+                          stroke={isSelected ? '#ffffff' : isStale ? '#fbbf24' : '#0a0d14'}
                           strokeWidth={isSelected ? 2 : 1}
                         />
 
@@ -1020,7 +1186,7 @@ export default function ScatterPage() {
                               pointerEvents: 'none',
                             }}
                           >
-                            {p.player_name}
+                            {isStale ? '⚠️ ' : isNew ? '✨ ' : ''}{p.player_name}
                           </text>
                         )}
                       </g>
@@ -1053,11 +1219,22 @@ export default function ScatterPage() {
                 <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
                   {hoveredPlayer.player_name}
                 </span>
-                {hoveredPlayer.is_own_squad ? (
-                  <span style={{ fontSize: '0.65rem', background: '#10b98125', color: '#34d399', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                    MACARÁ
-                  </span>
-                ) : null}
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  {hoveredPlayer.is_own_squad ? (
+                    <span style={{ fontSize: '0.65rem', background: '#10b98125', color: '#34d399', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                      MACARÁ
+                    </span>
+                  ) : null}
+                  {(hoveredPlayer.data_freshness === 'Stale' || hoveredPlayer.is_stats_stale === 1) ? (
+                    <span style={{ fontSize: '0.65rem', background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+                      ⚠️ UNCHANGED
+                    </span>
+                  ) : hoveredPlayer.data_freshness === 'New' ? (
+                    <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, border: '1px solid rgba(56, 189, 248, 0.4)' }}>
+                      ✨ NEW
+                    </span>
+                  ) : null}
+                </div>
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.45rem' }}>
                 {hoveredPlayer.club_name} • {hoveredPlayer.position} • {hoveredPlayer.age} yrs
@@ -1080,11 +1257,11 @@ export default function ScatterPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.5rem' }}>
                 <div>
                   <span style={{ color: '#38bdf8', display: 'block', fontSize: '0.7rem' }}>{getMetricLabel(xMetric).slice(0, 16)}</span>
-                  <strong style={{ fontSize: '0.85rem', color: '#fff' }}>{hoveredPlayer.x.toFixed(2)}</strong>
+                  <strong style={{ fontSize: '0.85rem', color: '#fff' }}>{formatMetricValue(xMetric, hoveredPlayer.x)}</strong>
                 </div>
                 <div>
                   <span style={{ color: '#34d399', display: 'block', fontSize: '0.7rem' }}>{getMetricLabel(yMetric).slice(0, 16)}</span>
-                  <strong style={{ fontSize: '0.85rem', color: '#fff' }}>{hoveredPlayer.y.toFixed(2)}</strong>
+                  <strong style={{ fontSize: '0.85rem', color: '#fff' }}>{formatMetricValue(yMetric, hoveredPlayer.y)}</strong>
                 </div>
               </div>
             </div>
@@ -1112,11 +1289,37 @@ export default function ScatterPage() {
                 </button>
               </div>
 
-              {selectedPlayer.is_own_squad ? (
-                <div style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', fontSize: '0.7rem', fontWeight: 700, marginBottom: '1rem' }}>
-                  OWN SQUAD PLAYER
+              {/* Freshness Status & Ownership Badges */}
+              <div style={{ display: 'flex', gap: '0.45rem', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
+                {selectedPlayer.is_own_squad ? (
+                  <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', fontSize: '0.7rem', fontWeight: 700 }}>
+                    OWN SQUAD
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontSize: '0.7rem', fontWeight: 700 }}>
+                    SCOUTING TARGET
+                  </span>
+                )}
+                {(selectedPlayer.data_freshness === 'Stale' || selectedPlayer.is_stats_stale === 1) ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, border: '1px solid rgba(245, 158, 11, 0.35)' }}>
+                    <AlertTriangle size={11} /> UNCHANGED STATS (STALE)
+                  </span>
+                ) : selectedPlayer.data_freshness === 'New' ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontSize: '0.7rem', fontWeight: 700, border: '1px solid rgba(56, 189, 248, 0.35)' }}>
+                    ✨ NEW INGESTION
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', fontSize: '0.7rem', fontWeight: 700 }}>
+                    ● FRESH STATS
+                  </span>
+                )}
+              </div>
+
+              {(selectedPlayer.data_freshness === 'Stale' || selectedPlayer.is_stats_stale === 1) && (
+                <div style={{ marginBottom: '1rem', padding: '0.55rem 0.75rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', fontSize: '0.72rem', color: '#fbbf24', lineHeight: 1.45 }}>
+                  ⚠️ <strong>Unchanged Data Notice:</strong> All metrics match the previous campaign. Unrefreshed in FM.
                 </div>
-              ) : null}
+              )}
 
               {/* Bio Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1.25rem', background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px' }}>
@@ -1160,11 +1363,11 @@ export default function ScatterPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(56, 189, 248, 0.08)', borderRadius: '6px', borderLeft: '3px solid #38bdf8' }}>
                     <span style={{ fontSize: '0.8rem', color: '#e2e8f0' }}>{getMetricLabel(xMetric)}</span>
-                    <strong style={{ fontSize: '0.85rem', color: '#38bdf8' }}>{selectedPlayer.x.toFixed(2)}</strong>
+                    <strong style={{ fontSize: '0.85rem', color: '#38bdf8' }}>{formatMetricValue(xMetric, selectedPlayer.x)}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(52, 211, 153, 0.08)', borderRadius: '6px', borderLeft: '3px solid #34d399' }}>
                     <span style={{ fontSize: '0.8rem', color: '#e2e8f0' }}>{getMetricLabel(yMetric)}</span>
-                    <strong style={{ fontSize: '0.85rem', color: '#34d399' }}>{selectedPlayer.y.toFixed(2)}</strong>
+                    <strong style={{ fontSize: '0.85rem', color: '#34d399' }}>{formatMetricValue(yMetric, selectedPlayer.y)}</strong>
                   </div>
                 </div>
               </div>
@@ -1196,7 +1399,7 @@ export default function ScatterPage() {
                     minutes_played: selectedPlayer.minutes_played,
                     transfer_value_m: selectedPlayer.transfer_value_m ?? undefined,
                     wage_per_week_k: selectedPlayer.wage_per_week_k ?? undefined,
-                    primary_stat: `${getMetricLabel(xMetric)}: ${selectedPlayer.x.toFixed(2)}`,
+                    primary_stat: `${getMetricLabel(xMetric)}: ${formatMetricValue(xMetric, selectedPlayer.x)}`,
                     added_at: new Date().toISOString(),
                   });
                 }}
@@ -1270,8 +1473,13 @@ export default function ScatterPage() {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff' }}>
-                    {p.player_name}
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span>{p.player_name}</span>
+                    {(p.data_freshness === 'Stale' || p.is_stats_stale === 1) && (
+                      <span style={{ fontSize: '0.62rem', background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }} title="Unchanged stats">
+                        ⚠️ UNCHANGED
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                     {p.club_name} • {p.position}
@@ -1279,7 +1487,7 @@ export default function ScatterPage() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600 }}>
-                    X: {p.x.toFixed(2)} | Y: {p.y.toFixed(2)}
+                    {formatMetricValue(xMetric, p.x)} • {formatMetricValue(yMetric, p.y)}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', marginTop: '2px' }}>
                     <span>{p.transfer_value_m ? `£${p.transfer_value_m}M` : 'Free'}</span>
@@ -1320,8 +1528,13 @@ export default function ScatterPage() {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff' }}>
-                    {p.player_name}
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span>{p.player_name}</span>
+                    {(p.data_freshness === 'Stale' || p.is_stats_stale === 1) && (
+                      <span style={{ fontSize: '0.62rem', background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }} title="Unchanged stats">
+                        ⚠️ UNCHANGED
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                     {p.club_name} • {p.position} • {p.age} yrs

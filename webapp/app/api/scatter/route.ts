@@ -4,78 +4,159 @@ import { executeQuery } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 const OUTFIELD_METRICS: Record<string, string> = {
+  // Finishing & Goal Threat
   goals_per90: 's.goals_per90',
-  assists_per90: 's.assists_per90',
+  xGoals_per90: 's.xGoals_per90',
   non_penalty_xGoals_per90: 's.non_penalty_xGoals_per90',
-  xAssits_per90: 's.xAssits_per90',
-  xAssists_per90: 's.xAssists_per90',
-  npxg_plus_xa_per90: 's.npxg_plus_xa_per90',
   goals_minus_xg_per90: 's.goals_minus_xg_per90',
   finishing_overperf_shrunk: 's.finishing_overperf_shrunk',
-  assist_luck: 's.assist_luck',
-  assist_luck_shrunk: 's.assist_luck_shrunk',
-  assists_per_op_kp: 's.assists_per_op_kp',
-  npxg_per_shot: 's.npxg_per_shot',
-  box_presence_proxy: 's.box_presence_proxy',
-  long_range_goal_share: 's.long_range_goal_share',
   shots_per90: 's.shots_per90',
   shot_on_target_rate: 's.shot_on_target_rate',
   conversion_rate: 's.conversion_rate',
-  passes_attempted_per90: 's.passes_attempted_per90',
-  pass_accuracy: 's.pass_accuracy',
-  completed_passes_per90: 's.completed_passes_per90',
+  npxg_per_shot: 's.npxg_per_shot',
+  box_presence_proxy: 's.box_presence_proxy',
+  long_range_goal_share: 's.long_range_goal_share',
+  goals_per90_adj: 's.goals_per90_adj',
+  xGoals_per90_adj: 's.xGoals_per90_adj',
+  non_penalty_xGoals_per90_adj: 's.non_penalty_xGoals_per90_adj',
+
+  // Creation & Passing
+  assists_per90: 's.assists_per90',
+  xAssits_per90: 's.xAssits_per90',
+  xAssists_per90: 's.xAssists_per90',
+  npxg_plus_xa_per90: 's.npxg_plus_xa_per90',
+  npxg_plus_xa_per90_adj: 's.npxg_plus_xa_per90_adj',
+  xAssists_per90_adj: 's.xAssists_per90_adj',
+  chances_created_per90: 's.chances_created_per90',
+  open_play_key_passes_per90: 's.open_play_key_passes_per90',
   progressive_passes_per90: 's.progressive_passes_per90',
   progressive_actions_per90: 's.progressive_actions_per90',
-  open_play_key_passes_per90: 's.open_play_key_passes_per90',
+  completed_passes_per90: 's.completed_passes_per90',
+  passes_attempted_per90: 's.passes_attempted_per90',
+  pass_accuracy: 's.pass_accuracy',
   completed_crosses_per90: 's.completed_crosses_per90',
+  cross_accuracy: 's.cross_accuracy',
+  crosses_attempted_per90: 's.crosses_attempted_per90',
+  open_play_completed_crosses_per90: 's.open_play_completed_crosses_per90',
+  open_play_cross_accuracy: 's.open_play_cross_accuracy',
   crosses_share_of_creation: 's.crosses_share_of_creation',
+  assist_luck: 's.assist_luck',
+  assist_luck_shrunk: 's.assist_luck_shrunk',
+  assists_per_op_kp: 's.assists_per_op_kp',
+
+  // Progression & Ball Retention
   dribbles_made_per90: 's.dribbles_made_per90',
   turnover_rate: 's.turnover_rate',
   net_ball_security: 's.net_ball_security',
+  possession_won_per90: 's.possession_won_per90',
+  possession_lost_per90: 's.possession_lost_per90',
+  possession_differential: 's.possession_differential',
+  prog_rate_per_pass: 's.prog_rate_per_pass',
+  progressive_share_of_actions: 's.progressive_share_of_actions',
+
+  // Defending & Pressing
   defensive_actions_per90: 's.defensive_actions_per90',
   non_clearance_def_actions_per90: 's.non_clearance_def_actions_per90',
   tackles_attempted_per90: 's.tackles_attempted_per90',
   tackle_accuracy: 's.tackle_accuracy',
+  key_tackles_per90: 's.key_tackles_per90',
   interceptions_per90: 's.interceptions_per90',
   blocks_per90: 's.blocks_per90',
+  shots_blocked_per90: 's.shots_blocked_per90',
   clearances_per90: 's.clearances_per90',
-  aerial_duels_won_per90: 's.aerial_duels_won_per90',
   pressures_attempted_per90: 's.pressures_attempted_per90',
+  pressures_completed_per90: 's.pressures_completed_per90',
+  pressure_accuracy: 's.pressure_accuracy',
   pressure_efficiency: 's.pressure_efficiency',
+  mistakes_leading_to_goals_per90: 's.mistakes_leading_to_goals_per90',
+
+  // Physical & Aerial Dominance
+  heading_accuracy: 's.heading_accuracy',
+  aerial_duels_won_per90: 's.aerial_duels_won_per90',
+  headers_attempted_per90: 's.headers_attempted_per90',
+  key_headers_per90: 's.key_headers_per90',
+  duels_won_per90: 's.duels_won_per90',
   distance_covered_km_per90: 's.distance_covered_km_per90',
   sprints_per90: 's.sprints_per90',
+  sprints_per_km: 's.sprints_per_km',
+  high_press_load: 's.high_press_load',
+  fouls_won_net: 's.fouls_won_net',
+  fouls_made_per90: 's.fouls_made_per90',
+  fouls_against_per90: 's.fouls_against_per90',
+  yellow_cards_per90: 's.yellow_cards_per90',
+  red_cards_per90: 's.red_cards_per90',
+  discipline_index: 's.discipline_index',
+  cards_per_foul: 's.cards_per_foul',
+  foul_per_duel: 's.foul_per_duel',
+  foul_per_tackle: 's.foul_per_tackle',
+
+  // Valuation & Moneyball
   value_gap: 's.value_gap',
+  cost_per_xgi: 's.cost_per_xgi',
+  xgi_per_cost_m: 's.xgi_per_cost_m',
   transfer_value_m: 's.transfer_value_m',
   wage_per_week_k: 's.wage_per_week_k',
+  on_pitch_goal_diff_per90: 's.on_pitch_goal_diff_per90',
+  on_pitch_gd_shrunk: 's.on_pitch_gd_shrunk',
   league_difficulty_coef: 's.league_difficulty_coef',
   minutes_played: 's.minutes_played',
   age: 's.age',
 };
 
 const GK_METRICS: Record<string, string> = {
+  // Shot Stopping
   save_pct: 's.saves_percentage',
   saves_percentage: 's.saves_percentage',
   psxg_net_per90: 's.xGoals_prevented_per90',
   xGoals_prevented_per90: 's.xGoals_prevented_per90',
+  goals_conceded_per90: 's.goals_conceded_per90',
+  saves_made_per90: 's.saves_made_per90',
+  shots_faced_per90: 's.shots_faced_per90',
+  shots_faced_total: 's.shots_faced_total',
   xgot_faced_per90: 's.xgot_faced_per90',
   xgp_per_shot: 's.xgp_per_shot',
+  xgp_per_shot_shrunk: 's.xgp_per_shot_shrunk',
+  xgp_per_season: 's.xgp_per_season',
+  xgp_per_season_shrunk: 's.xgp_per_season_shrunk',
+  shot_stopping_delta: 's.shot_stopping_delta',
+  shot_stopping_delta_shrunk: 's.shot_stopping_delta_shrunk',
   shot_difficulty: 's.shot_difficulty',
+  xSave_rate: 's.xSave_rate',
+  goals_vs_xgot_ratio: 's.goals_vs_xgot_ratio',
   hold_rate_pct: 's.hold_rate_pct',
   hold_rate_shrunk: 's.hold_rate_shrunk',
   hold_rate: 's.hold_rate',
+  parry_rate: 's.parry_rate',
+  tip_rate: 's.tip_rate',
+  saves_held_per90: 's.saves_held_per90',
+  saves_parried_per90: 's.saves_parried_per90',
+  saves_tipped_per90: 's.saves_tipped_per90',
+  hold_rate_over_expected: 's.hold_rate_over_expected',
+
+  // Command of Area & Sweeping
   sweeper_actions_per90: 's.sweeper_actions_per90',
   sweeper_share: 's.sweeper_share',
+  sweeper_index: 's.sweeper_index',
   interceptions_per90: 's.interceptions_per90',
   clearances_per90: 's.clearances_per90',
+  errors_leading_to_goal_per90: 's.errors_leading_to_goal_per90',
+  errors_leading_to_goal_shrunk: 's.errors_leading_to_goal_shrunk',
+  error_rate: 's.error_rate',
+
+  // Distribution & Reliability
   completed_passes_per90: 's.completed_passes_per90',
   passes_attempted_per90: 's.passes_attempted_per90',
   pass_accuracy: 's.pass_accuracy',
+  passing_involvement: 's.passing_involvement',
   turnovers_per90: 's.giveaways_per90',
   giveaways_per90: 's.giveaways_per90',
   distribution_value: 's.distribution_value',
+  possession_differential: 's.possession_differential',
+  penalties_faced_per90: 's.penalties_faced_per90',
   penalties_save_percentage: 's.penalties_save_percentage',
   pen_save_shrunk: 's.pen_save_shrunk',
-  errors_leading_to_goal_per90: 's.errors_leading_to_goal_per90',
+
+  // Valuation & Moneyball
   value_gap: 's.value_gap',
   transfer_value_m: 's.transfer_value_m',
   wage_per_week_k: 's.wage_per_week_k',
@@ -111,6 +192,7 @@ export async function GET(request: NextRequest) {
     const maxPrice = rawMaxPrice ? parseFloat(rawMaxPrice) : null;
     const maxWage = searchParams.get('maxWage') ? parseFloat(searchParams.get('maxWage')!) : null;
     const minCoef = searchParams.get('minCoef') ? parseFloat(searchParams.get('minCoef')!) : null;
+    const freshness = searchParams.get('freshness') || 'ALL';
     const searchParam = (searchParams.get('search') || '').trim();
     const limit = Math.min(parseInt(searchParams.get('limit') || '500', 10), 1000);
 
@@ -160,6 +242,17 @@ export async function GET(request: NextRequest) {
       params.minCoef = minCoef;
     }
 
+    // Freshness filter: Exclude stale, fresh only, stale only, or new only
+    if (freshness === 'EXCLUDE_STALE') {
+      conditions.push('s.is_stats_stale = 0');
+    } else if (freshness === 'FRESH') {
+      conditions.push("s.data_freshness = 'Fresh'");
+    } else if (freshness === 'STALE') {
+      conditions.push("s.data_freshness = 'Stale'");
+    } else if (freshness === 'NEW') {
+      conditions.push("s.data_freshness = 'New'");
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const countQuery = `
@@ -182,6 +275,8 @@ export async function GET(request: NextRequest) {
         s.wage_per_week_k,
         s.value_gap,
         s.is_own_squad,
+        s.data_freshness,
+        CAST(s.is_stats_stale AS INT) AS is_stats_stale,
         CAST(${xCol} AS float) AS x,
         CAST(${yCol} AS float) AS y
       FROM ${table} s
@@ -211,6 +306,8 @@ export async function GET(request: NextRequest) {
       wage_per_week_k: number | null;
       value_gap: number | null;
       is_own_squad: number;
+      data_freshness?: 'Fresh' | 'Stale' | 'New';
+      is_stats_stale?: number;
       x: number;
       y: number;
     }

@@ -40,6 +40,19 @@ GO
 -- 1. UNIFIED OUTFIELD SCOUTING SUMMARY MART
 -- ======================================================================
 CREATE OR ALTER VIEW gold.mart_outfield_scouting_summary AS
+WITH prev_outfield AS (
+    SELECT 
+        p_sub.player_id,
+        s_sub.minutes_played,
+        s_sub.goals,
+        s_sub.assists,
+        s_sub.shots_per90,
+        s_sub.passes_attempted_per90,
+        ROW_NUMBER() OVER (PARTITION BY p_sub.player_id ORDER BY s_sub.dwh_create_date DESC, s_sub.season DESC) AS rn
+    FROM gold.fact_outfield_player_stats s_sub
+    INNER JOIN gold.dim_player_info p_sub ON s_sub.player_key = p_sub.player_key
+    WHERE s_sub.dwh_current_validity = 0
+)
 SELECT
     -- Identity & Club Information
     p.player_key,
@@ -53,6 +66,28 @@ SELECT
     p.is_own_squad,                      -- 1 = Own squad, 0 = Potential buy
     p.contracted,
     s.minutes_played,
+
+    -- Data Freshness & Historical Carryover Diagnostics
+    CASE 
+        WHEN prev.player_id IS NULL THEN 'New'
+        WHEN s.minutes_played = prev.minutes_played 
+             AND s.goals = prev.goals 
+             AND s.assists = prev.assists 
+             AND s.shots_per90 = prev.shots_per90 
+             AND s.passes_attempted_per90 = prev.passes_attempted_per90 
+        THEN 'Stale'
+        ELSE 'Fresh'
+    END AS data_freshness,
+    CASE 
+        WHEN prev.player_id IS NOT NULL 
+             AND s.minutes_played = prev.minutes_played 
+             AND s.goals = prev.goals 
+             AND s.assists = prev.assists 
+             AND s.shots_per90 = prev.shots_per90 
+             AND s.passes_attempted_per90 = prev.passes_attempted_per90 
+        THEN CAST(1 AS BIT)
+        ELSE CAST(0 AS BIT)
+    END AS is_stats_stale,
 
     -- Financials & Valuation
     v.wage_per_week_k,
@@ -172,6 +207,7 @@ INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
 INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
 LEFT JOIN gold.dim_league l ON t.league = l.league
 LEFT JOIN gold.fact_players_value v ON s.player_key = v.player_key AND v.dwh_current_validity = 1
+LEFT JOIN prev_outfield prev ON p.player_id = prev.player_id AND prev.rn = 1
 WHERE s.dwh_current_validity = 1 AND p.dwh_current_validity = 1;
 GO
 
@@ -179,6 +215,18 @@ GO
 -- 2. UNIFIED GOALKEEPER SCOUTING SUMMARY MART
 -- ======================================================================
 CREATE OR ALTER VIEW gold.mart_gk_scouting_summary AS
+WITH prev_gk AS (
+    SELECT 
+        p_sub.player_id,
+        s_sub.minutes_played,
+        s_sub.goals_conceded_per90,
+        s_sub.saves_made_per90,
+        s_sub.passes_attempted_per90,
+        ROW_NUMBER() OVER (PARTITION BY p_sub.player_id ORDER BY s_sub.dwh_create_date DESC, s_sub.season DESC) AS rn
+    FROM gold.fact_gk_stats s_sub
+    INNER JOIN gold.dim_player_info p_sub ON s_sub.player_key = p_sub.player_key
+    WHERE s_sub.dwh_current_validity = 0
+)
 SELECT
     -- Identity & Club Information
     p.player_key,
@@ -192,6 +240,26 @@ SELECT
     p.is_own_squad,
     p.contracted,
     s.minutes_played,
+
+    -- Data Freshness & Historical Carryover Diagnostics
+    CASE 
+        WHEN prev.player_id IS NULL THEN 'New'
+        WHEN s.minutes_played = prev.minutes_played 
+             AND s.goals_conceded_per90 = prev.goals_conceded_per90 
+             AND s.saves_made_per90 = prev.saves_made_per90 
+             AND s.passes_attempted_per90 = prev.passes_attempted_per90 
+        THEN 'Stale'
+        ELSE 'Fresh'
+    END AS data_freshness,
+    CASE 
+        WHEN prev.player_id IS NOT NULL 
+             AND s.minutes_played = prev.minutes_played 
+             AND s.goals_conceded_per90 = prev.goals_conceded_per90 
+             AND s.saves_made_per90 = prev.saves_made_per90 
+             AND s.passes_attempted_per90 = prev.passes_attempted_per90 
+        THEN CAST(1 AS BIT)
+        ELSE CAST(0 AS BIT)
+    END AS is_stats_stale,
 
     -- Financials & Valuation
     v.wage_per_week_k,
@@ -263,6 +331,7 @@ INNER JOIN gold.dim_player_info p ON s.player_key = p.player_key
 INNER JOIN gold.dim_team_info t ON s.team_key = t.team_key
 LEFT JOIN gold.dim_league l ON t.league = l.league
 LEFT JOIN gold.fact_players_value v ON s.player_key = v.player_key AND v.dwh_current_validity = 1
+LEFT JOIN prev_gk prev ON p.player_id = prev.player_id AND prev.rn = 1
 WHERE s.dwh_current_validity = 1 AND p.dwh_current_validity = 1;
 GO
 
@@ -280,6 +349,8 @@ SELECT
     wage_per_week_k,
     transfer_value_m,
     minutes_played,
+    data_freshness,
+    is_stats_stale,
 
     -- Attacking & Chance Creation
     npxg_plus_xa_per90,

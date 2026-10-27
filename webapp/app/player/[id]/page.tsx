@@ -20,6 +20,7 @@ import {
   Printer,
   Sliders,
   Activity,
+  AlertTriangle,
 } from 'lucide-react';
 import PizzaRadarChart, { RadarSlice } from '@/components/PizzaRadarChart';
 import PercentileTable from '@/components/PercentileTable';
@@ -594,7 +595,11 @@ interface PlayerDetailResponse {
     season: string;
     is_current_season?: number;
   };
-  stats: Record<string, number> | null;
+  stats: (Record<string, any> & {
+    data_freshness?: 'Fresh' | 'Stale' | 'New';
+    is_stats_stale?: number | boolean;
+    cost_per_xgi?: number;
+  }) | null;
   percentiles: Record<string, number>;
   history: PlayerHistoryRecord[];
   tacticalContext?: {
@@ -1082,6 +1087,47 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
                   {player.is_current_season === 1 && <span style={{ fontSize: '0.55rem' }}>●</span>}
                   {player.season} {player.is_current_season === 1 ? 'Current Season' : 'Previous Season Archive'}
                 </span>
+
+                {(stats?.data_freshness === 'Stale' || stats?.is_stats_stale === 1 || stats?.is_stats_stale === true) ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
+                      background: 'rgba(245, 158, 11, 0.15)',
+                      color: '#fbbf24',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                    }}
+                    title="Player stats are identical to the previous season, indicating unrefreshed scouting data in FM."
+                  >
+                    <AlertTriangle size={12} />
+                    UNCHANGED STATS (STALE)
+                  </span>
+                ) : stats?.data_freshness === 'New' ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      color: '#38bdf8',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                    }}
+                    title="First season recorded for this player in the warehouse."
+                  >
+                    ✨ NEW INGESTION
+                  </span>
+                ) : null}
               </div>
 
               <h1 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>
@@ -1235,6 +1281,47 @@ function PlayerDetailContent({ params }: { params: Promise<{ id: string }> }) {
             }}
           >
             <strong style={{ color: '#fbbf24' }}>Scout Note:</strong> {tacticalContext.outlier_rationale}
+          </div>
+        )}
+
+        {/* Stale Scouting Notice Alert */}
+        {(stats?.data_freshness === 'Stale' || stats?.is_stats_stale === 1 || stats?.is_stats_stale === true) && (
+          <div
+            style={{
+              marginTop: '1.25rem',
+              padding: '0.85rem 1.25rem',
+              borderRadius: '10px',
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.28)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fbbf24',
+                flexShrink: 0,
+                marginTop: '1px',
+              }}
+            >
+              <AlertTriangle size={18} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fbbf24' }}>
+                Unchanged Stats Notice: Identical to Previous Campaign
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.45 }}>
+                All match metrics, playing time, and production rates for this player in <strong style={{ color: '#fff' }}>{player.season}</strong> are identical to the previous season. In Football Manager, this occurs when an unsimulated league or cached shortlist profile has not had fresh scout reports assigned. Consider assigning an in-game scout to refresh their report or relaxing filter criteria in the screener.
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -82,6 +82,8 @@ const OUTFIELD_FIELDS: Record<string, string> = {
   npxg_plus_xa_per90_adj: 's.npxg_plus_xa_per90_adj',
   on_pitch_gd_shrunk: 's.on_pitch_gd_shrunk',
   value_gap: 's.value_gap',
+  data_freshness: 's.data_freshness',
+  is_stats_stale: 's.is_stats_stale',
 };
 
 // Goalkeeper Whitelist
@@ -142,6 +144,8 @@ const GK_FIELDS: Record<string, string> = {
   is_eligible: 's.is_eligible',
   sample_reliability: 's.sample_reliability',
   value_gap: 's.value_gap',
+  data_freshness: 's.data_freshness',
+  is_stats_stale: 's.is_stats_stale',
 };
 
 export async function POST(request: NextRequest) {
@@ -223,6 +227,8 @@ export async function POST(request: NextRequest) {
         s.league_difficulty_coef,
         s.is_own_squad,
         s.minutes_played,
+        s.data_freshness,
+        s.is_stats_stale,
         s.wage_per_week_k,
         s.transfer_value_m,
         s.shots_faced_per90,
@@ -288,6 +294,8 @@ export async function POST(request: NextRequest) {
         s.league_difficulty_coef,
         s.is_own_squad,
         s.minutes_played,
+        s.data_freshness,
+        s.is_stats_stale,
         s.wage_per_week_k,
         s.transfer_value_m,
         s.goals_per90,

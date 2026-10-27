@@ -33,6 +33,8 @@ interface PlayerRow {
   minutes_played: number;
   wage_per_week_k: number;
   transfer_value_m: number;
+  data_freshness?: 'Fresh' | 'Stale' | 'New';
+  is_stats_stale?: number | boolean;
   // Outfield Core & Advanced Metrics
   goals_per90?: number;
   assists_per90?: number;
@@ -143,6 +145,8 @@ const OUTFIELD_CATALOG = [
   // General & Competition
   { field: 'age', label: 'Age', category: 'General', defaultOp: '<=', defaultVal: 23, unit: 'yrs' },
   { field: 'minutes_played', label: 'Minutes Played', category: 'General', defaultOp: '>=', defaultVal: 900, unit: 'mins' },
+  { field: 'data_freshness', label: 'Data Freshness (Fresh / Stale / New)', category: 'General', defaultOp: '=', defaultVal: 'Fresh', unit: '' },
+  { field: 'is_stats_stale', label: 'Stale Stats Flag (1 = Unchanged)', category: 'General', defaultOp: '=', defaultVal: 0, unit: '' },
   { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
 
   // Financials & Valuation
@@ -210,6 +214,8 @@ const GK_CATALOG = [
   // General & Competition
   { field: 'age', label: 'Age', category: 'General', defaultOp: '<=', defaultVal: 28, unit: 'yrs' },
   { field: 'minutes_played', label: 'Minutes Played', category: 'General', defaultOp: '>=', defaultVal: 900, unit: 'mins' },
+  { field: 'data_freshness', label: 'Data Freshness (Fresh / Stale / New)', category: 'General', defaultOp: '=', defaultVal: 'Fresh', unit: '' },
+  { field: 'is_stats_stale', label: 'Stale Stats Flag (1 = Unchanged)', category: 'General', defaultOp: '=', defaultVal: 0, unit: '' },
   { field: 'league_difficulty_coef', label: 'League Difficulty Coef', category: 'Competition', defaultOp: '>=', defaultVal: 0.70, unit: 'x' },
   { field: 'sample_reliability', label: 'Sample Reliability Factor', category: 'General', defaultOp: '>=', defaultVal: 0.25, unit: '' },
 
@@ -457,6 +463,7 @@ function ScreenerContent() {
     posParam || (initialIsGK ? 'Goalkeeper' : 'ALL')
   );
   const [selectedCoef, setSelectedCoef] = useState<string>('ALL');
+  const [selectedFreshness, setSelectedFreshness] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>(tabParam || 'Overview');
   const [sortBy, setSortBy] = useState<string>(() => {
@@ -558,6 +565,34 @@ function ScreenerContent() {
         });
       }
 
+      if (selectedFreshness !== 'ALL') {
+        if (selectedFreshness === 'EXCLUDE_STALE') {
+          effectiveFilters.push({
+            field: 'is_stats_stale',
+            operator: '=',
+            value: 0,
+          });
+        } else if (selectedFreshness === 'FRESH') {
+          effectiveFilters.push({
+            field: 'data_freshness',
+            operator: '=',
+            value: 'Fresh',
+          });
+        } else if (selectedFreshness === 'STALE') {
+          effectiveFilters.push({
+            field: 'is_stats_stale',
+            operator: '=',
+            value: 1,
+          });
+        } else if (selectedFreshness === 'NEW') {
+          effectiveFilters.push({
+            field: 'data_freshness',
+            operator: '=',
+            value: 'New',
+          });
+        }
+      }
+
       const res = await fetch('/api/screener', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -590,7 +625,7 @@ function ScreenerContent() {
       fetchScreenedPlayers();
     }, 200);
     return () => clearTimeout(timer);
-  }, [targetType, activeFilters, selectedPosition, selectedCoef, search, sortBy, sortOrder, page, pageSize]);
+  }, [targetType, activeFilters, selectedPosition, selectedCoef, selectedFreshness, search, sortBy, sortOrder, page, pageSize]);
 
   // Handle Target Type Switch (Outfield vs Goalkeeper)
   const handleSwitchTargetType = (type: 'outfield' | 'goalkeeper') => {
@@ -822,13 +857,14 @@ function ScreenerContent() {
   const handleExportCSV = () => {
     if (players.length === 0) return;
     const headers = isGK
-      ? ['Player', 'Club', 'League', 'Age', 'Minutes', 'Value (£M)', 'Wage (£k)', 'xG Prevented/90', 'Save %', 'Shot-Stop Delta', 'Hold Rate %', 'Sweeper Index', 'Pass Acc %']
-      : ['Player', 'Position', 'Club', 'League', 'Age', 'Minutes', 'Value (£M)', 'Wage (£k)', 'NP-xG/90', 'xA/90', 'NP-xG+xA/90', 'Prog Passes/90', 'Def Actions/90'];
+      ? ['Player', 'Freshness', 'Club', 'League', 'Age', 'Minutes', 'Value (£M)', 'Wage (£k)', 'xG Prevented/90', 'Save %', 'Shot-Stop Delta', 'Hold Rate %', 'Sweeper Index', 'Pass Acc %']
+      : ['Player', 'Freshness', 'Position', 'Club', 'League', 'Age', 'Minutes', 'Value (£M)', 'Wage (£k)', 'NP-xG/90', 'xA/90', 'NP-xG+xA/90', 'Prog Passes/90', 'Def Actions/90'];
 
     const rows = players.map((p) =>
       isGK
         ? [
             `"${p.player_name}"`,
+            `"${p.data_freshness || 'Fresh'}"`,
             `"${p.club_name}"`,
             `"${p.league}"`,
             p.age,
@@ -844,6 +880,7 @@ function ScreenerContent() {
           ]
         : [
             `"${p.player_name}"`,
+            `"${p.data_freshness || 'Fresh'}"`,
             `"${p.position}"`,
             `"${p.club_name}"`,
             `"${p.league}"`,
@@ -1059,6 +1096,7 @@ function ScreenerContent() {
                 setDiagnosisContext(null);
                 setSelectedPosition(isGK ? 'Goalkeeper' : 'ALL');
                 setSelectedCoef('ALL');
+                setSelectedFreshness('ALL');
                 handleSelectPreset(isGK ? 'gk_default' : 'default');
               }}
               className="btn-secondary"
@@ -1183,6 +1221,36 @@ function ScreenerContent() {
             <option value="0.4" style={{ background: '#131722', color: '#fff' }}>⚽ Semi-Pro &amp; Above (≥ 0.40x)</option>
           </select>
           <ChevronDown size={12} style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-dim)' }} />
+        </div>
+
+        {/* Data Freshness Dropdown Chip */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedFreshness}
+            onChange={(e) => {
+              setSelectedFreshness(e.target.value);
+              setPage(1);
+            }}
+            style={{
+              background: selectedFreshness !== 'ALL' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              border: selectedFreshness !== 'ALL' ? '1px solid #fbbf24' : '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '9999px',
+              padding: '0.35rem 1.75rem 0.35rem 0.85rem',
+              color: selectedFreshness !== 'ALL' ? '#fbbf24' : 'var(--text-muted)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              appearance: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <option value="ALL" style={{ background: '#131722', color: '#fff' }}>Freshness: All Data</option>
+            <option value="EXCLUDE_STALE" style={{ background: '#131722', color: '#34d399', fontWeight: 600 }}>✨ Exclude Stale (Live Season Only)</option>
+            <option value="FRESH" style={{ background: '#131722', color: '#38bdf8' }}>⚡ Fresh Season Stats Only</option>
+            <option value="STALE" style={{ background: '#131722', color: '#fbbf24' }}>⚠️ Unchanged / Stale (Matches Last Season)</option>
+            <option value="NEW" style={{ background: '#131722', color: '#a78bfa' }}>🆕 First Season in Warehouse</option>
+          </select>
+          <ChevronDown size={12} style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: selectedFreshness !== 'ALL' ? '#fbbf24' : 'var(--text-dim)' }} />
         </div>
 
         {/* ACTIVE FILTER PILLS */}
@@ -1837,12 +1905,49 @@ function ScreenerContent() {
                   <td>
                     <Link
                       href={`/player/${p.player_key}`}
-                      style={{ fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                      style={{ fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}
                     >
                       <span>{p.player_name}</span>
                       {p.is_own_squad === 1 && (
                         <span className="badge badge-own-squad" style={{ fontSize: '0.62rem' }}>
                           SQUAD
+                        </span>
+                      )}
+                      {p.data_freshness === 'Stale' && (
+                        <span
+                          title="Stats are unchanged from the previous season (unrefreshed scouting report)"
+                          style={{
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.03em',
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            background: 'rgba(245, 158, 11, 0.15)',
+                            color: '#fbbf24',
+                            border: '1px solid rgba(245, 158, 11, 0.35)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                          }}
+                        >
+                          <span style={{ fontSize: '0.65rem' }}>⚠️</span> UNCHANGED
+                        </span>
+                      )}
+                      {p.data_freshness === 'New' && (
+                        <span
+                          title="First season recorded in the warehouse"
+                          style={{
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.03em',
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            color: '#38bdf8',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                          }}
+                        >
+                          NEW
                         </span>
                       )}
                     </Link>

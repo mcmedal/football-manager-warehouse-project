@@ -333,6 +333,8 @@ The Gold schema exposes 24 analytical views and dimensional marts categorized in
 | `is_own_squad` | `BIT` | NO | `1` = Player in user's club; `0` = Scouted external transfer target. |
 | `contracted` | `BIT` | NO | `1` = Professional contract active; `0` = Free agent. |
 | `minutes_played` | `INT` | YES | Total competitive minutes in season snapshot. |
+| **`data_freshness`** | `VARCHAR(10)` | NO | Data evolution status relative to previous season (`'Fresh'` = stats updated in new campaign, `'Stale'` = stats unchanged from previous season, `'New'` = first season in warehouse). |
+| **`is_stats_stale`** | `BIT` | NO | `1` = Player metrics are identical to previous season snapshot (unrefreshed scouting data); `0` = Fresh live stats or newly scouted. |
 | `wage_per_week_k` | `DECIMAL(10,2)` | YES | Contractual weekly wage in thousands (£k). |
 | `transfer_value_m` | `DECIMAL(10,2)` | YES | Estimated market transfer valuation in millions (£M). |
 | `goals_per90` | `DECIMAL(5,2)` | YES | Goals scored per 90 minutes. |
@@ -426,6 +428,8 @@ The Gold schema exposes 24 analytical views and dimensional marts categorized in
 | `player_key`, `player_id`, `player_name`, `age`, `position` | Various | NO/YES | Identifiers and player attributes matching outfield mart. |
 | `club_name`, `league`, `league_difficulty_coef` | Various | YES/NO | Club, league, and league coefficient. |
 | `is_own_squad`, `contracted`, `minutes_played` | Various | NO/YES | Lineup status, contract status, and season minutes. |
+| **`data_freshness`** | `VARCHAR(10)` | NO | Data evolution status relative to previous season (`'Fresh'`, `'Stale'`, or `'New'`). |
+| **`is_stats_stale`** | `BIT` | NO | `1` = Goalkeeper metrics are identical to previous season snapshot; `0` = Fresh live stats or newly scouted. |
 | `wage_per_week_k`, `transfer_value_m` | `DECIMAL(10,2)` | YES | Financial contract wage (£k/wk) and valuation (£M). |
 | **`shots_faced_per90`** | `DECIMAL(7,4)` | YES | **Formula:** `saves_made_per90 + goals_conceded_per90`. Total shots on target faced per 90. |
 | **`shots_faced_total`** | `DECIMAL(7,2)` | YES | **Formula:** `shots_faced_per90 * (minutes_played / 90.0)`. Cumulative sample size of shots on target faced across the season (foundation for shrinkage). |

@@ -353,21 +353,18 @@ BEGIN
 				)
 				AND S.dwh_current_validity = 1;
 
-		PRINT '>>> Retiring Departed Players in GOLD.DIM_PLAYER_INFO';
+		PRINT '>>> Retiring Departed Squad Players in GOLD.DIM_PLAYER_INFO';
 			UPDATE S
 			SET 
 				dwh_cd_valid_till = GETDATE(),
 				dwh_current_validity = 0
 			FROM gold.dim_player_info AS S
 			WHERE S.dwh_current_validity = 1
+			  AND S.is_own_squad = 1
 			  AND S.player_id NOT IN (
 					SELECT player_id FROM silver.fmdata_team_players WHERE dwh_current_validity = 1
 					UNION
 					SELECT player_id FROM silver.fmdata_team_gks WHERE dwh_current_validity = 1
-					UNION
-					SELECT player_id FROM silver.fmdata_interested_out_players WHERE dwh_current_validity = 1
-					UNION
-					SELECT player_id FROM silver.fmdata_interested_gks WHERE dwh_current_validity = 1
 			  );
 
 		PRINT '>>> Inserting New Records in GOLD.DIM_PLAYER_INFO';
